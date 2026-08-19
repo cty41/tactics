@@ -1,0 +1,80 @@
+{
+  "schemaVersion": 3,
+  "assemblyId": "assembly-85aaf49c0337feaa",
+  "assetId": "demonbound-cast-dr",
+  "contractId": "contract-a50d48b4530a9d48",
+  "canvas": [
+    256,
+    256
+  ],
+  "layers": [
+    {
+      "role": "body",
+      "attemptId": "job-8520f1be804163d0-a008",
+      "transform": {
+        "scalePercent": 100,
+        "translate": [
+          0,
+          0
+        ],
+        "flipHorizontal": false
+      },
+      "artifact": {
+        "path": "Tools/artworks/pipeline/artifacts/job-8520f1be804163d0/job-8520f1be804163d0-a008/prepared.png",
+        "sha256": "442bb7a252114ee29a838268f72f37919c65a775d480bce1198eaa94fc10460d"
+      },
+      "componentContractId": "contract-735f05946e8cbfb0"
+    },
+    {
+      "role": "equipment",
+      "attemptId": "job-80191342a2559d49-a003",
+      "transform": {
+        "scalePercent": 70,
+        "translate": [
+          125,
+          73
+        ],
+        "flipHorizontal": false
+      },
+      "artifact": {
+        "path": "Tools/artworks/pipeline/artifacts/job-80191342a2559d49/job-80191342a2559d49-a003/prepared.png",
+        "sha256": "92a412e50c736c9799ef8419f61b35f333cd541c0bab65212a352778872a67b0"
+      },
+      "componentContractId": "contract-22e7196a19d1d4c2"
+    },
+    {
+      "role": "far_paw_overlay",
+      "attemptId": "job-5cfeec02ff1366f9-a001",
+      "transform": {
+        "scalePercent": 100,
+        "translate": [
+          0,
+          0
+        ],
+        "flipHorizontal": false
+      },
+      "artifact": {
+        "path": "Tools/artworks/pipeline/artifacts/job-5cfeec02ff1366f9/job-5cfeec02ff1366f9-a001/prepared.png",
+        "sha256": "3e9effad8e34108c73c438c018a3b2d0bed8c3387e949bd0dd0cf7fd35260d6a"
+      },
+      "componentContractId": "contract-746b1cd1587dcdb6"
+    },
+    {
+      "role": "near_paw_overlay",
+      "attemptId": "job-94ab54e8091f2590-a001",
+      "transform": {
+        "scalePercent": 100,
+        "translate": [
+          0,
+          0
+        ],
+        "flipHorizontal": false
+      },
+      "artifact": {
+        "path": "Tools/artworks/pipeline/artifacts/job-94ab54e8091f2590/job-94ab54e8091f2590-a001/prepared.png",
+        "sha256": "d3b3ca9c19f0c010c083c37b0cc9c3690797dcd23c7035d8594caf1a908bdbc4"
+      },
+      "componentContractId": "contract-8a1129a65819d6d4"
+    }
+  ]
+}

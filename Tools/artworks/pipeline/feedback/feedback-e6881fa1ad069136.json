@@ -1,0 +1,28 @@
+{
+  "schemaVersion": 2,
+  "feedbackId": "feedback-e6881fa1ad069136",
+  "attemptId": "job-3adba83fc2881bb0-a001",
+  "candidateSha256": "f64cffdd2c24bb678592534c117ccf8e994fe9fc7494d882470d59ecc143f930",
+  "reviewer": "codex-agent",
+  "verdict": "retry",
+  "strengths": [
+    "No sword, scabbard, glow, or floating props; two front paws form a compact empty grip and the body remains broadly capsule-like."
+  ],
+  "defects": [
+    "The body reads closer to frontal than the required down-right three-quarter view, so this should not be accepted as the composition anchor without human approval."
+  ],
+  "nextPromptDelta": "Make the down-right three-quarter projection unmistakable; preserve all frozen body-only constraints.",
+  "recordedAt": "2026-08-19T10:46:00+08:00",
+  "authorType": "agent",
+  "categories": [
+    "pose_axis",
+    "identity"
+  ],
+  "disposition": "retry",
+  "frozenInvariants": [
+    "No sword or FX in the body layer; exactly four attached paws; equal-width capsule body."
+  ],
+  "pendingFixes": [
+    "Strengthen down-right head and body projection while retaining the compact central empty grip."
+  ]
+}

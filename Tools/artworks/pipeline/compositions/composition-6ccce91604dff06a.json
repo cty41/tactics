@@ -1,0 +1,76 @@
+{
+  "schemaVersion": 2,
+  "compositionId": "composition-6ccce91604dff06a",
+  "assetId": "demonbound-cast-dr-body-layer-v2",
+  "spec": {
+    "canvas": [
+      256,
+      256
+    ],
+    "coreAxis": {
+      "bottom": [
+        127,
+        230
+      ],
+      "top": [
+        127,
+        121
+      ],
+      "tiltDegrees": [
+        -2.0,
+        2.0
+      ]
+    },
+    "footCenter": [
+      127,
+      236
+    ],
+    "weapon": {
+      "hiddenGrip": [
+        127,
+        177
+      ],
+      "exitWindow": [
+        123,
+        126,
+        132,
+        166
+      ],
+      "tipRegion": [
+        123,
+        112,
+        132,
+        126
+      ],
+      "guardWindow": [
+        112,
+        163,
+        144,
+        184
+      ],
+      "bladeCenterline": [
+        123,
+        126,
+        132,
+        165
+      ],
+      "maxBladeWidthPx": 9,
+      "maxGemAreaPx": 36
+    },
+    "forbiddenRegions": [],
+    "requiredHiddenLabels": [],
+    "visibleAreaCaps": {},
+    "equipmentState": {
+      "scabbard": "absent",
+      "staticEffects": "absent"
+    }
+  },
+  "source": {
+    "path": "Tools/artworks/doge/demonbound/cast_down_right_body_layer_composition_v2.json",
+    "sha256": "d6318695dd193e1d0d339d04a45de04c68ea5ecdecdd55c830b447d4588f21e4"
+  },
+  "anchor": {
+    "path": "Tools/artworks/doge/calibrated/doge_capsule_demonbound_idle_dr_v01.png",
+    "sha256": "21559ca7aedd3e146feb2b93c5a6633affc6ce544122628c960972a982b0b5e7"
+  }
+}

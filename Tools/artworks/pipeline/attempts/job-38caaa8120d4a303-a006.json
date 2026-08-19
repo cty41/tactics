@@ -1,0 +1,99 @@
+{
+  "schemaVersion": 1,
+  "attemptId": "job-38caaa8120d4a303-a006",
+  "jobId": "job-38caaa8120d4a303",
+  "ordinal": 6,
+  "parentAttemptId": "job-38caaa8120d4a303-a005",
+  "retryFeedbackId": "feedback-f428e023c2dc135e",
+  "promptDelta": "no visual regeneration; preserve raw hash",
+  "technicalRemediation": true,
+  "state": "promoted",
+  "artifacts": {
+    "source": {
+      "path": "Tools/artworks/doge/concepts/doge_capsule_demonbound_melee_ul_chroma_source_v07.png",
+      "sha256": "d1f47af2c98436b4dc8e7b8068a7c7b5186dd91f47fd0ea168eb541141e13ddf"
+    },
+    "raw": {
+      "path": "Tools/artworks/pipeline/artifacts/job-38caaa8120d4a303/job-38caaa8120d4a303-a006/raw.png",
+      "sha256": "d1f47af2c98436b4dc8e7b8068a7c7b5186dd91f47fd0ea168eb541141e13ddf"
+    },
+    "prepared": {
+      "path": "Tools/artworks/pipeline/artifacts/job-38caaa8120d4a303/job-38caaa8120d4a303-a006/prepared.png",
+      "sha256": "b7d37c230b88dc83a4bc34f74aa7f3214559cb0b12972b441175077f76d99a0e"
+    },
+    "maskSource": {
+      "path": "Tools/artworks/pipeline/masks/demonbound-melee-ul-v07-source-mask-v4.png",
+      "sha256": "607df5133bb7bf9a02167f549a0cd81d7cf3e0e0dfaa663cbb89654ba1705eb5"
+    },
+    "mask": {
+      "path": "Tools/artworks/pipeline/artifacts/job-38caaa8120d4a303/job-38caaa8120d4a303-a006/mask.png",
+      "sha256": "607df5133bb7bf9a02167f549a0cd81d7cf3e0e0dfaa663cbb89654ba1705eb5"
+    },
+    "calibrated": {
+      "path": "Tools/artworks/pipeline/artifacts/job-38caaa8120d4a303/job-38caaa8120d4a303-a006/calibrated.png",
+      "sha256": "4519d643cecce40130d92f00e4bbef9c3cd628f6b34953763a7cbbdda4d0e82b"
+    },
+    "calibratedMask": {
+      "path": "Tools/artworks/pipeline/artifacts/job-38caaa8120d4a303/job-38caaa8120d4a303-a006/calibrated-mask.png",
+      "sha256": "be152dc41ca96b6736e444dfea6c804b312acfc87ce918cceadd0652a8a3e296"
+    },
+    "review": {
+      "overlay": {
+        "path": "Tools/artworks/pipeline/reviews/job-38caaa8120d4a303-a006/overlay.png",
+        "sha256": "6b3ae774521ccdaad638137bb9a5440081396e9eb8c014369e585580216dbcb7"
+      },
+      "preview128": {
+        "path": "Tools/artworks/pipeline/reviews/job-38caaa8120d4a303-a006/preview128.png",
+        "sha256": "5c39afbe8865556225e2b3b6ebfcd671742858da1fd0546093c661ffa2086891"
+      },
+      "tile64x32": {
+        "path": "Tools/artworks/pipeline/reviews/job-38caaa8120d4a303-a006/tile64x32.png",
+        "sha256": "8f4846315349c863919624344f038906e84d073093e569dca10f589a903199ac"
+      },
+      "depthReview": {
+        "path": "Tools/artworks/pipeline/reviews/job-38caaa8120d4a303-a006/depthReview.png",
+        "sha256": "01a8b5f6ec69988751a47896f6346fe17cbf16a0c8d9ea1e076a020d60fca426"
+      }
+    },
+    "promoted": {
+      "master": {
+        "path": "Tools/artworks/doge/calibrated/doge_capsule_demonbound_melee_ul_v01.png",
+        "sha256": "4519d643cecce40130d92f00e4bbef9c3cd628f6b34953763a7cbbdda4d0e82b"
+      },
+      "preview": {
+        "path": "Tools/artworks/doge/calibrated/doge_capsule_demonbound_melee_ul_v01_128.png",
+        "sha256": "5c39afbe8865556225e2b3b6ebfcd671742858da1fd0546093c661ffa2086891"
+      }
+    }
+  },
+  "report": {
+    "path": "Tools/artworks/pipeline/reports/report-a41ee1eed2346003.json",
+    "sha256": "c2fc939e7876c09b442d7e190d8f2f0f3a5ccc0d3e6f6cdbad173f2e9c3b3916"
+  },
+  "approvalId": "approval-b416727c3f90417d",
+  "feedbackId": "feedback-f81805db04fbfde8",
+  "preparation": {
+    "chroma": "00ff00",
+    "chromaTolerance": 160
+  },
+  "calibration": {
+    "method": "uniform-core-height",
+    "scale": 0.32448377581120946,
+    "offset": [
+      -74,
+      -50
+    ],
+    "sourceCoreBbox": [
+      516,
+      532,
+      720,
+      870
+    ],
+    "anchorCoreBbox": [
+      92,
+      121,
+      162,
+      230
+    ]
+  }
+}

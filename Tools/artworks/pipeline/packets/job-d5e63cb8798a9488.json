@@ -1,0 +1,32 @@
+{
+  "conceptOnly": false,
+  "contractId": "contract-c95edabcb2497a34",
+  "contractSha256": "c6f3411b3df14ec19094fd7afff605e6756968b331396785d8497e5086420e40",
+  "inputs": [
+    {
+      "path": "Tools/artworks/doge/calibrated/doge_capsule_demonbound_idle_dr_v01.png",
+      "role": "core_anchor",
+      "sha256": "21559ca7aedd3e146feb2b93c5a6633affc6ce544122628c960972a982b0b5e7"
+    },
+    {
+      "path": "Tools/artworks/doge/calibrated/doge_capsule_hunter_color_ul_v02.png",
+      "role": "pose_reference",
+      "sha256": "f41e3e6f49abee5888ee74ae7db1d5fff57b9fd90e49d5fae71421394861fb24"
+    }
+  ],
+  "jobId": "job-d5e63cb8798a9488",
+  "prompt": {
+    "path": "Tools/artworks/doge/demonbound/idle_up_left_prompt.md",
+    "sha256": "f0a0f24a2a82cf6abc637dafc613c49a12435ccc628e73253d6b9afcd43b7f4b"
+  },
+  "schemaVersion": 1,
+  "series": {
+    "poseId": "idle-ul",
+    "seriesId": "demonbound-nine-pose-v1"
+  },
+  "state": "ready",
+  "target": {
+    "direction": "up-left",
+    "pose": "idle"
+  }
+}

@@ -1,0 +1,33 @@
+{
+  "schemaVersion": 1,
+  "jobId": "job-871408b81417ce24",
+  "state": "ready",
+  "contractId": "contract-e2f1c2d0f2146a1d",
+  "contractSha256": "902a2a401a8bc091d20132fe910cedbc7295d8e04c6a7f33fe243bab0460e0e9",
+  "prompt": {
+    "path": "Tools/artworks/doge/demonbound/melee_down_right_prompt_v11.md",
+    "sha256": "6ed7966d593f0f23586503b4537a78c3c7ba42df42efcdb3bb70d82d8b2e42da"
+  },
+  "inputs": [
+    {
+      "role": "candidate_reference",
+      "path": "Tools/artworks/pipeline/artifacts/job-8511c38401ba2a99/job-8511c38401ba2a99-a006/calibrated.png",
+      "sha256": "519f0eef8199625b3336dafafb2cecb45182ba0af5e384a5757b6f5dd94b9ea0"
+    },
+    {
+      "role": "core_anchor",
+      "path": "Tools/artworks/doge/calibrated/doge_capsule_demonbound_idle_dr_v01.png",
+      "sha256": "21559ca7aedd3e146feb2b93c5a6633affc6ce544122628c960972a982b0b5e7"
+    }
+  ],
+  "target": {
+    "direction": "down-right",
+    "pose": "melee"
+  },
+  "series": {
+    "seriesId": "demonbound-nine-pose-v1",
+    "poseId": "melee-dr"
+  },
+  "conceptOnly": false,
+  "contractRequirements": null
+}

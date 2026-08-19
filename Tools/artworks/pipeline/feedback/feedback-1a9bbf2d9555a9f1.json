@@ -1,0 +1,28 @@
+{
+  "schemaVersion": 2,
+  "feedbackId": "feedback-1a9bbf2d9555a9f1",
+  "attemptId": "job-9c1b93e8a987e7b1-a007",
+  "candidateSha256": "f4ec3c378bd293f0c51000060c2d4253a4eacc29a509ade41c3d55dd9149644f",
+  "reviewer": "codex",
+  "verdict": "technical_failed",
+  "strengths": [
+    "All gates except the top two core rows pass"
+  ],
+  "defects": [
+    "Core mask begins six source pixels before the first continuous body row between the ears"
+  ],
+  "nextPromptDelta": "No regeneration; start core mask at source y=506",
+  "recordedAt": "2026-08-19T19:48:08.3571208+08:00",
+  "authorType": "agent",
+  "categories": [
+    "processing",
+    "topology"
+  ],
+  "disposition": "technical_failed",
+  "frozenInvariants": [
+    "cleaned visible pixels,all semantic labels except core top boundary"
+  ],
+  "pendingFixes": [
+    "core top boundary"
+  ]
+}

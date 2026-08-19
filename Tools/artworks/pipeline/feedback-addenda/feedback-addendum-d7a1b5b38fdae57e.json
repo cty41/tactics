@@ -1,0 +1,13 @@
+{
+  "schemaVersion": 2,
+  "feedbackAddendumId": "feedback-addendum-d7a1b5b38fdae57e",
+  "attemptId": "job-94179e71f9db3ed5-a001",
+  "parentFeedbackId": "feedback-75786ee113f9f0bc",
+  "reviewer": "cty41",
+  "defects": [
+    "v5 blade thickness is preferred, but its guard-to-tip length is too short; lengthen it to the compact medium length between v4 and v5 without changing body pose"
+  ],
+  "recordedAt": "2026-08-19T10:00:00+08:00",
+  "authorType": "human",
+  "disposition": "retry"
+}

@@ -1,0 +1,11 @@
+{
+  "assetId": "demonbound-cast-dr",
+  "contractId": "contract-0b1b72d8ce84b230",
+  "canvas": [256, 256],
+  "layers": [
+    {"role": "body", "attemptId": "job-9c1b93e8a987e7b1-a009", "transform": {"scalePercent": 100, "translate": [0, 0], "flipHorizontal": false}},
+    {"role": "equipment", "attemptId": "job-80191342a2559d49-a003", "transform": {"scalePercent": 70, "translate": [130, 115], "flipHorizontal": false}},
+    {"role": "far_paw_overlay", "attemptId": "job-917b7cf91bc5279d-a001", "transform": {"scalePercent": 100, "translate": [0, 0], "flipHorizontal": false}},
+    {"role": "near_paw_overlay", "attemptId": "job-408b88b54a0b21df-a001", "transform": {"scalePercent": 100, "translate": [0, 0], "flipHorizontal": false}}
+  ]
+}

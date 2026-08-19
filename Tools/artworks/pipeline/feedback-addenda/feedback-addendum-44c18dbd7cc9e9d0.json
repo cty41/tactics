@@ -1,0 +1,11 @@
+{
+  "schemaVersion": 1,
+  "feedbackAddendumId": "feedback-addendum-44c18dbd7cc9e9d0",
+  "attemptId": "job-8511c38401ba2a99-a005",
+  "parentFeedbackId": "feedback-368a7b6295602211",
+  "reviewer": "cty41",
+  "defects": [
+    "人工最终视觉选择：采用 v9，停止 Melee DR 的后续 ImageGen 迭代；已知技术门禁问题继续保留，不将本选择解释为技术通过或正式晋升。"
+  ],
+  "recordedAt": "2026-08-18T11:48:54.8331156+08:00"
+}

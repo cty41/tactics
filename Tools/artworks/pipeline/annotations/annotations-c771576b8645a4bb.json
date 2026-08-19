@@ -1,0 +1,37 @@
+{
+  "schemaVersion": 2,
+  "annotationId": "annotations-c771576b8645a4bb",
+  "attemptId": "job-9c1b93e8a987e7b1-a009",
+  "candidateSha256": "64f327efc11609648b7c3f0d2fd0a5495caefab1befb5725908af955b65500e7",
+  "maskSha256": "82eb317af7ea0e9d2b5f869e125515ed9230f7efef0e09829c3956512f6f6956",
+  "source": {
+    "path": "Tools/artworks/doge/demonbound/cast_down_right_body_grip_v05_annotations.json",
+    "sha256": "49099c43fd3c83579fc0b87ffc526e8198a67e1ddb03593642666e0f6a648c2f"
+  },
+  "regions": {
+    "eyeRegion": [
+      118,
+      134,
+      157,
+      153
+    ],
+    "weaponExit": [
+      135,
+      168,
+      145,
+      183
+    ],
+    "weaponTip": [
+      136,
+      103,
+      144,
+      112
+    ],
+    "gemRegion": [
+      136,
+      194,
+      146,
+      205
+    ]
+  }
+}

@@ -1,0 +1,27 @@
+{
+  "schemaVersion": 2,
+  "feedbackId": "feedback-f81805db04fbfde8",
+  "attemptId": "job-38caaa8120d4a303-a006",
+  "candidateSha256": "4519d643cecce40130d92f00e4bbef9c3cd628f6b34953763a7cbbdda4d0e82b",
+  "reviewer": "cty41",
+  "verdict": "selected",
+  "strengths": [
+    "user selected Demonbound Melee UL v7 as the formal pose"
+  ],
+  "defects": [
+    "core width differs from the Idle UL static anchor because of the accepted action silhouette"
+  ],
+  "nextPromptDelta": "",
+  "recordedAt": "2026-08-18T12:10:00+08:00",
+  "authorType": "human",
+  "categories": [
+    "core_geometry"
+  ],
+  "disposition": "selected",
+  "frozenInvariants": [
+    "raw image sha256 d1f47af2c98436b4dc8e7b8068a7c7b5186dd91f47fd0ea168eb541141e13ddf"
+  ],
+  "pendingFixes": [
+    "core width differs from the Idle UL static anchor because of the accepted action silhouette"
+  ]
+}

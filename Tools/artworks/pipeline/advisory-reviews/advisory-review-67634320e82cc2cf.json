@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 2,
+  "advisoryReviewId": "advisory-review-67634320e82cc2cf",
+  "attemptId": "job-7423a5fc8cd94098-a001",
+  "candidateSha256": "df567c281ac1519f854ddde13c53ff1b3ad4fababd89ecffb981d29a933564dc",
+  "reviewer": "codex",
+  "risks": [
+    "medium-length thick blade is between v4 and v5 as contracted. The candidate remains front-facing/symmetric, omits formal forehead blaze and alternate ear, and uses oversized gold guard/pommel, so it cannot be promoted"
+  ],
+  "recordedAt": "2026-08-19T10:06:00+08:00",
+  "nonBinding": true
+}

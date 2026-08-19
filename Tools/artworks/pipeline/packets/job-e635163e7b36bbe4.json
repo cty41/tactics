@@ -1,0 +1,33 @@
+{
+  "schemaVersion": 1,
+  "jobId": "job-e635163e7b36bbe4",
+  "state": "ready",
+  "contractId": "contract-e2f1c2d0f2146a1d",
+  "contractSha256": "902a2a401a8bc091d20132fe910cedbc7295d8e04c6a7f33fe243bab0460e0e9",
+  "prompt": {
+    "path": "Tools/artworks/doge/demonbound/melee_down_right_prompt_v02.md",
+    "sha256": "a35d98d3e8adf2f0ca38a1f2e19214cf720755c50ce68ebf4d68dbaa3df769de"
+  },
+  "inputs": [
+    {
+      "role": "core_anchor",
+      "path": "Tools/artworks/doge/calibrated/doge_capsule_demonbound_idle_dr_v01.png",
+      "sha256": "21559ca7aedd3e146feb2b93c5a6633affc6ce544122628c960972a982b0b5e7"
+    },
+    {
+      "role": "pose_reference",
+      "path": "godot/assets/units/actions/doge_hunter_melee_attack_dr.png",
+      "sha256": "122484a3bb1d2c0c301af1b1c712a5a2331decfe75ada4b88edd799f29bec8d6"
+    }
+  ],
+  "target": {
+    "direction": "down-right",
+    "pose": "melee"
+  },
+  "series": {
+    "seriesId": "demonbound-nine-pose-v1",
+    "poseId": "melee-dr"
+  },
+  "conceptOnly": false,
+  "contractRequirements": null
+}

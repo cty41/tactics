@@ -1,0 +1,8 @@
+{
+  "schemaVersion": 2,
+  "generationFailureId": "generation-failure-f04e19e7de7402b3",
+  "invocationId": "generation-invocation-7a99dd73c81a0ecc",
+  "attemptId": "job-3adba83fc2881bb0-a002",
+  "reason": "Invocation created with a superseded compiled-prompt id before delivery; no external image generation was performed.",
+  "failedAt": "2026-08-19T10:53:00+08:00"
+}

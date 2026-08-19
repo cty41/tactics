@@ -1,0 +1,18 @@
+{
+  "schemaVersion": 3,
+  "approvalId": "approval-ddf5c16ec75b4154",
+  "attemptId": "job-917b7cf91bc5279d-a001",
+  "candidateSha256": "02a14047fe1da5698fc7413501b442463342c4d7ee12c02ba09d46a6f035fbeb",
+  "maskSha256": "93580aaddeb0861a03bf93dbf254a38eeaca6094004eaca74199d15145553646",
+  "reviewer": "cty41",
+  "reviewSha256": {
+    "overlay": "2105299c97002b501d7699ec9c3122061323933dc823522653dc1bde10a66b15",
+    "preview128": "198232c346ea5db424b2d4a3a03d964a8a4de5fb93a64d2e7d7ec5ef1ece0ee7",
+    "tile64x32": "214352b06e91925a2da5f733f4e25b55e383210c1d2b4d2b1e1086ba749f4c12"
+  },
+  "decision": "approved",
+  "reason": "Deterministic far-paw overlay derived from the user-approved Cast DR v5 body for the accepted grip composition",
+  "decidedAt": "2026-08-19T19:51:26.3918255+08:00",
+  "annotation": null,
+  "reportSha256": "3bfbab897c62e67051d38d05ae6d1c63cb774d5ffb5647e10da09d0d30083e9e"
+}

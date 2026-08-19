@@ -1,0 +1,33 @@
+{
+  "approvalId": null,
+  "artifacts": {
+    "prepared": {
+      "path": "Tools/artworks/pipeline/artifacts/job-d5e63cb8798a9488/job-d5e63cb8798a9488-a002/prepared.png",
+      "sha256": "ed22534ed915d38c82c34e3c7be43f72aeab56e1d1cd3e0f0b7622b9ac2d1df9"
+    },
+    "raw": {
+      "path": "Tools/artworks/pipeline/artifacts/job-d5e63cb8798a9488/job-d5e63cb8798a9488-a002/raw.png",
+      "sha256": "1331771802a640c1b9a60aa084b53d9ead5eaddcae33d7e97efe5f7b6dd8832f"
+    },
+    "source": {
+      "path": "Tools/artworks/doge/concepts/doge_capsule_demonbound_idle_ul_chroma_source_v02.png",
+      "sha256": "1331771802a640c1b9a60aa084b53d9ead5eaddcae33d7e97efe5f7b6dd8832f"
+    }
+  },
+  "attemptId": "job-d5e63cb8798a9488-a002",
+  "feedbackAddendumIds": [
+    "feedback-addendum-44a0ab84261aab10"
+  ],
+  "feedbackId": "feedback-5fa0c0a0c053293e",
+  "jobId": "job-d5e63cb8798a9488",
+  "ordinal": 2,
+  "parentAttemptId": "job-d5e63cb8798a9488-a001",
+  "promptDelta": "Make the Hunter UL reference dominate orientation only: show the back and left side clearly, keep just a partial muzzle and one eye at the left contour, preserve the exact compact DR core proportions, and leave the sword close behind the near side",
+  "report": {
+    "path": "Tools/artworks/pipeline/reports/report-9c77a713857b862e.json",
+    "sha256": "88b7cbed2f258256b75b9eca0c031d23d0c80e2403a74cfbf7520489195c7b96"
+  },
+  "retryFeedbackId": "feedback-0c98ddb3f734573b",
+  "schemaVersion": 1,
+  "state": "technical_failed"
+}

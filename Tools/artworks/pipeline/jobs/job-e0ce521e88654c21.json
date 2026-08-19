@@ -1,0 +1,32 @@
+{
+  "schemaVersion": 2,
+  "jobId": "job-e0ce521e88654c21",
+  "state": "ready",
+  "contractId": "contract-c4464f6c1e7ce0d9",
+  "contractSha256": "6d3f946118af2403eaf2d57d9d64e245654d6fb0764a839222dd5294c9fd3311",
+  "prompt": {
+    "path": "Tools/artworks/doge/demonbound/cast_down_right_sword_layer_prompt_v1.md",
+    "sha256": "72cfc06dbf915974e0a414be4ca16ee641b738665b19360689831fd5156f23d4"
+  },
+  "inputs": [
+    {
+      "role": "idle_sword_reference",
+      "path": "Tools/artworks/doge/calibrated/doge_capsule_demonbound_idle_dr_v01.png",
+      "sha256": "21559ca7aedd3e146feb2b93c5a6633affc6ce544122628c960972a982b0b5e7"
+    },
+    {
+      "role": "selected_body_composite_reference",
+      "path": "Tools/artworks/pipeline/artifacts/job-d3e64d0255927458/job-d3e64d0255927458-a001/calibrated.png",
+      "sha256": "47a0b5061b68bd9e5a3da0b93f1b83ca9f4c7a86c10372219a2b5ac806c22808"
+    }
+  ],
+  "target": {
+    "direction": "down-right",
+    "pose": "cast-sword-layer"
+  },
+  "series": null,
+  "conceptOnly": false,
+  "contractRequirements": null,
+  "requiresInvocation": false,
+  "poseGuide": null
+}

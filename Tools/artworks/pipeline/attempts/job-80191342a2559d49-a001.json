@@ -1,0 +1,38 @@
+{
+  "schemaVersion": 3,
+  "attemptId": "job-80191342a2559d49-a001",
+  "jobId": "job-80191342a2559d49",
+  "ordinal": 1,
+  "parentAttemptId": null,
+  "retryFeedbackId": null,
+  "promptDelta": null,
+  "technicalRemediation": false,
+  "state": "annotated",
+  "artifacts": {
+    "source": {
+      "path": "Tools/artworks/doge/candidates/doge_capsule_demonbound_cast_dr_sword_layer_v01.png",
+      "sha256": "a79e2a4769320e78bd6b1a3174f2e367d60bc9c8489e2b3c2ea1a9623de863c4"
+    },
+    "raw": {
+      "path": "Tools/artworks/pipeline/artifacts/job-80191342a2559d49/job-80191342a2559d49-a001/raw.png",
+      "sha256": "a79e2a4769320e78bd6b1a3174f2e367d60bc9c8489e2b3c2ea1a9623de863c4"
+    },
+    "prepared": {
+      "path": "Tools/artworks/pipeline/artifacts/job-80191342a2559d49/job-80191342a2559d49-a001/prepared.png",
+      "sha256": "2e829301d14ea5339ce8729e3edc8ac1adabfc18557faab0cae6b233882de161"
+    },
+    "maskSource": {
+      "path": "Tools/artworks/doge/demonbound/cast_down_right_sword_component_v1_semantic_mask.png",
+      "sha256": "fbac1b32d2c72fa93d9090003dc0a58ac359bfcb24fb1bcf55cab3dcf07a0004"
+    },
+    "mask": {
+      "path": "Tools/artworks/pipeline/artifacts/job-80191342a2559d49/job-80191342a2559d49-a001/mask.png",
+      "sha256": "fbac1b32d2c72fa93d9090003dc0a58ac359bfcb24fb1bcf55cab3dcf07a0004"
+    }
+  },
+  "report": null,
+  "approvalId": null,
+  "feedbackId": null,
+  "componentMigrationId": "component-migration-092a485c352dfd9d",
+  "sourceMode": "pre_v3_import"
+}

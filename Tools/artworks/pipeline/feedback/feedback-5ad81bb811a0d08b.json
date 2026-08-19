@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 1,
+  "feedbackId": "feedback-5ad81bb811a0d08b",
+  "attemptId": "job-136c73125d89e5de-a001",
+  "candidateSha256": "31eec5adc6403820daa110223e05b4df4767e383ebb46e186b63e3cde251322c",
+  "reviewer": "cty41",
+  "verdict": "retry",
+  "strengths": [
+    "The frame reads as a down-right sword attack, preserves the Doberman split-coat palette, keeps four paws, and points the blade toward the intended lower-right target."
+  ],
+  "defects": [
+    "The ancestral sword is enlarged into an oversized broad blade, both hand paws are presented as complete round disks, the capsule has almost no forward lean and is approximately 13 pixels wider than the approved core, the far paw contact is below 3 pixels, the baseline reaches y=244, and the gray-white forehead blaze is lost."
+  ],
+  "nextPromptDelta": "Restore the exact narrow Idle DR core and broad gray-white forehead blaze. Use the exact original short sword at roughly half v1's visible blade length; move its grip to the lower front-center with the sword hand mostly embedded in the core edge, shrink both hand paws to attached contour pads, lean the rigid capsule modestly toward screen-right while keeping feet on the y=236 baseline, and keep the blade tip lower-right.",
+  "recordedAt": "2026-08-18T10:05:50+08:00"
+}

@@ -1,0 +1,29 @@
+{
+  "schemaVersion": 2,
+  "feedbackId": "feedback-1adfcd712356d0c8",
+  "attemptId": "job-1ba4cbd209ecf161-a001",
+  "candidateSha256": "d7e6e6a2dc3503d0c0c61965c4e688e4cfcd912b72d4ea8e13b1115080dbb550",
+  "reviewer": "codex",
+  "verdict": "technical_failed",
+  "strengths": [
+    "Assembled pixels, blade length/width, core geometry and four-paw topology match the accepted preview"
+  ],
+  "defects": [
+    "Gem annotation box is oversized and legacy near-hand side metadata contradicts the new compact grip projection"
+  ],
+  "nextPromptDelta": "No pixel change; tighten gem annotation and use right-side near-hand contract",
+  "recordedAt": "2026-08-19T19:53:33.3670233+08:00",
+  "authorType": "agent",
+  "categories": [
+    "processing",
+    "topology",
+    "equipment_scale"
+  ],
+  "disposition": "technical_failed",
+  "frozenInvariants": [
+    "all assembly component hashes,transforms and rendered pixels"
+  ],
+  "pendingFixes": [
+    "contract metadata correction"
+  ]
+}

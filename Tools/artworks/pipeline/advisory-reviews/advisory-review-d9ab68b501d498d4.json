@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 2,
+  "advisoryReviewId": "advisory-review-d9ab68b501d498d4",
+  "attemptId": "job-d3e64d0255927458-a001",
+  "candidateSha256": "47a0b5061b68bd9e5a3da0b93f1b83ca9f4c7a86c10372219a2b5ac806c22808",
+  "reviewer": "codex-agent",
+  "risks": [
+    "The candidate retains four direct paws and has no visible arm or leg segments, but the body/head still reads too frontal for a clear Down-Right projection. It remains a non-binding visual retry; no sword layer may be created from it."
+  ],
+  "recordedAt": "2026-08-19T11:30:00+08:00",
+  "nonBinding": true
+}

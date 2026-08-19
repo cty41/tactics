@@ -1,0 +1,27 @@
+{
+  "schemaVersion": 2,
+  "feedbackId": "feedback-7b0d779b70c890c1",
+  "attemptId": "job-9c1b93e8a987e7b1-a002",
+  "candidateSha256": "788441cb36999faba1f1d4636714f4db0a408a6fa5c20b2593c428cbe4768c67",
+  "reviewer": "cty41",
+  "verdict": "retry",
+  "strengths": [
+    "Front paws now overlap and remain separately readable"
+  ],
+  "defects": [
+    "The two gripping paws share an exact vertical centerline and read like stacked buttons"
+  ],
+  "nextPromptDelta": "Keep partial overlap but offset the upper far paw slightly screen-left and the lower near paw slightly screen-right around the same central invisible handle",
+  "recordedAt": "2026-08-19T19:34:21.6295980+08:00",
+  "authorType": "human",
+  "categories": [
+    "topology"
+  ],
+  "disposition": "retry",
+  "frozenInvariants": [
+    "body identity,core geometry,DR direction,four paws,no arms,no legs,70 percent sword scale,partial paw overlap"
+  ],
+  "pendingFixes": [
+    "diagonal horizontal paw offset"
+  ]
+}

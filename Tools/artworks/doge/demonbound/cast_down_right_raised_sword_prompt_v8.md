@@ -1,0 +1,7 @@
+Transparent-background 2D game character sprite, 256x256 master composition, down-right three-quarter view. First reference is the exact formal Demonbound Idle DR identity and ancestral sword style anchor. Second reference is only the upright Cast pose layout.
+
+Preserve the accepted v4 body pose and v5 blade thickness: compact rigid equal-width capsule body, down-right three-quarter asymmetry, dark coat with half-body alternate coat, one alternate-colour ear, small flat gray-white forehead blaze, four attached paws, no arms or legs. Serious head-raised expression with inward-and-upward focused pupils.
+
+Two front paws hold the compact one-handed ancestral sword at chest centre. Keep v5's substantial blade thickness, but lengthen the blade to a compact MEDIUM length between the earlier v4 and v5: longer than v5, shorter than v3, with a tip modestly above the ears and safely below the upper third of the canvas. Do not turn it into a needle or a long pole. Keep compact guard below mouth and above collar, with blade only covering the narrow face centre strip and not either eye.
+
+Exactly one tiny red gemstone only at guard centre. No gems, pale ornaments, coloured fittings, decorations, or extra shapes on blade, tip, pommel, grip end, forehead, ears, or body. Keep the guard and pommel compact rather than gold oversized redesigns. No scabbard and no glow/light/energy/orb/beam/fire/particles/aura/slash/crescent/magic effect. Uniform #00ff00 chroma background only; no text/frame/ground/shadow.

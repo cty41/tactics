@@ -1,0 +1,40 @@
+{
+  "schemaVersion": 3,
+  "contractId": "contract-976b32a768b12567",
+  "assetId": "demonbound-cast-dr-near-paw-overlay-v2",
+  "approvedAssetId": "demonbound-cast-dr-near-paw-overlay-v2",
+  "kind": "action_pose",
+  "direction": "down-right",
+  "pose": "cast-near-paw-overlay",
+  "anchor": {
+    "path": "Tools/artworks/doge/calibrated/doge_capsule_demonbound_idle_dr_v01.png",
+    "sha256": "21559ca7aedd3e146feb2b93c5a6633affc6ce544122628c960972a982b0b5e7"
+  },
+  "maskRequired": false,
+  "noArms": false,
+  "handSides": {
+    "near_hand": null,
+    "far_hand": null
+  },
+  "occlusion": null,
+  "compositionSpec": null,
+  "identitySpec": null,
+  "requiresInvocation": false,
+  "tolerances": {
+    "sizePx": 3,
+    "centerPx": 2
+  },
+  "outputs": {
+    "master": "Tools/artworks/doge/calibrated/doge_capsule_demonbound_cast_dr_near_paw_overlay_v02.png",
+    "preview": "Tools/artworks/doge/calibrated/doge_capsule_demonbound_cast_dr_near_paw_overlay_v02_128.png"
+  },
+  "rights": {
+    "rightsHolder": "cty41",
+    "license": "CC-BY-4.0",
+    "provenance": "Deterministically derived near paw overlay from approved Cast DR v5 body semantic mask"
+  },
+  "assetRole": "component",
+  "componentKind": "paw_overlay",
+  "sourceMode": "derived",
+  "runtimeEligible": false
+}

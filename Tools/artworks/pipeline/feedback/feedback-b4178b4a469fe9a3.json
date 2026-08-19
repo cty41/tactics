@@ -1,0 +1,27 @@
+{
+  "schemaVersion": 2,
+  "feedbackId": "feedback-b4178b4a469fe9a3",
+  "attemptId": "job-9c1b93e8a987e7b1-a004",
+  "candidateSha256": "8bb434c7ab4b294232b2e4e46cc35b8f4d292f406128031b2cf57852d7e25f8a",
+  "reviewer": "cty41",
+  "verdict": "retry",
+  "strengths": [
+    "Lower paw moved upward and horizontal stagger remains"
+  ],
+  "defects": [
+    "Vertical overlap remains insufficient"
+  ],
+  "nextPromptDelta": "Raise the lower near paw until the two paw bounding boxes overlap by approximately 60 percent vertically, preserving subtle horizontal stagger",
+  "recordedAt": "2026-08-19T19:38:49.8422518+08:00",
+  "authorType": "human",
+  "categories": [
+    "topology"
+  ],
+  "disposition": "retry",
+  "frozenInvariants": [
+    "body identity,core geometry,DR direction,four paws,no limbs,horizontal paw stagger,70 percent sword scale"
+  ],
+  "pendingFixes": [
+    "60 percent vertical paw overlap"
+  ]
+}

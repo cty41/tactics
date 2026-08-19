@@ -1,0 +1,87 @@
+{
+  "schemaVersion": 1,
+  "attemptId": "job-8511c38401ba2a99-a004",
+  "jobId": "job-8511c38401ba2a99",
+  "ordinal": 4,
+  "parentAttemptId": "job-8511c38401ba2a99-a003",
+  "retryFeedbackId": "feedback-37e6ffc7ed28670e",
+  "promptDelta": "Preserve v7's total removal of the scabbard, metallic ornate compact sword, serious closed mouth, split coat, forehead blaze, and alternate ear. Narrow the core another 6 pixels to the exact 64-pixel Idle DR width without changing height, then tilt the entire rigid capsule modestly screen-right to restore attack commitment. Raise both pupils one small step toward the target torso. Hide most of the sword hand behind the lower front-center body contour so only a small attached arc remains, keep the far hand as a smaller opposite arc, steepen the lower-right sword axis slightly, and keep both feet and the entire sword at or above y=236.",
+  "state": "technical_failed",
+  "artifacts": {
+    "source": {
+      "path": "Tools/artworks/doge/concepts/doge_capsule_demonbound_melee_dr_chroma_source_v08.png",
+      "sha256": "adc089b363ee471031140ff8d79649135e6ac74da53f5050e9ea2a083eefdcce"
+    },
+    "raw": {
+      "path": "Tools/artworks/pipeline/artifacts/job-8511c38401ba2a99/job-8511c38401ba2a99-a004/raw.png",
+      "sha256": "adc089b363ee471031140ff8d79649135e6ac74da53f5050e9ea2a083eefdcce"
+    },
+    "prepared": {
+      "path": "Tools/artworks/pipeline/artifacts/job-8511c38401ba2a99/job-8511c38401ba2a99-a004/prepared.png",
+      "sha256": "e51ec12d57e97db8ae634139cd753571f7f194c982f842ea0200e8afcbf54cc0"
+    },
+    "maskSource": {
+      "path": "Tools/artworks/pipeline/masks/demonbound-melee-dr-v08-source-mask.png",
+      "sha256": "46f03d131b7c441ec9214e2ce587b7ddd74100b69de67d96ba72f938ae7456dd"
+    },
+    "mask": {
+      "path": "Tools/artworks/pipeline/artifacts/job-8511c38401ba2a99/job-8511c38401ba2a99-a004/mask.png",
+      "sha256": "46f03d131b7c441ec9214e2ce587b7ddd74100b69de67d96ba72f938ae7456dd"
+    },
+    "calibrated": {
+      "path": "Tools/artworks/pipeline/artifacts/job-8511c38401ba2a99/job-8511c38401ba2a99-a004/calibrated.png",
+      "sha256": "04d63b982a28ffd89970e8f67762319cfe616da9779fa00a60b759bf52c735b6"
+    },
+    "calibratedMask": {
+      "path": "Tools/artworks/pipeline/artifacts/job-8511c38401ba2a99/job-8511c38401ba2a99-a004/calibrated-mask.png",
+      "sha256": "df88598a212d44b5c639e6bf424a0e80165808c305c0fe03d0b6eb7f9c65e46e"
+    },
+    "review": {
+      "overlay": {
+        "path": "Tools/artworks/pipeline/reviews/job-8511c38401ba2a99-a004/overlay.png",
+        "sha256": "eff304fa41acd69e0a1f7e14c645d33bc8623ae22d706dc2a736ae572a3dd4e1"
+      },
+      "preview128": {
+        "path": "Tools/artworks/pipeline/reviews/job-8511c38401ba2a99-a004/preview128.png",
+        "sha256": "5dcb6f448b693022da2bfde622873c68fa4b99aa676b532c9622a82387df73a0"
+      },
+      "tile64x32": {
+        "path": "Tools/artworks/pipeline/reviews/job-8511c38401ba2a99-a004/tile64x32.png",
+        "sha256": "6e644f8200fd0986db41407b10fc92a801e751e53f65c2fe3dce9a2dd1ce8b01"
+      }
+    }
+  },
+  "report": {
+    "path": "Tools/artworks/pipeline/reports/report-bc9756b505d1b6e4.json",
+    "sha256": "2e4257a6d062915b6ded8efe97ad71c135a309d81f56bf966d9bb0db7987e2c7"
+  },
+  "approvalId": null,
+  "feedbackId": "feedback-5129acda12c45d1a",
+  "preparation": {
+    "chroma": "00ff00",
+    "chromaTolerance": 160
+  },
+  "calibration": {
+    "method": "uniform-core-height",
+    "scale": 0.2528473804100228,
+    "offset": [
+      -28,
+      12
+    ],
+    "sourceCoreBbox": [
+      432,
+      431,
+      801,
+      869
+    ],
+    "anchorCoreBbox": [
+      96,
+      121,
+      159,
+      231
+    ]
+  },
+  "feedbackAddendumIds": [
+    "feedback-addendum-98b3093cc915090e"
+  ]
+}

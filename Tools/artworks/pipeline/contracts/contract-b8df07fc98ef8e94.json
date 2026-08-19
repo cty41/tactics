@@ -1,0 +1,36 @@
+{
+  "schemaVersion": 2,
+  "contractId": "contract-b8df07fc98ef8e94",
+  "assetId": "demonbound-cast-dr-sword-layer-v2",
+  "approvedAssetId": "demonbound-cast-dr-sword-layer-v2",
+  "kind": "tile",
+  "direction": "down-right",
+  "pose": "cast-sword-layer",
+  "anchor": null,
+  "maskRequired": false,
+  "noArms": false,
+  "handSides": {
+    "near_hand": null,
+    "far_hand": null
+  },
+  "occlusion": null,
+  "compositionSpec": {
+    "compositionId": "composition-bb0c68941c25ad68",
+    "sha256": "2ecfff9031c71f471673b30befca0f8f05da8669298631d0dcc0a15431171512"
+  },
+  "identitySpec": null,
+  "requiresInvocation": false,
+  "tolerances": {
+    "sizePx": 3,
+    "centerPx": 2
+  },
+  "outputs": {
+    "master": "Tools/artworks/doge/candidates/doge_capsule_demonbound_cast_dr_sword_layer_v01.png",
+    "preview": "Tools/artworks/doge/candidates/doge_capsule_demonbound_cast_dr_sword_layer_v01_128.png"
+  },
+  "rights": {
+    "rightsHolder": "cty41",
+    "license": "CC-BY-4.0",
+    "provenance": "project-owned-gpt-generated"
+  }
+}

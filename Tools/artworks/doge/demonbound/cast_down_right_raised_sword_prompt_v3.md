@@ -1,0 +1,7 @@
+Transparent-background 2D game character sprite, 256x256 master composition, down-right three-quarter view. Use the supplied Idle DR only as the identity and equal-width core anchor, and the supplied pose guide only as the composition guide.
+
+Depict the same compact capsule-bodied Demonbound Doberman: a rigid, straight, equal-width body; warm dark coat with a deliberate half-body alternate coat color; one alternate-color ear; a small flat gray-white blaze between the ears; canine face. No human hair. Exactly four small attached paws, with no arms and no legs.
+
+This is a serious, focused cast pose. The head lifts slightly and both eyes look upward toward the sword tip. Two attached front paws hold the compact ancestral cursed one-handed sword at the chest centerline: one paw on each side of the grip, close to the body. The narrow blade is held almost perfectly vertical on the character centerline. The guard stays below the mouth and above the collar; it must not cover either eye. The blade can cover only a thin central strip of the face. The tip is above both ears with clear canvas margin. Preserve the established compact sword length, guard shape, and one small restrained red gemstone; do not enlarge the sword or gemstone.
+
+No scabbard. No glow, no orb, no beam, no flame, no particles, no sparks, no magical aura, and no crescent slash. The sprite is only the unlit pose and sword on a clean #00ff00 chroma background; no text, no frame, no ground shadow.

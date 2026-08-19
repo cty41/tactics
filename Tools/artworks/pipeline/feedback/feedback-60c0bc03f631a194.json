@@ -1,0 +1,30 @@
+{
+  "schemaVersion": 2,
+  "feedbackId": "feedback-60c0bc03f631a194",
+  "attemptId": "job-b62cc7f9ef78fcf0-a001",
+  "candidateSha256": "7f01849529a3c10e7c9e67bf707b852e0b7ccf1a721720f3df294026647858aa",
+  "reviewer": "cty41",
+  "verdict": "retry",
+  "strengths": [
+    "A single eye and muzzle edge establish isometric facial visibility"
+  ],
+  "defects": [
+    "Rotation is too side-on; capsule remains tall; both rear feet are fully exposed symmetric foreground discs with incorrect body-foot occlusion"
+  ],
+  "nextPromptDelta": "Rotate halfway back toward rear view; shorten/widen core; body overlaps upper/inner edges of both feet; screen-left near foot slightly lower/more visible, screen-right far foot slightly higher/more hidden",
+  "recordedAt": "2026-08-19T20:55:07.9800256+08:00",
+  "authorType": "human",
+  "categories": [
+    "pose_axis",
+    "core_geometry",
+    "occlusion",
+    "topology"
+  ],
+  "disposition": "retry",
+  "frozenInvariants": [
+    "one-eye facial sliver,no equipment,no front paws,coat identity,collar"
+  ],
+  "pendingFixes": [
+    "rear-dominant rotation,compact core,asymmetric rear-foot depth"
+  ]
+}

@@ -1,0 +1,32 @@
+{
+  "schemaVersion": 2,
+  "feedbackId": "feedback-9d45a6546086faa9",
+  "attemptId": "job-ce5a38dfdcdcb04b-a001",
+  "candidateSha256": "a043b8db3863a7f1c79896dcbd68e155f5a8752da42e08509b61694cf0684ed5",
+  "reviewer": "codex",
+  "verdict": "retry",
+  "strengths": [
+    "clean green-key background; two front paws touch the center grip; no emitted magic effect or scabbard"
+  ],
+  "defects": [
+    "front-facing symmetric redesign instead of formal DR identity",
+    "body, paws, ears, coat pattern and forehead blaze drift from Idle DR",
+    "oversized blade/guard and extra red gems at tip and pommel"
+  ],
+  "nextPromptDelta": "preserve Idle DR identity exactly; enforce down-right three-quarter asymmetry, a single restrained red gem, compact inherited sword, and serious upward gaze",
+  "recordedAt": "2026-08-18T15:31:00+08:00",
+  "authorType": "agent",
+  "categories": [
+    "identity",
+    "pose_axis",
+    "equipment_scale",
+    "chroma"
+  ],
+  "disposition": "retry",
+  "frozenInvariants": [],
+  "pendingFixes": [
+    "front-facing symmetric redesign instead of formal DR identity",
+    "body, paws, ears, coat pattern and forehead blaze drift from Idle DR",
+    "oversized blade/guard and extra red gems at tip and pommel"
+  ]
+}

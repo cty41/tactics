@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 2,
+  "poseGuideId": "pose-guide-8637e7448b568a8d",
+  "compositionId": "composition-ee735e63e8b178dc",
+  "compositionSha256": "c28d2dfe8742dd78e7c3f411b296eac1af11f2c86a034b48f2d59bf073b663ac",
+  "anchorSha256": "21559ca7aedd3e146feb2b93c5a6633affc6ce544122628c960972a982b0b5e7",
+  "artifact": {
+    "path": "Tools/artworks/doge/demonbound/cast_down_right_raised_sword_pose_guide_v5.png",
+    "sha256": "0f160dbc887d84bce8e596500519242b8e7e9f10c33591baa653e910da53e1c0"
+  },
+  "role": "supporting-derived"
+}

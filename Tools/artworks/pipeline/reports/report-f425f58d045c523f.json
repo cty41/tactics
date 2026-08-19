@@ -1,0 +1,96 @@
+{
+  "schemaVersion": 1,
+  "attemptId": "job-871408b81417ce24-a002",
+  "inputSha256": "33639ed90070330945bd75e03d091c424813bd5c6a59c11aeb236ec872599248",
+  "maskSha256": "a55e43b6023d06abbbdd617c604af75de50e426d0d159b4ccc47d4dec00f05e8",
+  "technical": {
+    "size": [
+      256,
+      256
+    ],
+    "alphaBbox": [
+      90,
+      100,
+      166,
+      244
+    ]
+  },
+  "geometry": {
+    "boxes": {
+      "core": [
+        93,
+        120,
+        162,
+        230
+      ],
+      "head_appendage": [
+        103,
+        103,
+        159,
+        127
+      ],
+      "near_hand": [
+        108,
+        188,
+        125,
+        204
+      ],
+      "far_hand": [
+        157,
+        188,
+        164,
+        206
+      ],
+      "near_foot": [
+        96,
+        220,
+        116,
+        237
+      ],
+      "far_foot": [
+        131,
+        220,
+        151,
+        237
+      ],
+      "equipment": [
+        112,
+        195,
+        159,
+        241
+      ],
+      "wings": null,
+      "effect": null
+    },
+    "core": {
+      "bbox": [
+        93,
+        120,
+        162,
+        230
+      ],
+      "center": [
+        127.5,
+        175.0
+      ],
+      "bandMaxWidths": [
+        69,
+        70,
+        68
+      ]
+    },
+    "occlusion": {
+      "intrusionPixels": {},
+      "visibleAreaRatios": {}
+    }
+  },
+  "issues": [
+    "baseline_not_236",
+    "chroma_fringe",
+    "core_row_disconnected",
+    "core_size_out_of_tolerance",
+    "exact_chroma_residue",
+    "semantic_mask_outside_subject"
+  ],
+  "passed": false
+}

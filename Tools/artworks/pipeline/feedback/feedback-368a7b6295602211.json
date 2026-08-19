@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 1,
+  "feedbackId": "feedback-368a7b6295602211",
+  "attemptId": "job-8511c38401ba2a99-a005",
+  "candidateSha256": "07dfa1283594dee72efb9d28929ea011de04159ce2cf58e9edbf43f582896c2d",
+  "reviewer": "codex",
+  "verdict": "retry",
+  "strengths": [
+    "The sword jewelry is now restrained and consistent with Idle DR: one small red guard gem only, with no oversized ruby or extra red stones. The scabbard is absent, the metallic blade remains compact, and the core improves from v8's 94 pixels to 76 pixels."
+  ],
+  "defects": [
+    "The distinct gray-white forehead patch has disappeared and is replaced only by the jagged boundary between the gray and black coat halves; the 76-pixel core is still wider than the 64-pixel anchor; the body is upright rather than committed into the attack; both hands remain complete circles; the pupils and smiling mouth face the viewer rather than the target; the sword axis is nearly horizontal; the alpha baseline reaches y=240; chroma fringe/residue, a disconnected core row, and semantic-mask overshoot remain."
+  ],
+  "nextPromptDelta": "Preserve v9's exact single small guard gem, compact metallic blade, and total absence of a scabbard. Restore the separate light gray-white forehead fur patch as a shallow horizontal irregular patch visibly distinct from the gray half-coat. Return to the exact 64-pixel Idle DR core, tilt the rigid body screen-right, use serious off-camera target tracking, reduce both hands to occluded crescents, steepen the lower-right blade axis, and keep all pixels at or above y=236.",
+  "recordedAt": "2026-08-18T11:35:32.7097903+08:00"
+}

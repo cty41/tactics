@@ -1,0 +1,88 @@
+{
+  "schemaVersion": 1,
+  "attemptId": "job-f40816b1c2e8b36c-a004",
+  "jobId": "job-f40816b1c2e8b36c",
+  "ordinal": 4,
+  "parentAttemptId": "job-f40816b1c2e8b36c-a003",
+  "retryFeedbackId": "feedback-2e4ab19df173d6af",
+  "promptDelta": "Preserve v4's asymmetric rear-layer sword-side grip and rear sword placement. Restore the exact narrower DR capsule width without changing core height; move the opposite hand outward until only a tiny contour crescent remains; place both feet higher relative to the core; use a genuinely uniform pure green background.",
+  "state": "technical_failed",
+  "artifacts": {
+    "source": {
+      "path": "Tools/artworks/doge/concepts/doge_capsule_demonbound_idle_ul_chroma_source_v05.png",
+      "sha256": "174b02a5884014a27bd7e5b74e6cca54ce95b25bba445965bbdab41c936a0ab9"
+    },
+    "raw": {
+      "path": "Tools/artworks/pipeline/artifacts/job-f40816b1c2e8b36c/job-f40816b1c2e8b36c-a004/raw.png",
+      "sha256": "174b02a5884014a27bd7e5b74e6cca54ce95b25bba445965bbdab41c936a0ab9"
+    },
+    "prepared": {
+      "path": "Tools/artworks/pipeline/artifacts/job-f40816b1c2e8b36c/job-f40816b1c2e8b36c-a004/prepared.png",
+      "sha256": "e1f1b9ba8c0cd6e99ca6d277565bb37bd3b0066f3e7bebdce7d1b70321b9cd2c"
+    },
+    "maskSource": {
+      "path": "Tools/artworks/pipeline/masks/demonbound-idle-ul-v05-source-mask.png",
+      "sha256": "fd878e886e53818ab57d5b9ea667a997c3fb1643b62562b263f2fe75d6994a7a"
+    },
+    "mask": {
+      "path": "Tools/artworks/pipeline/artifacts/job-f40816b1c2e8b36c/job-f40816b1c2e8b36c-a004/mask.png",
+      "sha256": "fd878e886e53818ab57d5b9ea667a997c3fb1643b62562b263f2fe75d6994a7a"
+    },
+    "calibrated": {
+      "path": "Tools/artworks/pipeline/artifacts/job-f40816b1c2e8b36c/job-f40816b1c2e8b36c-a004/calibrated.png",
+      "sha256": "ef9fd7521afafc4f46ef8fd355fc90337b493e268de61eaebfcd8d2ea3e529f4"
+    },
+    "calibratedMask": {
+      "path": "Tools/artworks/pipeline/artifacts/job-f40816b1c2e8b36c/job-f40816b1c2e8b36c-a004/calibrated-mask.png",
+      "sha256": "2fa658cdf1f956b2b10422703aa8e74ebf98f6a7ed13fb4e118a7d81afdadbde"
+    },
+    "review": {
+      "overlay": {
+        "path": "Tools/artworks/pipeline/reviews/job-f40816b1c2e8b36c-a004/overlay.png",
+        "sha256": "d4c808a9f9f6800a2903ad1f239c5aeb3197b8fc19e7d80c6d7b85517a781e2f"
+      },
+      "preview128": {
+        "path": "Tools/artworks/pipeline/reviews/job-f40816b1c2e8b36c-a004/preview128.png",
+        "sha256": "bf9a3b20c47fd0a47c8b2281eabec579a491fd3531ace24ee311add404e724e9"
+      },
+      "tile64x32": {
+        "path": "Tools/artworks/pipeline/reviews/job-f40816b1c2e8b36c-a004/tile64x32.png",
+        "sha256": "041964a65c7d64b7df072aa9acc24699c793823dc43e79a5d8c808839c1b5c36"
+      },
+      "depthReview": {
+        "path": "Tools/artworks/pipeline/reviews/job-f40816b1c2e8b36c-a004/depthReview.png",
+        "sha256": "2f5d1ec6adbca129620837e566de69414df39fabf45b6ae37d62084ffb4fb817"
+      }
+    }
+  },
+  "report": {
+    "path": "Tools/artworks/pipeline/reports/report-fd23d4c6ac7e77fb.json",
+    "sha256": "9ef93912b0e6186529c93ad8edaaaa19a70f35965211b7e70b866d4c030a78f2"
+  },
+  "approvalId": null,
+  "feedbackId": "feedback-3dd7fd32300f0118",
+  "preparation": {
+    "chroma": "14f113",
+    "chromaTolerance": 160
+  },
+  "calibration": {
+    "method": "uniform-core-height",
+    "scale": 0.22839506172839505,
+    "offset": [
+      -16,
+      27
+    ],
+    "sourceCoreBbox": [
+      474,
+      410,
+      783,
+      895
+    ],
+    "anchorCoreBbox": [
+      96,
+      121,
+      159,
+      231
+    ]
+  }
+}

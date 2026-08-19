@@ -1,0 +1,51 @@
+{
+  "schemaVersion": 3,
+  "attemptId": "job-8520f1be804163d0-a006",
+  "jobId": "job-8520f1be804163d0",
+  "ordinal": 6,
+  "parentAttemptId": "job-8520f1be804163d0-a005",
+  "retryFeedbackId": null,
+  "promptDelta": null,
+  "technicalRemediation": true,
+  "state": "technical_failed",
+  "artifacts": {
+    "source": {
+      "path": "Tools/artworks/doge/candidates/doge_capsule_demonbound_cast_dr_body_component_v01.png",
+      "sha256": "a8b14b292ae80279dc3f8a3b60b9735d7c1e292c109c6dfa7f5563eb6d6c6192"
+    },
+    "raw": {
+      "path": "Tools/artworks/pipeline/artifacts/job-8520f1be804163d0/job-8520f1be804163d0-a006/raw.png",
+      "sha256": "a8b14b292ae80279dc3f8a3b60b9735d7c1e292c109c6dfa7f5563eb6d6c6192"
+    },
+    "prepared": {
+      "path": "Tools/artworks/pipeline/artifacts/job-8520f1be804163d0/job-8520f1be804163d0-a006/prepared.png",
+      "sha256": "442bb7a252114ee29a838268f72f37919c65a775d480bce1198eaa94fc10460d"
+    },
+    "maskSource": {
+      "path": "Tools/artworks/doge/demonbound/cast_down_right_body_component_v5_semantic_mask.png",
+      "sha256": "1a978e18552e7b0dbb19e7bbe02ca02a11113864ac5509c6bd43460d40c4876e"
+    },
+    "mask": {
+      "path": "Tools/artworks/pipeline/artifacts/job-8520f1be804163d0/job-8520f1be804163d0-a006/mask.png",
+      "sha256": "1a978e18552e7b0dbb19e7bbe02ca02a11113864ac5509c6bd43460d40c4876e"
+    },
+    "identityMaskSource": {
+      "path": "Tools/artworks/doge/demonbound/demonbound_idle_dr_identity_mask_v1.png",
+      "sha256": "89c86b18c96ae771d31a88a13337f471aa0da7bea114b136cff87255590ba6cb"
+    },
+    "identityMask": {
+      "path": "Tools/artworks/pipeline/artifacts/job-8520f1be804163d0/job-8520f1be804163d0-a006/identity-mask.png",
+      "sha256": "89c86b18c96ae771d31a88a13337f471aa0da7bea114b136cff87255590ba6cb"
+    }
+  },
+  "report": {
+    "path": "Tools/artworks/pipeline/reports/report-903c38a7648cb7c3.json",
+    "sha256": "f3180ee5f562aef05677a66d046ff95f56b1f6b1b66c726d2b8a2640192aab0f"
+  },
+  "approvalId": null,
+  "feedbackId": null,
+  "preparation": {
+    "chroma": null,
+    "chromaTolerance": 0
+  }
+}

@@ -1,0 +1,32 @@
+{
+  "schemaVersion": 3,
+  "attemptId": "job-9c1b93e8a987e7b1-a004",
+  "jobId": "job-9c1b93e8a987e7b1",
+  "ordinal": 4,
+  "parentAttemptId": "job-9c1b93e8a987e7b1-a003",
+  "retryFeedbackId": "feedback-83377588ef80f0db",
+  "promptDelta": null,
+  "technicalRemediation": false,
+  "state": "prepared",
+  "artifacts": {
+    "source": {
+      "path": "Tools/artworks/doge/concepts/doge_capsule_demonbound_cast_dr_body_grip_chroma_source_v04.png",
+      "sha256": "b83baff8b71cc0644e1bf772591e30a0ac259835ebe4e562954ad65e861555be"
+    },
+    "raw": {
+      "path": "Tools/artworks/pipeline/artifacts/job-9c1b93e8a987e7b1/job-9c1b93e8a987e7b1-a004/raw.png",
+      "sha256": "b83baff8b71cc0644e1bf772591e30a0ac259835ebe4e562954ad65e861555be"
+    },
+    "prepared": {
+      "path": "Tools/artworks/pipeline/artifacts/job-9c1b93e8a987e7b1/job-9c1b93e8a987e7b1-a004/prepared.png",
+      "sha256": "8bb434c7ab4b294232b2e4e46cc35b8f4d292f406128031b2cf57852d7e25f8a"
+    }
+  },
+  "report": null,
+  "approvalId": null,
+  "feedbackId": "feedback-b4178b4a469fe9a3",
+  "preparation": {
+    "chroma": "08f909",
+    "chromaTolerance": 20
+  }
+}

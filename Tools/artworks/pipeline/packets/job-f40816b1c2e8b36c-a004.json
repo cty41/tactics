@@ -1,0 +1,38 @@
+{
+  "schemaVersion": 1,
+  "attemptId": "job-f40816b1c2e8b36c-a004",
+  "jobId": "job-f40816b1c2e8b36c",
+  "promptDelta": "Preserve v4's asymmetric rear-layer sword-side grip and rear sword placement. Restore the exact narrower DR capsule width without changing core height; move the opposite hand outward until only a tiny contour crescent remains; place both feet higher relative to the core; use a genuinely uniform pure green background.",
+  "inputs": [
+    {
+      "path": "Tools/artworks/doge/calibrated/doge_capsule_demonbound_idle_dr_v01.png",
+      "role": "core_anchor",
+      "sha256": "21559ca7aedd3e146feb2b93c5a6633affc6ce544122628c960972a982b0b5e7"
+    },
+    {
+      "path": "Tools/artworks/doge/calibrated/doge_capsule_hunter_color_ul_v02.png",
+      "role": "pose_reference",
+      "sha256": "f41e3e6f49abee5888ee74ae7db1d5fff57b9fd90e49d5fae71421394861fb24"
+    }
+  ],
+  "target": {
+    "direction": "up-left",
+    "pose": "idle"
+  },
+  "conceptOnly": false,
+  "contractRequirements": {
+    "imageGenDirective": "Draw behind-core equipment and both hand paws first, then draw the capsule body over their inner portions; only outer arcs may remain visible.",
+    "occlusion": {
+      "layerRules": {
+        "equipment": "behind-core",
+        "far_hand": "behind-core",
+        "near_hand": "behind-core"
+      },
+      "visibilityCaps": {
+        "equipment": 0.12,
+        "far_hand": 0.04,
+        "near_hand": 0.04
+      }
+    }
+  }
+}

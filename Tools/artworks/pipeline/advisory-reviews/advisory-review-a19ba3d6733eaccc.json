@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 2,
+  "advisoryReviewId": "advisory-review-a19ba3d6733eaccc",
+  "attemptId": "job-33b591a0de916181-a001",
+  "candidateSha256": "9b0ea16e8def2a555a9d97e80b64302fdbc15a7bc4a0b50f120bdeccd54d698d",
+  "reviewer": "codex",
+  "risks": [
+    "red gemstone is correctly confined to the guard and eyes no longer cross; however the sprite remains front-facing and symmetric rather than the formal Idle DR three-quarter identity, misses the gray-white forehead blaze and one alternate-color ear, and adds an unapproved pale pommel ornament"
+  ],
+  "recordedAt": "2026-08-18T16:11:00+08:00",
+  "nonBinding": true
+}

@@ -1,0 +1,31 @@
+{
+  "schemaVersion": 1,
+  "attemptId": "job-1b243a2bdfee22b1-a002",
+  "jobId": "job-1b243a2bdfee22b1",
+  "ordinal": 2,
+  "parentAttemptId": "job-1b243a2bdfee22b1-a001",
+  "retryFeedbackId": "feedback-4d59e22a2c8ca5f5",
+  "promptDelta": "Keep the up-left swing and no-scabbard state. Match Idle UL body scale and width exactly; restore its broad shallow gray-white forehead marking; reduce both hands to tiny asymmetric attached outer crescents; move the grip and guard behind the left body contour so the face is unobstructed while the blade emerges toward the up-left target.",
+  "state": "prepared",
+  "artifacts": {
+    "source": {
+      "path": "Tools/artworks/doge/concepts/doge_capsule_demonbound_melee_ul_chroma_source_v02.png",
+      "sha256": "0232b6b961246e49cb512267aa56fc26ceb05a9d248298da09288e5d6a4537cb"
+    },
+    "raw": {
+      "path": "Tools/artworks/pipeline/artifacts/job-1b243a2bdfee22b1/job-1b243a2bdfee22b1-a002/raw.png",
+      "sha256": "0232b6b961246e49cb512267aa56fc26ceb05a9d248298da09288e5d6a4537cb"
+    },
+    "prepared": {
+      "path": "Tools/artworks/pipeline/artifacts/job-1b243a2bdfee22b1/job-1b243a2bdfee22b1-a002/prepared.png",
+      "sha256": "3e54fdbd850cbdd31cc1bc0bb17b9576d80c0f01777e4e4dd94a58007752807b"
+    }
+  },
+  "report": null,
+  "approvalId": null,
+  "feedbackId": "feedback-5ba6a5f6e482300c",
+  "preparation": {
+    "chroma": "00ff00",
+    "chromaTolerance": 96
+  }
+}

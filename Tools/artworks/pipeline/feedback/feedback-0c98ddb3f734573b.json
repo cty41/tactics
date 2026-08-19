@@ -1,0 +1,18 @@
+{
+  "attemptId": "job-d5e63cb8798a9488-a001",
+  "candidateSha256": "00274a0f6385f2d6da8a69105e02c989a2ead75a1572fa532604654f4fc93075",
+  "defects": [
+    "The view remains mostly frontal/upward-looking instead of a native up-left three-quarter back view",
+    "The core reads taller and narrower than the approved compact Idle DR capsule",
+    "Raw output is 1254x1254 with chroma fringe and cannot pass the 256x256 technical contract"
+  ],
+  "feedbackId": "feedback-0c98ddb3f734573b",
+  "nextPromptDelta": "Make the Hunter UL reference dominate orientation only: show the back and left side clearly, keep just a partial muzzle and one eye at the left contour, preserve the exact compact DR core proportions, and leave the sword close behind the near side",
+  "recordedAt": "2026-08-18T08:56:58+08:00",
+  "reviewer": "cty41",
+  "schemaVersion": 1,
+  "strengths": [
+    "Preserves the Doberman face, broad gray-white blaze, alternate-colored ear, split coat, four-paw topology, and recognizable ancestral sword"
+  ],
+  "verdict": "technical_failed"
+}

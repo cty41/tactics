@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 1,
+  "feedbackId": "feedback-2a260f4caa1f9f47",
+  "attemptId": "job-f40816b1c2e8b36c-a005",
+  "candidateSha256": "ef9fd7521afafc4f46ef8fd355fc90337b493e268de61eaebfcd8d2ea3e529f4",
+  "reviewer": "cty41",
+  "verdict": "selected",
+  "strengths": [
+    "User-confirmed v5 rear-layer composition: sword and both hand paws remain behind the core with asymmetric outer arcs; identity and split coat are preserved."
+  ],
+  "defects": [
+    "Core is 7px wider than the DR anchor, accepted as a pose-specific silhouette difference."
+  ],
+  "nextPromptDelta": "",
+  "recordedAt": "2026-08-18T13:29:29+08:00"
+}

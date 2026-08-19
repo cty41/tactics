@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 3,
+  "componentDerivationId": "component-derivation-939aa7a88ea3060a",
+  "contractId": "contract-8a1129a65819d6d4",
+  "sourceAttemptId": "job-8520f1be804163d0-a011",
+  "sourceCandidateSha256": "442bb7a252114ee29a838268f72f37919c65a775d480bce1198eaa94fc10460d",
+  "sourceMaskSha256": "7bf915468e3863bda493637edb8a77408e0c9a3bc63f0a868d54124880c54448",
+  "label": "near_hand",
+  "artifact": {
+    "path": "Tools/artworks/pipeline/artifacts/job-939aa7a88ea3060a/job-939aa7a88ea3060a-a001/prepared.png",
+    "sha256": "401475f65f632f9613391f44f6bb488a1903cc96c75f715f308e23d088c30a3a"
+  },
+  "maskArtifact": {
+    "path": "Tools/artworks/pipeline/artifacts/job-939aa7a88ea3060a/job-939aa7a88ea3060a-a001/mask.png",
+    "sha256": "78d3b2429f83fac05b7c083420d729e36ad1098794d84dab7012423c77527815"
+  }
+}

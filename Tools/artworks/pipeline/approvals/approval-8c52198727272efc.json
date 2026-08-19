@@ -1,0 +1,39 @@
+{
+  "schemaVersion": 1,
+  "approvalId": "approval-8c52198727272efc",
+  "attemptId": "job-f40816b1c2e8b36c-a005",
+  "candidateSha256": "ef9fd7521afafc4f46ef8fd355fc90337b493e268de61eaebfcd8d2ea3e529f4",
+  "maskSha256": "2fa658cdf1f956b2b10422703aa8e74ebf98f6a7ed13fb4e118a7d81afdadbde",
+  "reportSha256": "97197c0e10dd5f0be2ffd9a0b7e247745ce95096c01451a0b1b80342b91e3a78",
+  "contractId": "contract-075b9db204c60d9b",
+  "contractSha256": "6b7024c0152f286da5c0c8133cb45cf6fbd6f4316c9af4792e5e9f75f71b5a99",
+  "reviewSha256": {
+    "depthReview": "2f5d1ec6adbca129620837e566de69414df39fabf45b6ae37d62084ffb4fb817",
+    "overlay": "d4c808a9f9f6800a2903ad1f239c5aeb3197b8fc19e7d80c6d7b85517a781e2f",
+    "preview128": "bf9a3b20c47fd0a47c8b2281eabec579a491fd3531ace24ee311add404e724e9",
+    "tile64x32": "041964a65c7d64b7df072aa9acc24699c793823dc43e79a5d8c808839c1b5c36"
+  },
+  "reviewer": "cty41",
+  "decision": "approved",
+  "approvalMode": "gate-exception",
+  "waivedIssues": [
+    {
+      "code": "core_size_out_of_tolerance",
+      "candidateCoreSize": [
+        71,
+        110
+      ],
+      "anchorCoreSize": [
+        64,
+        111
+      ],
+      "delta": [
+        7,
+        -1
+      ],
+      "tolerancePx": 3
+    }
+  ],
+  "reason": "User explicitly confirmed this Idle UL composition; the 7px width difference is accepted while all rear-layer, four-paw, center, baseline, and topology checks pass.",
+  "decidedAt": "2026-08-18T13:29:37+08:00"
+}

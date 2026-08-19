@@ -1,0 +1,28 @@
+{
+  "schemaVersion": 2,
+  "feedbackId": "feedback-6a3aa1399829caf4",
+  "attemptId": "job-9c1b93e8a987e7b1-a006",
+  "candidateSha256": "f4ec3c378bd293f0c51000060c2d4253a4eacc29a509ade41c3d55dd9149644f",
+  "reviewer": "codex",
+  "verdict": "technical_failed",
+  "strengths": [
+    "Chroma, exact palette, baseline, four-paw topology and core dimensions now pass"
+  ],
+  "defects": [
+    "Head appendage label extends below the core top and creates a disconnected core row"
+  ],
+  "nextPromptDelta": "No regeneration; constrain ear labels above the core top",
+  "recordedAt": "2026-08-19T19:47:06.3150888+08:00",
+  "authorType": "agent",
+  "categories": [
+    "processing",
+    "topology"
+  ],
+  "disposition": "technical_failed",
+  "frozenInvariants": [
+    "cleaned visible pixels,core geometry,paw labels,foot baseline"
+  ],
+  "pendingFixes": [
+    "ear mask boundary"
+  ]
+}

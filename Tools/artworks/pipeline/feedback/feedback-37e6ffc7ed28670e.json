@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 1,
+  "feedbackId": "feedback-37e6ffc7ed28670e",
+  "attemptId": "job-8511c38401ba2a99-a003",
+  "candidateSha256": "f51b15d706d251ffc5e03e07aa42154cf4b19bb685a52cc5d276a9968d38462a",
+  "reviewer": "codex",
+  "verdict": "retry",
+  "strengths": [
+    "The scabbard is now completely absent, the held sword again reads as a compact metallic ornate ancestral weapon, the serious brow and closed mouth are substantially improved, the split coat and separate forehead blaze remain clear, and the core width has improved from v6's 93 pixels to 70 pixels."
+  ],
+  "defects": [
+    "The 70-pixel calibrated core is still 6 pixels wider than the 64-pixel anchor; the body is nearly upright and loses the committed forward attack lean; the near sword hand remains a complete circular paw instead of a mostly occluded edge arc; the pupils still sit slightly low rather than clearly tracking the target torso; the shallow sword axis and feet extend the alpha baseline to y=243; chroma fringe/residue, a disconnected core row, and semantic-mask overshoot remain."
+  ],
+  "nextPromptDelta": "Preserve v7's total removal of the scabbard, metallic ornate compact sword, serious closed mouth, split coat, forehead blaze, and alternate ear. Narrow the core another 6 pixels to the exact 64-pixel Idle DR width without changing height, then tilt the entire rigid capsule modestly screen-right to restore attack commitment. Raise both pupils one small step toward the target torso. Hide most of the sword hand behind the lower front-center body contour so only a small attached arc remains, keep the far hand as a smaller opposite arc, steepen the lower-right sword axis slightly, and keep both feet and the entire sword at or above y=236.",
+  "recordedAt": "2026-08-18T11:24:01.9487243+08:00"
+}

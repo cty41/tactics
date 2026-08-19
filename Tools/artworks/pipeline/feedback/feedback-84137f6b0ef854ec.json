@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 1,
+  "feedbackId": "feedback-84137f6b0ef854ec",
+  "attemptId": "job-3d0573f3f442934f-a001",
+  "candidateSha256": "4c819f3813e2627689fd1ec888622c1768ee186bcd44ca11187bd3a1d0efda3b",
+  "reviewer": "codex",
+  "verdict": "retry",
+  "strengths": [
+    "The pupils now track the lower-right attack line instead of looking at the viewer, the broad gray-white forehead blaze is restored, the capsule has a readable forward attack lean, the scabbard remains completely absent, and all four paws remain visible."
+  ],
+  "defects": [
+    "The sword overshoots the requested balanced scale and again dominates the sprite, the sword hand is still a complete circular disk, the far hand appears on the wrong screen side, the calibrated core bbox is 76 pixels wide versus the 64-pixel anchor, the alpha baseline reaches y=239, and chroma residue/fringe plus a disconnected core row remain."
+  ],
+  "nextPromptDelta": "Preserve v3's target-directed lower-right gaze, restored broad forehead blaze, forward lean, split coat, and no-scabbard state. Reduce the entire sword by about 25–30% while keeping it longer than v2 and narrow/ornate; make the sword paw a mostly occluded edge arc and return the far paw to the opposite screen-right contour; lock the capsule to the 64-pixel anchor width and y=236 baseline; require an exact flat #00FF00 background with no green inside the subject.",
+  "recordedAt": "2026-08-18T10:25:38.8239294+08:00"
+}

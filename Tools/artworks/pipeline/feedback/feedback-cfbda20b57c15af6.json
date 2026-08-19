@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 1,
+  "feedbackId": "feedback-cfbda20b57c15af6",
+  "attemptId": "job-8511c38401ba2a99-a001",
+  "candidateSha256": "9eebd1c3fb240109b37da337d440a672d2ec9c590a0ba84b7007affe16a27201",
+  "reviewer": "codex",
+  "verdict": "retry",
+  "strengths": [
+    "The broad separate gray-white forehead blaze and far hand return, the four-paw topology and split coat are preserved, and the active frame remains free of any scabbard."
+  ],
+  "defects": [
+    "Both hand paws are oversized complete circular disks, the sword is again too long and visually dominant with an overly horizontal idle-like axis, the body lacks readable forward attack lean, the pupils and soft mouth drift back toward a viewer-facing Idle expression, the calibrated core is 77 pixels wide versus the 64-pixel anchor, the alpha baseline reaches y=238, and chroma residue/fringe plus a disconnected core row remain."
+  ],
+  "nextPromptDelta": "Preserve the restored forehead blaze, alternate ear, far hand, split coat, and no-scabbard state. Re-establish v4's raised target-torso gaze and serious closed-mouth brows, rotate the blade to a lower-right cleave axis and shorten it about 20%, shrink both hands to mostly occluded asymmetric edge arcs, restore a readable rigid-body screen-right lean, lock core width to 64 pixels and baseline y=236, and use exact flat #00FF00 without contamination.",
+  "recordedAt": "2026-08-18T11:05:43+08:00"
+}

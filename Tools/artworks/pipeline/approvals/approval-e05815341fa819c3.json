@@ -1,0 +1,18 @@
+{
+  "schemaVersion": 3,
+  "approvalId": "approval-e05815341fa819c3",
+  "attemptId": "job-939aa7a88ea3060a-a001",
+  "candidateSha256": "401475f65f632f9613391f44f6bb488a1903cc96c75f715f308e23d088c30a3a",
+  "maskSha256": "78d3b2429f83fac05b7c083420d729e36ad1098794d84dab7012423c77527815",
+  "reviewer": "cty41",
+  "reviewSha256": {
+    "overlay": "63a9817ba04f85a61ab59f39a58180f9e6c98a0d533a678101a64b197049ce6d",
+    "preview128": "e49362e5f77995cf507eee75a0dda0cf6ade927613261bdd4d7dd064f5ca594f",
+    "tile64x32": "c0ab552cc03352ce74351b84c40309f8a984feae679f5ca9ec5a05c767973a73"
+  },
+  "decision": "approved",
+  "reason": "Technical re-derivation from the accepted body after excluding the stray eye-edge row; the accepted near-paw grip pixels are otherwise unchanged.",
+  "decidedAt": "2026-08-19T15:47:00+08:00",
+  "annotation": null,
+  "reportSha256": "aa31af8c561ae8d3a16b915fb4184c15d785983a66ac237b8fdb2782f45f3091"
+}

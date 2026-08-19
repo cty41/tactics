@@ -1,0 +1,40 @@
+{
+  "schemaVersion": 2,
+  "contractId": "contract-69c81766e320c2d4",
+  "assetId": "demonbound-cast-dr-raised",
+  "approvedAssetId": "demonbound-cast",
+  "kind": "action_pose",
+  "direction": "down-right",
+  "pose": "cast",
+  "anchor": {
+    "path": "Tools/artworks/doge/calibrated/doge_capsule_demonbound_idle_dr_v01.png",
+    "sha256": "21559ca7aedd3e146feb2b93c5a6633affc6ce544122628c960972a982b0b5e7",
+    "maskPath": "Tools/artworks/pipeline/artifacts/job-168fd4b2f49ff6ca/job-168fd4b2f49ff6ca-a001/mask.png",
+    "maskSha256": "9f4968081aa296e73ec215a3a7e89383ad6e34c7d86fe7251af0b3511f12b2c8"
+  },
+  "maskRequired": true,
+  "noArms": true,
+  "handSides": {
+    "near_hand": "left",
+    "far_hand": "right"
+  },
+  "occlusion": null,
+  "compositionSpec": {
+    "compositionId": "composition-1169d83710f61142",
+    "sha256": "5b0f3f1e9e3a4ed1d3e7c70a42a1329153c3631a1f7118ba9c317f133e0892d1"
+  },
+  "requiresInvocation": true,
+  "tolerances": {
+    "sizePx": 3,
+    "centerPx": 2
+  },
+  "outputs": {
+    "master": "Tools/artworks/doge/calibrated/doge_capsule_demonbound_cast_dr_v01.png",
+    "preview": "Tools/artworks/doge/calibrated/doge_capsule_demonbound_cast_dr_v01_128.png"
+  },
+  "rights": {
+    "rightsHolder": "cty41",
+    "license": "CC-BY-4.0",
+    "provenance": "project-owned-gpt-generated"
+  }
+}

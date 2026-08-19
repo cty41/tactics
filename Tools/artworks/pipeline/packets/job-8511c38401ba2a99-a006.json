@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 1,
+  "attemptId": "job-8511c38401ba2a99-a006",
+  "jobId": "job-8511c38401ba2a99",
+  "promptDelta": "Preserve v9's exact single small guard gem, compact metallic blade, and total absence of a scabbard. Restore the separate light gray-white forehead fur patch as a shallow horizontal irregular patch visibly distinct from the gray half-coat. Return to the exact 64-pixel Idle DR core, tilt the rigid body screen-right, use serious off-camera target tracking, reduce both hands to occluded crescents, steepen the lower-right blade axis, and keep all pixels at or above y=236.",
+  "inputs": [
+    {
+      "role": "core_anchor",
+      "path": "Tools/artworks/doge/calibrated/doge_capsule_demonbound_idle_dr_v01.png",
+      "sha256": "21559ca7aedd3e146feb2b93c5a6633affc6ce544122628c960972a982b0b5e7"
+    },
+    {
+      "role": "pose_reference",
+      "path": "godot/assets/units/actions/doge_hunter_melee_attack_dr.png",
+      "sha256": "122484a3bb1d2c0c301af1b1c712a5a2331decfe75ada4b88edd799f29bec8d6"
+    }
+  ],
+  "target": {
+    "direction": "down-right",
+    "pose": "melee"
+  },
+  "conceptOnly": false,
+  "contractRequirements": null
+}

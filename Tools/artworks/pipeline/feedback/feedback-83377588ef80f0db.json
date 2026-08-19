@@ -1,0 +1,27 @@
+{
+  "schemaVersion": 2,
+  "feedbackId": "feedback-83377588ef80f0db",
+  "attemptId": "job-9c1b93e8a987e7b1-a003",
+  "candidateSha256": "0d9884d42690c8080b3faf0839d5cdd760fa4d82b556382417c467b955daff5c",
+  "reviewer": "cty41",
+  "verdict": "retry",
+  "strengths": [
+    "Diagonal horizontal paw offset reads more naturally"
+  ],
+  "defects": [
+    "Lower near paw sits too far below the upper far paw"
+  ],
+  "nextPromptDelta": "Move the lower near paw upward while preserving the subtle left-right stagger and partial foreground overlap",
+  "recordedAt": "2026-08-19T19:37:05.9266647+08:00",
+  "authorType": "human",
+  "categories": [
+    "topology"
+  ],
+  "disposition": "retry",
+  "frozenInvariants": [
+    "body identity,core geometry,DR direction,four paws,no limbs,diagonal horizontal paw offset,70 percent sword scale"
+  ],
+  "pendingFixes": [
+    "reduce vertical distance between gripping paws"
+  ]
+}

@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 3,
+  "componentDerivationId": "component-derivation-5cfeec02ff1366f9",
+  "contractId": "contract-746b1cd1587dcdb6",
+  "sourceAttemptId": "job-8520f1be804163d0-a008",
+  "sourceCandidateSha256": "442bb7a252114ee29a838268f72f37919c65a775d480bce1198eaa94fc10460d",
+  "sourceMaskSha256": "8b41585a6a823be60d587b33aa0b6334a1bfb7156676bb329eae5823efa7aa1f",
+  "label": "far_hand",
+  "artifact": {
+    "path": "Tools/artworks/pipeline/artifacts/job-5cfeec02ff1366f9/job-5cfeec02ff1366f9-a001/prepared.png",
+    "sha256": "3e9effad8e34108c73c438c018a3b2d0bed8c3387e949bd0dd0cf7fd35260d6a"
+  },
+  "maskArtifact": {
+    "path": "Tools/artworks/pipeline/artifacts/job-5cfeec02ff1366f9/job-5cfeec02ff1366f9-a001/mask.png",
+    "sha256": "1c2012e6b74990b3dfc8b5e581b84b565727efe3121dbd43f722a7d8c373d6e5"
+  }
+}

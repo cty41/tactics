@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 2,
+  "advisoryReviewId": "advisory-review-bac976a200c0cfa3",
+  "attemptId": "job-3adba83fc2881bb0-a001",
+  "candidateSha256": "f64cffdd2c24bb678592534c117ccf8e994fe9fc7494d882470d59ecc143f930",
+  "reviewer": "codex-agent",
+  "risks": [
+    "Body-only layer successfully avoids weapon/eye occlusion coupling. Visual risk remains: the three-quarter down-right read is weak and may resolve as near-frontal; human review must decide whether the coat split, alternate ear, forehead blaze, and compact empty grip still match the approved Idle DR identity."
+  ],
+  "recordedAt": "2026-08-19T10:45:00+08:00",
+  "nonBinding": true
+}

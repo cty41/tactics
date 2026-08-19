@@ -1,0 +1,5 @@
+Transparent-background 2D game sprite, 256x256 master, clear down-right three-quarter view. Use the supplied formal Demonbound Idle DR as the sole identity and exact core-height anchor.
+
+Create only the no-sword BODY LAYER for Cast. Match the Idle DR core capsule height exactly: the collar-to-foot body section must not be longer or taller than Idle. Keep the head, ears, and four paws compact; shorten the torso rather than stretching the body. Maintain a straight equal-width capsule, two front paws directly attached at a tight empty chest-centre grip, and two rear paws directly attached at the normal baseline. No arms, no legs, and no connecting limb segments.
+
+Keep the same flat irregular gray-white forehead blaze, single alternate-colour ear and half-body alternate coat as Idle; no diamonds, crests, ornaments or symbols. Keep the tighter asymmetric DR eyes and serious focus. Absolutely no sword, scabbard, metal, glow, magic, particles, text, ground or shadow; uniform #00ff00 chroma background only.

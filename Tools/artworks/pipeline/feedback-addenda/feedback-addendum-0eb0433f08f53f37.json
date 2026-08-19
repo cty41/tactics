@@ -1,0 +1,13 @@
+{
+  "schemaVersion": 2,
+  "feedbackAddendumId": "feedback-addendum-0eb0433f08f53f37",
+  "attemptId": "job-d3e64d0255927458-a001",
+  "parentFeedbackId": "feedback-73c35d3f2319b88a",
+  "reviewer": "cty41",
+  "defects": [
+    "User accepts the v3 body layer visually as the temporary body layer for standalone sword compositing; this is not a formal Sprite approval."
+  ],
+  "recordedAt": "2026-08-19T11:40:00+08:00",
+  "authorType": "human",
+  "disposition": "selected"
+}

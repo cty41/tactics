@@ -1,0 +1,18 @@
+{
+  "schemaVersion": 3,
+  "approvalId": "approval-4f80f36a7a157c33",
+  "attemptId": "job-80191342a2559d49-a003",
+  "candidateSha256": "92a412e50c736c9799ef8419f61b35f333cd541c0bab65212a352778872a67b0",
+  "maskSha256": "27607f13120b050404ca8529086828496542aaee7bde24c4c7917122d61ef37c",
+  "reviewer": "cty41",
+  "reviewSha256": {
+    "overlay": "89bc993526908b753d18185e7815ed4d4ab7de308a97ca856bf3ff3512d4c564",
+    "preview128": "3b0d5699a1b1edba60c48656e04db3f2121e14e8be18ccd34c8d0a5d39119268",
+    "tile64x32": "f3abc3095a8fd1435328e3463b6918c3bbf3798196a43a257866de862e418436"
+  },
+  "decision": "approved",
+  "reason": "User confirmed the sword dimensions and design for the Cast DR assembly at 70 percent scale.",
+  "decidedAt": "2026-08-19T15:41:00.7260740+08:00",
+  "annotation": null,
+  "reportSha256": "0112f03e5c4d96b759bddaafbc42bf4a33f4e0f4c8221f4beeb7a4ade34606e2"
+}

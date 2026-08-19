@@ -1,0 +1,28 @@
+{
+  "schemaVersion": 2,
+  "feedbackId": "feedback-5103317034203023",
+  "attemptId": "job-b62cc7f9ef78fcf0-a002",
+  "candidateSha256": "854e7d3711f3a23102925dced3684794e157058536a5fa66f70e3d4551a3866f",
+  "reviewer": "cty41",
+  "verdict": "retry",
+  "strengths": [
+    "Shorter/wider capsule and rear-dominant single-eye isometric read are improved"
+  ],
+  "defects": [
+    "Both rear feet remain almost complete foreground ovals; body does not occlude their upper/inner portions enough"
+  ],
+  "nextPromptDelta": "Body lower silhouette must be foreground over feet; near left foot 60-70 percent visible, far right foot 35-50 percent visible and slightly higher",
+  "recordedAt": "2026-08-19T21:02:20.2459981+08:00",
+  "authorType": "human",
+  "categories": [
+    "occlusion",
+    "topology"
+  ],
+  "disposition": "retry",
+  "frozenInvariants": [
+    "rear-dominant UL angle,one-eye facial sliver,compact core,no equipment,no front paws"
+  ],
+  "pendingFixes": [
+    "body-over-rear-feet occlusion and near/far asymmetry"
+  ]
+}

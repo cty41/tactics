@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 1,
+  "feedbackId": "feedback-f72602ec4d99607e",
+  "attemptId": "job-38caaa8120d4a303-a003",
+  "candidateSha256": "a6e38bd8a44b81d2575b701c71f24ba9b57b7d8c9b0bd7e868e2d0b3dcc3a170",
+  "reviewer": "cty41",
+  "verdict": "selected",
+  "strengths": [
+    "User selected v7 as the formal Melee UL candidate. It preserves the correct below-eye blade exit, rear-layer grip, subtle left attack lean, formal-like core scale, small attached hand arcs, split coat, forehead patch, alternate ear, and no-scabbard state."
+  ],
+  "defects": [
+    "Final status remains contingent on semantic mask, deterministic calibration, occlusion review, Tile Review, and bound approval receipt."
+  ],
+  "nextPromptDelta": "",
+  "recordedAt": "2026-08-18T14:25:33+08:00"
+}

@@ -1,0 +1,45 @@
+{
+  "schemaVersion": 3,
+  "componentMigrationId": "component-migration-97104915e53131ca",
+  "contractId": "contract-735f05946e8cbfb0",
+  "contractSha256": "d4e304d0e9944c1fa7056fc1253f678d1f54fa3b32ced8d24769c2f364da27de",
+  "source": {
+    "path": "Tools/artworks/doge/concepts/doge_capsule_demonbound_cast_dr_body_layer_chess_source_v05.png",
+    "sha256": "f638a12a3d74dc4c1630a62eb1300c58b797624ea16082034ee973b94aac6a84"
+  },
+  "prepared": {
+    "path": "Tools/artworks/doge/candidates/doge_capsule_demonbound_cast_dr_body_component_v01.png",
+    "sha256": "a8b14b292ae80279dc3f8a3b60b9735d7c1e292c109c6dfa7f5563eb6d6c6192"
+  },
+  "processing": {
+    "operation": "pre-v3 deterministic preparation",
+    "backgroundRemoval": {
+      "method": "edge-connected flood fill",
+      "seed": [
+        0,
+        0
+      ],
+      "fuzzPercent": 8
+    },
+    "calibration": {
+      "method": "uniform alpha-bbox fit and integer placement",
+      "targetSubjectSize": [
+        69,
+        128
+      ],
+      "targetOffset": [
+        96,
+        109
+      ],
+      "canvas": [
+        256,
+        256
+      ]
+    },
+    "transparentRgb": "zero"
+  },
+  "reviewer": "cty41",
+  "reason": "User accepted the closer two-paw Cast DR body composition; preserve the pre-v3 generation without inventing an invocation.",
+  "acceptedAt": "2026-08-19T15:08:41.9406076+08:00",
+  "invocationStatus": "missing-pre-v3"
+}

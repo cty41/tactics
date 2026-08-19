@@ -1,0 +1,53 @@
+{
+  "schemaVersion": 3,
+  "contractId": "contract-c2143454bbf314ac",
+  "assetId": "demonbound-cast-dr",
+  "approvedAssetId": "demonbound",
+  "kind": "action_pose",
+  "direction": "down-right",
+  "pose": "cast",
+  "anchor": {
+    "path": "Tools/artworks/doge/calibrated/doge_capsule_demonbound_idle_dr_v01.png",
+    "sha256": "21559ca7aedd3e146feb2b93c5a6633affc6ce544122628c960972a982b0b5e7",
+    "maskPath": "Tools/artworks/pipeline/artifacts/job-168fd4b2f49ff6ca/job-168fd4b2f49ff6ca-a001/mask.png",
+    "maskSha256": "9f4968081aa296e73ec215a3a7e89383ad6e34c7d86fe7251af0b3511f12b2c8"
+  },
+  "maskRequired": true,
+  "noArms": true,
+  "handSides": {
+    "near_hand": null,
+    "far_hand": null
+  },
+  "occlusion": null,
+  "compositionSpec": {
+    "compositionId": "composition-fc2f6bfaf683d8a9",
+    "sha256": "ce5ec1926ece7d1ff14673c6b7dfc7b3055afa6a8fb50ba6d7ed8dd2429e85a7"
+  },
+  "identitySpec": {
+    "anchorMaskPath": "Tools/artworks/doge/demonbound/demonbound_idle_dr_identity_mask_v1.png",
+    "anchorMaskSha256": "89c86b18c96ae771d31a88a13337f471aa0da7bea114b136cff87255590ba6cb",
+    "foreheadBlazeMinIou": 0.45,
+    "foreheadBlazeAreaRatio": [
+      0.65,
+      1.45
+    ]
+  },
+  "requiresInvocation": false,
+  "tolerances": {
+    "sizePx": 3,
+    "centerPx": 2
+  },
+  "outputs": {
+    "master": "Tools/artworks/doge/calibrated/doge_capsule_demonbound_cast_dr_v01.png",
+    "preview": "Tools/artworks/doge/calibrated/doge_capsule_demonbound_cast_dr_v01_128.png"
+  },
+  "rights": {
+    "rightsHolder": "cty41",
+    "license": "CC-BY-4.0",
+    "provenance": "project-owned-derived"
+  },
+  "assetRole": "assembled_sprite",
+  "componentKind": null,
+  "sourceMode": "derived",
+  "runtimeEligible": true
+}

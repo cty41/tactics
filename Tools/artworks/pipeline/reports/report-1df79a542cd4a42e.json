@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "attemptId": "job-408b88b54a0b21df-a001",
+  "inputSha256": "16262fd98ba2bdaa1a36319848b2bf57c8d06665b43cd6a21dc060e17528faba",
+  "maskSha256": "966489c3ff1bf43ccea1c3f1d2ef66e7b4fa51c0a3037a10ebd63608e28bf51a",
+  "technical": {
+    "size": [
+      256,
+      256
+    ],
+    "alphaBbox": [
+      135,
+      190,
+      156,
+      210
+    ]
+  },
+  "geometry": {
+    "componentKind": "paw_overlay"
+  },
+  "issues": [],
+  "passed": true
+}

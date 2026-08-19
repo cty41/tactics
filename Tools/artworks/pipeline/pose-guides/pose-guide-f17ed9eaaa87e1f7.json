@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 2,
+  "poseGuideId": "pose-guide-f17ed9eaaa87e1f7",
+  "compositionId": "composition-d0b9bf58406be0c5",
+  "compositionSha256": "c84a61c07947fdab74dfa350e3b121a9ca57362ea57cd752248d1b327465f223",
+  "anchorSha256": "21559ca7aedd3e146feb2b93c5a6633affc6ce544122628c960972a982b0b5e7",
+  "artifact": {
+    "path": "Tools/artworks/doge/demonbound/cast_down_right_body_grip_pose_guide_v1.png",
+    "sha256": "6730bf1ee2c27905a257bde4055e937c48902b82dcb1e64c87f2f8680f09b3d0"
+  },
+  "role": "supporting-derived"
+}

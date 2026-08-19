@@ -1,0 +1,13 @@
+{
+  "schemaVersion": 2,
+  "feedbackAddendumId": "feedback-addendum-cb2f23a67e55e871",
+  "attemptId": "job-d3e64d0255927458-a001",
+  "parentFeedbackId": "feedback-73c35d3f2319b88a",
+  "reviewer": "cty41",
+  "defects": [
+    "Tilemap comparison shows the Cast body is visibly taller than Idle DR from collar to feet. Regenerate the body at Idle core height before further sword work."
+  ],
+  "recordedAt": "2026-08-19T11:58:00+08:00",
+  "authorType": "human",
+  "disposition": "retry"
+}

@@ -1,0 +1,56 @@
+{
+  "schemaVersion": 1,
+  "attemptId": "job-871408b81417ce24-a001",
+  "jobId": "job-871408b81417ce24",
+  "ordinal": 1,
+  "parentAttemptId": null,
+  "retryFeedbackId": null,
+  "promptDelta": null,
+  "state": "technical_failed",
+  "artifacts": {
+    "source": {
+      "path": "Tools/artworks/doge/concepts/doge_capsule_demonbound_melee_dr_chroma_source_v11.png",
+      "sha256": "c7a15fd631771422f949871b16d7cd0b087fe1ffd01f5ac7b88027f989e545fc"
+    },
+    "raw": {
+      "path": "Tools/artworks/pipeline/artifacts/job-871408b81417ce24/job-871408b81417ce24-a001/raw.png",
+      "sha256": "c7a15fd631771422f949871b16d7cd0b087fe1ffd01f5ac7b88027f989e545fc"
+    },
+    "prepared": {
+      "path": "Tools/artworks/pipeline/artifacts/job-871408b81417ce24/job-871408b81417ce24-a001/prepared.png",
+      "sha256": "6fea99320acb27d47a46a8cff08bb4fe69e67cb9ed0c71717c28ff2ed892c9c0"
+    },
+    "maskSource": {
+      "path": "Tools/artworks/pipeline/masks/demonbound-melee-dr-v11-source-mask.png",
+      "sha256": "b1a511ba89fefddb523fc22fd5cc1948d74f873b3b3f6b4c7d483267e7b26ea6"
+    },
+    "mask": {
+      "path": "Tools/artworks/pipeline/artifacts/job-871408b81417ce24/job-871408b81417ce24-a001/mask.png",
+      "sha256": "b1a511ba89fefddb523fc22fd5cc1948d74f873b3b3f6b4c7d483267e7b26ea6"
+    },
+    "review": {
+      "overlay": {
+        "path": "Tools/artworks/pipeline/reviews/job-871408b81417ce24-a001/overlay.png",
+        "sha256": "c506db597e348c65bab1326d34355dc4e381fe24fb395c49d536a75eeda7174f"
+      },
+      "preview128": {
+        "path": "Tools/artworks/pipeline/reviews/job-871408b81417ce24-a001/preview128.png",
+        "sha256": "e4537ba8558ca71260a3d5203ed988fbe9978cb190eebcd5fc06c1a2015a8760"
+      },
+      "tile64x32": {
+        "path": "Tools/artworks/pipeline/reviews/job-871408b81417ce24-a001/tile64x32.png",
+        "sha256": "0d185fbe636f043d952ffcd8f5beb9a2f99e2f3a52c98d5bd58566bb0f4a7759"
+      }
+    }
+  },
+  "report": {
+    "path": "Tools/artworks/pipeline/reports/report-bca884c95d501084.json",
+    "sha256": "fe49eebaf505bc042061d3036b189ef5e4a274476124529a2ac9794a075c2414"
+  },
+  "approvalId": null,
+  "feedbackId": "feedback-7ad36f3df82affc1",
+  "preparation": {
+    "chroma": "00ff00",
+    "chromaTolerance": 160
+  }
+}

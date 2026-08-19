@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 2,
+  "advisoryReviewId": "advisory-review-923a7d93e5e7806c",
+  "attemptId": "job-ce5a38dfdcdcb04b-a001",
+  "candidateSha256": "a043b8db3863a7f1c79896dcbd68e155f5a8752da42e08509b61694cf0684ed5",
+  "reviewer": "codex",
+  "risks": [
+    "front-facing rather than DR three-quarter; body/read deviates from Idle DR; symmetric oversized paws and two extra red gems; sword and guard are oversized; serious upward gaze, half-body heterochromia, and forehead blaze are not retained"
+  ],
+  "recordedAt": "2026-08-18T15:31:00+08:00",
+  "nonBinding": true
+}

@@ -4,7 +4,7 @@ resource: https://github.com/cty41/tactics/tree/main/Tools/artworks
 title: Pure Run Artwork Pipeline
 description: Pure Run 角色美术的生成、去幕、尺寸校准、Review 与提交入口。
 tags: [operations, pure-run, artwork, sprite, unity]
-timestamp: "2026-08-18T01:07:37+08:00"
+timestamp: "2026-08-18T20:54:40+08:00"
 status: active
 catalog_scope: pure-run-artwork
 repo_paths:
@@ -14,7 +14,7 @@ repo_paths:
   - godot/assets
   - Tools/public-release/asset-provenance.json
 verified_revision: c68dbebe
-source_fingerprint: sha256:f85f47e03ccaf588977823bbff1f3f9649ef48f04e1678b5d41c03293505006f
+source_fingerprint: sha256:3b126263205eb3d0ec5196d364b994937848ce3d83b25b191cd6ab2e6af8e7b4
 ---
 
 # Pure Run 角色美术流水线
@@ -23,9 +23,12 @@ source_fingerprint: sha256:f85f47e03ccaf588977823bbff1f3f9649ef48f04e1678b5d41c0
 
 ## Current State
 
-- `Tools/artworks/pipeline` 现为 schema v1 合同状态机：合同、job、attempt、不可变验证报告、人工 approval receipt 与 promotion 均绑定 SHA-256。ImageGen 保持外部调用；本地状态固定沿 `ready -> ingested -> prepared -> annotated -> review_pending -> approved/rejected -> promoted`，技术失败只能新建 retry。385 张历史 PNG 已逐文件登记，其中 59 张为 `legacy-approved`、128 张为 `legacy-rejected`、198 张为 `legacy-unresolved`；未知血缘不推断且不能作为母图。
-- Demonbound 垂直切片已登记固定 prompt、Hunter bootstrap anchor、原始 ImageGen 输出与旧校准候选。1254px 原图按合同进入 `technical_failed`；旧候选停在 `prepared`，等待经人工审核的语义蒙版，不因完整 AABB 校准或聊天确认自动晋升。
+- `Tools/artworks/pipeline` 读取 schema v1/v2/v3 且不改写历史记录。v2 对高风险动作增加 `compositionSpec`、确定性 pose guide、candidate annotations、编译 prompt、ImageGen invocation/delivery/failure receipt、结构化 feedback 与非绑定 advisory。v3 增加受控 `body/equipment/paw_overlay` 组件与 `assembled_sprite`：组件必须独立验证和人工批准、永不直接晋升；爪层只能从获批身体语义蒙版派生；assembly 只允许等比整数缩放、整数平移、水平翻转与固定层序 Alpha 合成，并绑定全部输入/蒙版/变换哈希。最终 Sprite 必须另行验证、生成 `assemblyLayerReview` 并获得独立 `cty41` receipt，组件 approval 不能替代完整批准。动作、死亡、遮挡或含姿态参考的生成 job 没有构图规范和导引时不得创建；成功输出必须匹配 invocation 才能 ingest，调用失败不产生 raw SHA。Agent/advisory 不能批准。相同 raw 的技术重处理不增加唯一输出数；唯一几何例外仍是 `core_size_out_of_tolerance`，且不能覆盖其他技术或语义问题。纯美术任务默认不运行完整 Godot Verify。
+- Demonbound 九姿态 series 的顺序固定为 Idle、Melee、Cast、Hit 的 DR/UL 与单张 Death。Melee DR v9 已正式晋升；Melee UL 采用用户选定的 v7，保持 raw SHA `d1f47af...3ddf`，经技术重处理后只豁免核心宽度相对 Idle UL 锚点 `-4px` 的尺寸差，并以 `approval-b416727c3f90417d` 晋升。v6 以 Human feedback addendum 保留为 backup。Series 已推进到 Cast DR；它是首个原生 v2 job，已具备 composition、pose guide、compiled prompt、invocation 和 delivery receipt，真实 v1 候选等待逐版本人工视觉审核，不得自动批准。
+- Demonbound 的 Hunter bootstrap 与 Idle DR 已获 `cty41` receipt，Idle DR 已晋升为后续唯一身份/核心锚点。用户要求后续每个版本逐次人工审核。Idle UL v1/v2 各占一个唯一输出并保持失败：v1 方向和体型漂移；v2 虽形成背向轮廓，但剑与持剑爪错误位于前层且缺少远手。剩余版本必须先通过新增的 behind-core 遮挡合同、统一核心校准和 depth Review。
+- 背向合同可将近手、远手和装备声明为 `behind-core` 并限制可见面积；验证拒绝后层标签侵入批准核心、核心逐行断裂、完整外露手爪或缺失 depth Review。`calibrate-core` 将高分辨率 prepared 图与同坐标语义蒙版用同一统一比例和位移输出到 `256×256`，保留原始证据且禁止单轴拉伸。
 - `c68dbebe` 是当前已提交角色美术的初始验证锚点；设计层正式资产由 Doge `calibrated` 与敌人 `approved` 共同组成，旧版本保留在 `rejected/superseded`，不得作为母图。
+- Cast DR 的重制使用独立 v2 合同 `contract-69c81766e320c2d4` 与确定性中心线举剑构图：正式 Idle DR 只承担身份/核心锚点，双手夹持胸口中线剑柄，窄刃可经过面部中央窄带但不得进入左右眼区，护手固定在口鼻与领圈之间。Cast Sprite 不含剑鞘或静态魔法效果；剑尖聚能 FX 的挂点、翻转与 `charge/release/recover` 时序仅记录在延期设计，尚未接入运行时。旧 Cast DR v1 及其 retry feedback 保留，不能作为母图。
 - 运行时标准角色纹理为 `128 PPU`，根节点与 `Sprite` 子节点均为 `localScale = 1`；单位状态由等距 Tile 高亮而非角色方形 Marker 表达。标准 `Sprite` 表现高度使用根空间 `localY=0.15`，降低原 `0.25` 带来的脚底悬空感；逻辑 Root、格子坐标、occupancy、碰撞与排序点不变。阴影继续锚定单位根节点代表的 Tile 几何落点，不跟随 Sprite Tween。
 - 已确认的单格单位通用阴影以 `Tools/artworks/pure_run/shadows/approved/pure_run_unit_shadow_1x1_v01.png` 为设计源，并原字节复制到 `Assets/Tactics/Arts/PureRun/Textures/pure_run_unit_shadow_1x1_v01.png`。它是屏幕水平的 `64×32` 等距软椭圆，导入为 Single Sprite、`64 PPU`、中心 Pivot、Full Rect、Bilinear、Clamp、无 Mipmap/压缩/Read-Write/fallback physics shape。保守贴地参数为：地面 Scale `0.80` / Renderer alpha `0.90`，飞行为同图 Scale `0.60` / alpha `0.54`；两者都以 Tile 几何中心为虚拟落点。
 - `Fighter.prefab` 的共享 Shadow 与 `PureRunGoatSupport`、`PureRunSkeletonMage`、`PureRunSkeletonWarrior` 的三个直接 Shadow 已指向新通用阴影，因而覆盖当前 12 个 Pure Run 单位。它们统一使用 `Assets/Tactics/Arts/PureRun/Materials/PureRunUnitShadow.mat` 的静态 `Sprites/Default` Shader；不得复用会摆动顶点且忽略 Renderer 颜色/alpha 的第三方 `HeliSprite/FloatingUnitShader`。Prefab 与生产初始化都把 Shadow 固定在单位根空间 `localY=-0.03`，即 Tile 几何落点附近；不能再从可能被 Idle/动作 Tween 改写的 `Sprite.localPosition` 推导阴影位置。12 个单位的 Shadow 均默认激活，`PureRunNecromancer` 不再保留禁用覆盖。legacy `Skeleton.prefab`、双方 GroundTiles Palette 与第三方 Heli 继续保留历史引用；目录级 Editor 测试自动检查新增 Pure Run 单位的 Land/Air 二选一、对应阴影参数、激活状态、静态材质和 Tile 根空间落点。

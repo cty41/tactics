@@ -1,0 +1,42 @@
+{
+  "schemaVersion": 3,
+  "jobId": "job-9c1b93e8a987e7b1",
+  "state": "ready",
+  "contractId": "contract-68fa3cb076e5d380",
+  "contractSha256": "3521a9b8fe11ca5bd9e707c901b12f76f31da7f00e36ece57378c6c7be6b2e5d",
+  "prompt": {
+    "path": "Tools/artworks/doge/demonbound/cast_down_right_body_grip_prompt_v1.md",
+    "sha256": "2d4d979499ea7a346b7ee177c97e9ea9c0ae149f996ec313ffc71552e162d3b7"
+  },
+  "inputs": [
+    {
+      "role": "edit_target",
+      "path": "Tools/artworks/pipeline/artifacts/job-8520f1be804163d0/job-8520f1be804163d0-a011/prepared.png",
+      "sha256": "442bb7a252114ee29a838268f72f37919c65a775d480bce1198eaa94fc10460d"
+    },
+    {
+      "role": "equipment_scale_reference",
+      "path": "Tools/artworks/pipeline/artifacts/job-80191342a2559d49/job-80191342a2559d49-a003/prepared.png",
+      "sha256": "92a412e50c736c9799ef8419f61b35f333cd541c0bab65212a352778872a67b0"
+    },
+    {
+      "role": "identity_anchor",
+      "path": "Tools/artworks/doge/calibrated/doge_capsule_demonbound_idle_dr_v01.png",
+      "sha256": "21559ca7aedd3e146feb2b93c5a6633affc6ce544122628c960972a982b0b5e7"
+    },
+    {
+      "role": "pose_guide",
+      "path": "Tools/artworks/doge/demonbound/cast_down_right_body_grip_pose_guide_v1.png",
+      "sha256": "6730bf1ee2c27905a257bde4055e937c48902b82dcb1e64c87f2f8680f09b3d0"
+    }
+  ],
+  "target": {
+    "direction": "down-right",
+    "pose": "cast-body-component-grip"
+  },
+  "series": null,
+  "conceptOnly": false,
+  "contractRequirements": null,
+  "requiresInvocation": false,
+  "poseGuide": null
+}

@@ -1,0 +1,27 @@
+{
+  "schemaVersion": 2,
+  "feedbackId": "feedback-392cc5495dced877",
+  "attemptId": "job-9c1b93e8a987e7b1-a001",
+  "candidateSha256": "044d7faf1cba8884b566d3ed4666fc0a3f3b088e75e288cf4552d23dc0f7697d",
+  "reviewer": "cty41",
+  "verdict": "retry",
+  "strengths": [
+    "Sword scale and length accepted in composite preview; central two-paw grip direction accepted"
+  ],
+  "defects": [
+    "Both front paws remain fully separated vertically and read abruptly"
+  ],
+  "nextPromptDelta": "Lower near paw overlaps and occludes approximately 50 percent of upper far paw while both remain visible around the same invisible grip",
+  "recordedAt": "2026-08-19T00:00:00+08:00",
+  "authorType": "human",
+  "categories": [
+    "topology"
+  ],
+  "disposition": "retry",
+  "frozenInvariants": [
+    "body identity,core geometry,DR direction,four paws,no arms,no legs,70 percent sword scale"
+  ],
+  "pendingFixes": [
+    "front-paw overlap"
+  ]
+}

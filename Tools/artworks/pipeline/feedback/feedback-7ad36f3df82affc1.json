@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 1,
+  "feedbackId": "feedback-7ad36f3df82affc1",
+  "attemptId": "job-871408b81417ce24-a001",
+  "candidateSha256": "6fea99320acb27d47a46a8cff08bb4fe69e67cb9ed0c71717c28ff2ed892c9c0",
+  "reviewer": "codex",
+  "verdict": "technical_failed",
+  "strengths": [
+    "The ImageGen output was ingested successfully with a stable raw hash and its semantic mask was attached."
+  ],
+  "defects": [
+    "A transient Windows write error occurred while registering calibrated artifacts in asset-provenance.json. Because the shell continued, validation ran against the uncalibrated 1254px prepared image and irreversibly marked this attempt technical_failed; this report is not a visual judgment of the candidate."
+  ],
+  "nextPromptDelta": "Reuse the exact same raw image hash and semantic mask in a new technical retry; do not call ImageGen and do not change the visual prompt.",
+  "recordedAt": "2026-08-18T11:45:10.2789040+08:00"
+}

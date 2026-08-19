@@ -1,0 +1,29 @@
+{
+  "schemaVersion": 2,
+  "feedbackId": "feedback-f0a08f7fab6a35ae",
+  "attemptId": "job-ff0004c252fc0691-a002",
+  "candidateSha256": "fd1871aa369badcdbcc38119285612f4b4028c27fcbc71fcd42aafb76f461d9d",
+  "reviewer": "cty41",
+  "verdict": "retry",
+  "strengths": [
+    "Rear-facing UL direction and coat split remain recognizable"
+  ],
+  "defects": [
+    "Front paws remain on outer sides; white spike added between ears; capsule core became visibly too tall and narrow versus formal Idle UL"
+  ],
+  "nextPromptDelta": "Switch to exact Idle UL body-shell edit: remove sword, scabbard and side front paws only; preserve body silhouette and rear feet pixel-proportionally; add central paws later as components",
+  "recordedAt": "2026-08-19T20:13:12.5668006+08:00",
+  "authorType": "human",
+  "categories": [
+    "topology",
+    "core_geometry",
+    "equipment_state"
+  ],
+  "disposition": "retry",
+  "frozenInvariants": [
+    "UL rear direction,identity,coat split,collar,alternate ear,rear feet"
+  ],
+  "pendingFixes": [
+    "exact Idle UL core proportions; no side paws; no white spike; no equipment"
+  ]
+}

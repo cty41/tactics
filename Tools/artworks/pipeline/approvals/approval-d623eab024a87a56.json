@@ -1,0 +1,18 @@
+{
+  "schemaVersion": 3,
+  "approvalId": "approval-d623eab024a87a56",
+  "attemptId": "job-f54a89d9b7ee39c9-a001",
+  "candidateSha256": "7a00a43e561422c570eb796202241ea83941028f35dd84e18c7f9b340c8c6b32",
+  "maskSha256": "1757ca8350290a81dcdd9ea5fd47b184b4b0d74b2e30662c0217f4b36c91b456",
+  "reviewer": "cty41",
+  "reviewSha256": {
+    "overlay": "fb275bb29eb71c64baa022ec59fe04e8aff99fe3130c2ef84bfb194514cbfe79",
+    "preview128": "d03a3b71163d324f936974d82ec0ee84c70d5edc5560de337132780ab9843def",
+    "tile64x32": "d6a0ba14beef6d562a83ee6cc7709e378a54a15bd17a59ca1498f76123f9e444"
+  },
+  "decision": "approved",
+  "reason": "Technical re-derivation from the accepted body using corrected far-paw semantics; candidate body pixels and accepted grip are unchanged.",
+  "decidedAt": "2026-08-19T15:35:00+08:00",
+  "annotation": null,
+  "reportSha256": "02060486026830e86cccd4ea5bdf380ad27b372958008b559714845bc988e5b3"
+}

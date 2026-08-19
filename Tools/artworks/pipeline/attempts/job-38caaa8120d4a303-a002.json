@@ -1,0 +1,34 @@
+{
+  "schemaVersion": 1,
+  "attemptId": "job-38caaa8120d4a303-a002",
+  "jobId": "job-38caaa8120d4a303",
+  "ordinal": 2,
+  "parentAttemptId": "job-38caaa8120d4a303-a001",
+  "retryFeedbackId": "feedback-bfe7e984b3d553d7",
+  "promptDelta": "Preserve v5 blade exit and rear-layer grip exactly. Scale the entire character core down to match formal Idle UL, add only a subtle 3-5 degree left lean, reduce the visible guard/gem to a pinhead-sized rim matching formal Melee DR, and hide at least two thirds of each hand paw behind the body so only tiny asymmetric attached crescents remain.",
+  "state": "prepared",
+  "artifacts": {
+    "source": {
+      "path": "Tools/artworks/doge/concepts/doge_capsule_demonbound_melee_ul_chroma_source_v06.png",
+      "sha256": "1abe96ac5ce26ef411f100701e440dca0ef183d273a7013aac4f71f8819603a7"
+    },
+    "raw": {
+      "path": "Tools/artworks/pipeline/artifacts/job-38caaa8120d4a303/job-38caaa8120d4a303-a002/raw.png",
+      "sha256": "1abe96ac5ce26ef411f100701e440dca0ef183d273a7013aac4f71f8819603a7"
+    },
+    "prepared": {
+      "path": "Tools/artworks/pipeline/artifacts/job-38caaa8120d4a303/job-38caaa8120d4a303-a002/prepared.png",
+      "sha256": "793a0b4a6863f1822f5b6e80bcecbbd777daf4689e372ae96815955eeb58c45a"
+    }
+  },
+  "report": null,
+  "approvalId": null,
+  "feedbackId": "feedback-5846dcc9d91f3006",
+  "preparation": {
+    "chroma": "00ff00",
+    "chromaTolerance": 96
+  },
+  "feedbackAddendumIds": [
+    "feedback-addendum-c757beb11c75cb0e"
+  ]
+}

@@ -1,0 +1,31 @@
+{
+  "schemaVersion": 2,
+  "feedbackId": "feedback-6fbac6b3747aa182",
+  "attemptId": "job-9c8a49b12ae5683e-a001",
+  "candidateSha256": "effcd97cb0dc39d91cbf396909ade7bf266086ef4c4301acd1a9e13df5452d1d",
+  "reviewer": "codex",
+  "verdict": "retry",
+  "strengths": [
+    "long narrow centerline blade; deliberate inward-upward focus; one red guard gem; no tip gem, scabbard, or static effect"
+  ],
+  "defects": [
+    "blade is slightly too long and close to canvas top",
+    "front-facing symmetry rather than formal Idle DR three-quarter identity; missing blaze and alternate ear",
+    "unapproved pale pommel ornament"
+  ],
+  "nextPromptDelta": "shorten blade slightly while retaining v1-scale presence; restore exact Idle DR asymmetry, blaze and one alternate ear; remove pommel ornament",
+  "recordedAt": "2026-08-18T16:26:00+08:00",
+  "authorType": "agent",
+  "categories": [
+    "identity",
+    "equipment_scale",
+    "equipment_state"
+  ],
+  "disposition": "retry",
+  "frozenInvariants": [],
+  "pendingFixes": [
+    "blade is slightly too long and close to canvas top",
+    "front-facing symmetry rather than formal Idle DR three-quarter identity; missing blaze and alternate ear",
+    "unapproved pale pommel ornament"
+  ]
+}

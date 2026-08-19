@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 2,
+  "compiledPromptId": "compiled-prompt-7d1691c4f394760e",
+  "jobId": "job-d3e64d0255927458",
+  "poseGuideId": "pose-guide-383c62791ebc0411",
+  "artifact": {
+    "path": "Tools/artworks/doge/demonbound/cast_down_right_body_layer_compiled_prompt_v3.md",
+    "sha256": "e5cd30d693a105fb380a2b35ded61ded1b321c8bc21f361561571eade88edfd2"
+  }
+}

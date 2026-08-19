@@ -1,0 +1,22 @@
+{
+  "schemaVersion": 3,
+  "approvalId": "approval-00326bdf137475ff",
+  "attemptId": "job-96bbe2ae0fc73102-a001",
+  "candidateSha256": "d7e6e6a2dc3503d0c0c61965c4e688e4cfcd912b72d4ea8e13b1115080dbb550",
+  "maskSha256": "1009c5787e17e04cf91109d051a258a1e05eaa876c3b107c0e9a182ea24664dd",
+  "reviewer": "cty41",
+  "reviewSha256": {
+    "assemblyLayerReview": "db8e5e82f47ec995a42348143644ce8859572bc3d31c318437666fe1a9e7fe38",
+    "overlay": "848c211a82ed9600ab3cd89c7f6378bb795d24cbd3df425a9f96554cf57cb1e1",
+    "preview128": "e9f9fdd770fb58cd3c28e0dcd2bcdffc5ff81898cd28b5db575f700ec6848349",
+    "tile64x32": "de2b4838272185b2511c77af029f3a5528487eae6d6cd6129000212c1b049fbb"
+  },
+  "decision": "approved",
+  "reason": "User explicitly approved the final Cast DR evidence set",
+  "decidedAt": "2026-08-19T19:56:01.6155012+08:00",
+  "annotation": {
+    "annotationId": "annotations-55e8f48ea26682c7",
+    "sha256": "02518cbc23f6770fcf270651299009e93b66212486969eef139351fe0bddca4f"
+  },
+  "reportSha256": "799d63c291d0d2b14fb2608e8adc3f7c4215db88d2f9ee00303fc1f9cc679ebd"
+}

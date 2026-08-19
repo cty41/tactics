@@ -1,0 +1,21 @@
+{
+  "canvas": [256, 256],
+  "coreAxis": {
+    "bottom": [127, 230],
+    "top": [127, 121],
+    "tiltDegrees": [-3.0, 3.0]
+  },
+  "footCenter": [127, 236],
+  "weapon": {
+    "hiddenGrip": [132, 178],
+    "exitWindow": [155, 142, 174, 188],
+    "tipRegion": [174, 100, 224, 158],
+    "maxGemAreaPx": 36
+  },
+  "forbiddenRegions": [
+    {"name": "eyes", "rect": [101, 126, 157, 158]}
+  ],
+  "requiredHiddenLabels": [],
+  "visibleAreaCaps": {"equipment": 0.22},
+  "equipmentState": {"scabbard": "absent"}
+}

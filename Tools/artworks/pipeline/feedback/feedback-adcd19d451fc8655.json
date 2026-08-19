@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 2,
+  "feedbackId": "feedback-adcd19d451fc8655",
+  "attemptId": "job-9c1b93e8a987e7b1-a008",
+  "candidateSha256": "fe16c7f4cbc65ddb6f5522d1f7aa5d91b396e9ce55bf5f146b4f153f726e29b1",
+  "reviewer": "cty41",
+  "verdict": "selected",
+  "strengths": [
+    "User accepted the compact diagonally overlapping two-paw grip and requested formal finalization"
+  ],
+  "defects": [],
+  "nextPromptDelta": "",
+  "recordedAt": "2026-08-19T19:48:57.5931404+08:00",
+  "authorType": "human",
+  "categories": [
+    "topology"
+  ],
+  "disposition": "selected",
+  "frozenInvariants": [
+    "selected body identity,core geometry,DR direction,four paws,no limbs,gripping paw composition"
+  ],
+  "pendingFixes": []
+}

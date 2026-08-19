@@ -1,0 +1,7 @@
+Transparent-background 2D game character sprite, 256x256 master composition, down-right three-quarter view. First reference is the exact formal Demonbound Idle DR identity and ancestral sword design anchor. Second reference is only the upright Cast pose layout.
+
+Preserve the v4 body pose exactly: same compact rigid equal-width capsule body, same down-right three-quarter asymmetry, dark coat with half-body alternate coat, one alternate-colour ear, small flat gray-white forehead blaze, four attached paws, no arms or legs. Serious head-raised expression with pupils deliberately converging inward and upward at the sword tip.
+
+Two front paws hold the compact one-handed ancestral sword at chest centre. Keep v4's compact guard-to-tip length and upright centreline position exactly; do NOT lengthen the sword. But make the BLADE visibly thicker and more substantial, matching the formal Idle DR and Melee DR sword blade width and ornate metallic weight. It must not read as a thin needle. Keep the blade narrow enough to cover only the face center strip and avoid both eyes; compact guard below mouth and above collar.
+
+Exactly one tiny restrained red gemstone only at guard centre. No gems, pale ornaments, coloured fittings, or decorations on blade, tip, pommel, or grip end. No scabbard and no glow/light/energy/orb/beam/fire/particles/aura/slash/crescent/magic effect. Uniform #00ff00 chroma background only, no text/frame/ground/shadow.

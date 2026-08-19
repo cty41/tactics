@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 1,
+  "feedbackId": "feedback-14bef190721e09cd",
+  "attemptId": "job-8511c38401ba2a99-a006",
+  "candidateSha256": "519f0eef8199625b3336dafafb2cecb45182ba0af5e384a5757b6f5dd94b9ea0",
+  "reviewer": "codex",
+  "verdict": "retry",
+  "strengths": [
+    "The core reaches 67 pixels against the 64-pixel anchor and all three width bands are exactly 67 pixels, making this the most stable equal-width capsule so far. The separate shallow gray-white forehead patch returns, the serious off-camera gaze is improved, and the sword correctly keeps one small guard gem with no scabbard."
+  ],
+  "defects": [
+    "The body remains nearly upright and does not communicate committed melee motion; the near sword hand is still a complete circular paw; the sword axis is too steeply downward and reads like a low guard rather than a swing freeze; the blade tip extends the alpha baseline to y=244; the core remains 3 pixels over target; chroma fringe/residue, a disconnected core row, and semantic-mask overshoot remain."
+  ],
+  "nextPromptDelta": "Preserve v10's 67-pixel parallel core, shallow separate forehead patch, serious target gaze, one tiny guard gem, and total absence of a scabbard. Narrow the core only 3 more pixels, then tilt the complete rigid body modestly screen-right without changing its width bands. Hide most of the sword hand behind the body as a crescent. Rotate the compact sword slightly upward from v10 into a readable lower-right mid-swing axis, with the whole blade above y=236.",
+  "recordedAt": "2026-08-18T11:40:20.7005329+08:00"
+}

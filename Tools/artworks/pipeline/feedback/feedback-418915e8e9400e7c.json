@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 1,
+  "feedbackId": "feedback-418915e8e9400e7c",
+  "attemptId": "job-8511c38401ba2a99-a008",
+  "candidateSha256": "a0fee8512cf8578f57b8b3d3c5e2b74a1f68ac3afdcbefd15a87c82f5a85eaf5",
+  "reviewer": "codex",
+  "verdict": "technical_failed",
+  "strengths": [
+    "The user-selected v9 appearance is preserved under a 96 percent uniform transform; baseline is exactly y=236; chroma, transparent RGB, semantic coverage, mask continuity, hand/foot presence, center, and lower-body width trend all pass."
+  ],
+  "defects": [
+    "The 74-pixel core remains 10 pixels wider than the 64-pixel Idle DR anchor. Further uniform shrinking would violate the core-height tolerance, while single-axis compression is prohibited."
+  ],
+  "nextPromptDelta": "No further ImageGen iteration requested. Keep this as the baseline-corrected visual candidate unless the user explicitly authorizes a native redraw for the 64-pixel core.",
+  "recordedAt": "2026-08-18T11:57:24.2300847+08:00"
+}

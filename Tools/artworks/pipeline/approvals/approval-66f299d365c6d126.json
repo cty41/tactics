@@ -1,0 +1,15 @@
+{
+  "approvalId": "approval-66f299d365c6d126",
+  "attemptId": "bootstrap:Tools/artworks/doge/calibrated/doge_capsule_hunter_color_calibrated_v01.png",
+  "candidatePath": "Tools/artworks/doge/calibrated/doge_capsule_hunter_color_calibrated_v01.png",
+  "candidateSha256": "68a35da9d5d646d497ae7bf99eebc5871bcc5be26a893441d9fcece57877ac07",
+  "decidedAt": "2026-08-18T08:51:26+08:00",
+  "decision": "approved",
+  "maskPath": "Tools/artworks/pipeline/masks/hunter-idle-dr-core-v1.png",
+  "maskSha256": "a99b855e8967fe90d63ac25777b1f9d1bb51b0d51ad03c7014faeb839535027d",
+  "reason": "User approved Hunter bootstrap semantic mask for Demonbound core geometry",
+  "reviewPath": "Tools/artworks/pipeline/reviews/bootstrap-hunter-idle-dr-core-v1.png",
+  "reviewSha256": "9eab08c40554bdb4a1ce5a7cedf0282745f8c6fa789b75e878732b1610120a8f",
+  "reviewer": "cty41",
+  "schemaVersion": 1
+}

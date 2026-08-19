@@ -11,10 +11,16 @@ verified_revision: c68dbebe
 ## 合同状态机
 
 - `Tools/artworks/pipeline` 是制作状态与血缘的机器权威；PNG 是像素真相源，两者必须以 SHA-256 绑定。ImageGen 仅是 `create-job` 与 `ingest` 之间的外部非确定性步骤。
+- 新合同默认使用 schema v2，读取器保留 v1 兼容且禁止原地批量重写历史记录。动作、死亡、遮挡或使用姿态参考的高风险任务必须先保存 `compositionSpec` 并确定性渲染 pose guide；规范固定核心轴、基线、隐藏握点、武器出口/尖端、禁入区、装备状态与可见面积上限。
+- `compile-prompt` 将合同不变量、参考职责、冻结项和待修项确定性合并；`begin-generation` 在调用 ImageGen 前生成 invocation receipt。成功输出必须匹配 invocation 才能 ingest；工具失败或交付丢失只写 failure receipt，不产生 raw SHA，也不增加唯一输出数。
+- Feedback v2 区分 Human 与 Agent，支持结构化缺陷和 backup disposition。视觉模型报告只能作为 `advisoryReviews`，不改变状态；正式 approval 只能由 `cty41` 签发并绑定候选、蒙版、annotations、报告和 Review 哈希。
 - 新资产只能沿 `ready -> ingested -> prepared -> annotated -> review_pending -> approved/rejected -> promoted` 转换。技术失败固定为 `technical_failed`，后续必须新建 retry，不能修改失败 attempt 或把它作为母图。
 - `prepare` 只负责确定性去幕、RGBA 与透明 RGB；核心体量必须由同坐标语义蒙版检查。聊天中的“通过”必须由 CLI 写成同时绑定候选和蒙版哈希的人工 receipt 才生效。
 - `legacy-assets.json` 逐文件登记历史 PNG。缺失可证血缘的 `legacy-unresolved` 只可保留和查看；目录名不能让它自动成为母图。正式旧图只有补充审核过的核心蒙版后，才能成为新任务的几何锚点。
-- 晋升只能由状态机写入 `calibrated/approved` 并同步公开 provenance。验证入口是 `python .agents/skills/pure-run-artwork-pipeline/scripts/artwork_pipeline.py --root . check --strict`；它也是 Godot 统一验证的一部分。
+- 晋升只能由状态机写入 `calibrated/approved` 并同步公开 provenance。纯美术任务使用 Artwork、公开发布、LFS 与 OKF 门禁；完整 Godot Verify 仅在同时修改运行时或 Godot 代码时运行。
+- 多姿态生产必须使用 versioned series：固定姿态顺序，并为每个姿态选择无限迭代或显式正整数输出预算；每个不同 ImageGen raw SHA 均有不可变 feedback。相同 SHA 的重复处理不增加版本数；没有上一版 feedback 不得 retry 或推进。预算变化必须通过状态机命令留下审核记录。只有有限预算耗尽的首姿态允许显式选择 provisional anchor，但所有下游结果仅是概念稿，禁止 approval/promotion，直至正式首姿态锚点修复。
+- 背向三分之四图必须把合同指定的手爪与装备置于核心后层：语义蒙版中的后层标签不得侵入批准核心区域，核心逐行保持连续，只允许手爪与装备在身体轮廓外露出受限外弧。高分辨率 ImageGen 输出只能按源/锚点核心蒙版统一等比校准，不得使用完整 AABB 或单轴拉伸。
+- 普通批准仍要求验证报告完全通过。若报告唯一问题是 `core_size_out_of_tolerance`，且继续等比校准会破坏另一核心尺寸，`cty41` 可通过 `approve-exception` 对该 attempt 签发限定几何例外。Receipt 必须保留失败报告并绑定候选、蒙版、报告、合同、全部 Review 哈希、实际/锚点核心尺寸、差值、容差和理由；任一绑定内容变化后自动失效。例外不得修改全局容差，也不得覆盖基线、Alpha、透明 RGB、色幕、蒙版、缺爪、接触、错误侧、梨形、遮挡、裁切、路径或哈希问题。
 
 ## 身体与屏幕契约
 

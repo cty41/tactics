@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 2,
+  "advisoryReviewId": "advisory-review-3dc4d49605e59da9",
+  "attemptId": "job-8527ac67fd9a38b2-a001",
+  "candidateSha256": "fd66f6a8e3649e3f7ab1a06f4da431ace56835273d4f6a2fd316fac36739f4fa",
+  "reviewer": "codex-agent",
+  "risks": [
+    "Standalone sword layer requires human review for exact blade length, silver-gray metal, brown-red wood grip and the single pommel gemstone before any body composite is created."
+  ],
+  "recordedAt": "2026-08-19T11:49:00+08:00",
+  "nonBinding": true
+}

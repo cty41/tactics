@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 1,
+  "feedbackId": "feedback-3dd7fd32300f0118",
+  "attemptId": "job-f40816b1c2e8b36c-a004",
+  "candidateSha256": "ef9fd7521afafc4f46ef8fd355fc90337b493e268de61eaebfcd8d2ea3e529f4",
+  "reviewer": "cty41",
+  "verdict": "exhausted",
+  "strengths": [
+    "The final allowed output satisfies the rear-layer goal: sword, screen-left hand and screen-right sword hand have zero core intrusion, both hands are asymmetric small contour crescents, and the split-coat identity remains readable."
+  ],
+  "defects": [
+    "The core remains approximately 7 pixels wider than the approved DR anchor, the lowest pixels land at y=240 instead of y=236, and the core mask has a disconnected row; the attempt cannot be approved or promoted."
+  ],
+  "nextPromptDelta": "No sixth ImageGen output is permitted. Idle UL requires a future contract-level reopening or an explicitly approved deterministic/non-ImageGen remediation; retain v5 as the best exhausted draft.",
+  "recordedAt": "2026-08-18T09:55:35+08:00"
+}

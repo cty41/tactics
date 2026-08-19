@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 2,
+  "compiledPromptId": "compiled-prompt-e5f874de436f19b9",
+  "jobId": "job-33b591a0de916181",
+  "poseGuideId": "pose-guide-1c8abd1737b17dff",
+  "artifact": {
+    "path": "Tools/artworks/doge/demonbound/cast_down_right_raised_sword_compiled_prompt_v4.md",
+    "sha256": "d76c9fa7a5dad38582f6a23c2ad8a172589ee22b5fdfe8fca7904182f473b5a9"
+  }
+}

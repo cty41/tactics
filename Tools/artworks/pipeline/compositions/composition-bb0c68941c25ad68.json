@@ -1,0 +1,81 @@
+{
+  "schemaVersion": 2,
+  "compositionId": "composition-bb0c68941c25ad68",
+  "assetId": "demonbound-cast-dr-sword-layer-v2",
+  "spec": {
+    "canvas": [
+      256,
+      256
+    ],
+    "coreAxis": {
+      "bottom": [
+        127,
+        230
+      ],
+      "top": [
+        127,
+        121
+      ],
+      "tiltDegrees": [
+        -2.0,
+        2.0
+      ]
+    },
+    "footCenter": [
+      127,
+      236
+    ],
+    "weapon": {
+      "hiddenGrip": [
+        127,
+        185
+      ],
+      "exitWindow": [
+        123,
+        110,
+        132,
+        194
+      ],
+      "tipRegion": [
+        123,
+        108,
+        132,
+        117
+      ],
+      "guardWindow": [
+        114,
+        160,
+        141,
+        171
+      ],
+      "bladeCenterline": [
+        123,
+        110,
+        132,
+        165
+      ],
+      "minBladeWidthPx": 7,
+      "maxBladeWidthPx": 9,
+      "bladeLengthRangePx": [
+        55,
+        65
+      ],
+      "maxGemAreaPx": 20
+    },
+    "forbiddenRegions": [],
+    "requiredHiddenLabels": [],
+    "visibleAreaCaps": {},
+    "equipmentState": {
+      "scabbard": "absent",
+      "staticEffects": "absent"
+    }
+  },
+  "source": {
+    "path": "Tools/artworks/doge/demonbound/cast_down_right_sword_layer_composition_v1.json",
+    "sha256": "1bdb553ee9241293d348d96202e1ba0600313f8719534e09e9358f0641e90ab5"
+  },
+  "anchor": {
+    "path": "Tools/artworks/doge/calibrated/doge_capsule_demonbound_idle_dr_v01.png",
+    "sha256": "21559ca7aedd3e146feb2b93c5a6633affc6ce544122628c960972a982b0b5e7"
+  }
+}

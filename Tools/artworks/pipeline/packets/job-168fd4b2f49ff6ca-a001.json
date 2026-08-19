@@ -1,0 +1,18 @@
+{
+  "attemptId": "job-168fd4b2f49ff6ca-a001",
+  "conceptOnly": false,
+  "inputs": [
+    {
+      "path": "Tools/artworks/doge/calibrated/doge_capsule_hunter_color_calibrated_v01.png",
+      "role": "core_anchor",
+      "sha256": "68a35da9d5d646d497ae7bf99eebc5871bcc5be26a893441d9fcece57877ac07"
+    }
+  ],
+  "jobId": "job-168fd4b2f49ff6ca",
+  "promptDelta": null,
+  "schemaVersion": 1,
+  "target": {
+    "direction": "down-right",
+    "pose": "idle"
+  }
+}

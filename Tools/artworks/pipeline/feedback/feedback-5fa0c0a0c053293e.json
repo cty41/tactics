@@ -1,0 +1,18 @@
+{
+  "attemptId": "job-d5e63cb8798a9488-a002",
+  "candidateSha256": "ed22534ed915d38c82c34e3c7be43f72aeab56e1d1cd3e0f0b7622b9ac2d1df9",
+  "defects": [
+    "Only one hand paw is visible; the contract requires two body-touching hand paws even in the back view",
+    "Raw output remains 1254x1254 with chroma fringe and requires an explicit core-mask calibration stage before it can become a 256x256 candidate"
+  ],
+  "feedbackId": "feedback-5fa0c0a0c053293e",
+  "nextPromptDelta": "Preserve v2 composition exactly, add the missing far hand paw as a small body-touching paw on the opposite side without adding an arm, and retain all identity and proportions",
+  "recordedAt": "2026-08-18T09:00:43+08:00",
+  "reviewer": "cty41",
+  "schemaVersion": 1,
+  "strengths": [
+    "Correct native up-left three-quarter-back orientation while retaining the approved compact Demonbound silhouette",
+    "Split coat, alternate ear, partial muzzle, one visible eye, collar, and compact ancestral sword remain recognizable"
+  ],
+  "verdict": "retry"
+}

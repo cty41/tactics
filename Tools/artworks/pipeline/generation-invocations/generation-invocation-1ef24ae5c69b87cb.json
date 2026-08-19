@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 2,
+  "invocationId": "generation-invocation-1ef24ae5c69b87cb",
+  "state": "started",
+  "attemptId": "job-94179e71f9db3ed5-a001",
+  "compiledPromptId": "compiled-prompt-523f1aed418b7840",
+  "compiledPromptSha256": "2d42595316943928cdc28ba9777298f274f33f7fb74aab954ae28c161b3b6abd",
+  "provider": "openai-imagegen",
+  "startedAt": "2026-08-18T16:55:00+08:00"
+}

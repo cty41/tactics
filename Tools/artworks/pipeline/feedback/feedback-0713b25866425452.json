@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 1,
+  "feedbackId": "feedback-0713b25866425452",
+  "attemptId": "job-f0d6fcf9375ff1ae-a001",
+  "candidateSha256": "dc1512fe0b74a65678498e01fd1698967192710a34d837610dd1a04bf1db8802",
+  "reviewer": "codex",
+  "verdict": "retry",
+  "strengths": [
+    "The gaze is raised toward the enemy torso, the lowered brows and tightened mouth read as more serious attack focus, the sword scale is more restrained than v3, the split coat remains recognizable, and the scabbard stays absent."
+  ],
+  "defects": [
+    "The broad gray-white forehead blaze is lost, the far hand is completely missing, the sword hand remains a full circular disk, the attack lean is too weak, the calibrated core bbox is 75 pixels wide versus the 64-pixel anchor, the alpha baseline reaches y=237, and chroma residue/fringe plus a disconnected core row remain."
+  ],
+  "nextPromptDelta": "For the final v5, preserve v4's raised target-torso gaze and serious restrained expression, keep no scabbard, and reduce the sword only slightly to a narrow medium ancestral blade. Restore the broad gray-white forehead blaze; include a small far-hand arc attached to the screen-right contour; hide most of the sword hand inside the lower front-center core edge; restore v3's readable rigid-body forward lean; lock the core to 64 pixels and baseline y=236; use perfectly flat exact #00FF00 with no green inside the subject.",
+  "recordedAt": "2026-08-18T10:35:59.4622652+08:00"
+}

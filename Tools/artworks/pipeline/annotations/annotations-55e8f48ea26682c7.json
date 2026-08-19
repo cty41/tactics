@@ -1,0 +1,63 @@
+{
+  "schemaVersion": 2,
+  "annotationId": "annotations-55e8f48ea26682c7",
+  "attemptId": "job-96bbe2ae0fc73102-a001",
+  "candidateSha256": "d7e6e6a2dc3503d0c0c61965c4e688e4cfcd912b72d4ea8e13b1115080dbb550",
+  "maskSha256": "1009c5787e17e04cf91109d051a258a1e05eaa876c3b107c0e9a182ea24664dd",
+  "source": {
+    "path": "Tools/artworks/doge/demonbound/cast_down_right_assembly_v6_annotations.json",
+    "sha256": "a4a767868c2ea0d75e61a64abb3bd6790acfce00c89ef7c6b9bfb38a12ac2cd9"
+  },
+  "regions": {
+    "eyeRegion": [
+      118,
+      134,
+      157,
+      153
+    ],
+    "leftEyeRegion": [
+      118,
+      134,
+      139,
+      153
+    ],
+    "rightEyeRegion": [
+      140,
+      134,
+      157,
+      153
+    ],
+    "weaponExit": [
+      139,
+      115,
+      147,
+      178
+    ],
+    "weaponTip": [
+      139,
+      115,
+      147,
+      124
+    ],
+    "weaponBlade": [
+      139,
+      115,
+      147,
+      178
+    ],
+    "guardRegion": [
+      130,
+      174,
+      155,
+      185
+    ],
+    "gemRegion": [
+      140,
+      203,
+      146,
+      210
+    ],
+    "scabbard": null,
+    "staticEffect": null
+  }
+}

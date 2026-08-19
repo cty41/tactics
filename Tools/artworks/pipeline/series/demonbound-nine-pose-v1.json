@@ -1,0 +1,145 @@
+{
+  "assetId": "demonbound",
+  "currentPoseId": "cast-dr",
+  "maxUniqueOutputs": null,
+  "poses": [
+    {
+      "attemptIds": [
+        "job-168fd4b2f49ff6ca-a001"
+      ],
+      "jobIds": [
+        "job-168fd4b2f49ff6ca"
+      ],
+      "poseId": "idle-dr",
+      "selectedAttemptId": "job-168fd4b2f49ff6ca-a001",
+      "state": "promoted"
+    },
+    {
+      "attemptIds": [
+        "job-d5e63cb8798a9488-a001",
+        "job-d5e63cb8798a9488-a002",
+        "job-f40816b1c2e8b36c-a001",
+        "job-f40816b1c2e8b36c-a002",
+        "job-f40816b1c2e8b36c-a003",
+        "job-f40816b1c2e8b36c-a004",
+        "job-f40816b1c2e8b36c-a005"
+      ],
+      "jobIds": [
+        "job-d5e63cb8798a9488",
+        "job-f40816b1c2e8b36c"
+      ],
+      "poseId": "idle-ul",
+      "selectedAttemptId": "job-f40816b1c2e8b36c-a005",
+      "state": "promoted"
+    },
+    {
+      "attemptIds": [
+        "job-136c73125d89e5de-a001",
+        "job-e635163e7b36bbe4-a001",
+        "job-3d0573f3f442934f-a001",
+        "job-f0d6fcf9375ff1ae-a001",
+        "job-8511c38401ba2a99-a001",
+        "job-8511c38401ba2a99-a002",
+        "job-8511c38401ba2a99-a003",
+        "job-8511c38401ba2a99-a004",
+        "job-8511c38401ba2a99-a005",
+        "job-8511c38401ba2a99-a006",
+        "job-871408b81417ce24-a001",
+        "job-871408b81417ce24-a002",
+        "job-8511c38401ba2a99-a007",
+        "job-8511c38401ba2a99-a008"
+      ],
+      "jobIds": [
+        "job-136c73125d89e5de",
+        "job-e635163e7b36bbe4",
+        "job-3d0573f3f442934f",
+        "job-f0d6fcf9375ff1ae",
+        "job-8511c38401ba2a99",
+        "job-871408b81417ce24"
+      ],
+      "poseId": "melee-dr",
+      "selectedAttemptId": "job-8511c38401ba2a99-a008",
+      "state": "promoted"
+    },
+    {
+      "attemptIds": [
+        "job-1b243a2bdfee22b1-a001",
+        "job-1b243a2bdfee22b1-a002",
+        "job-1b243a2bdfee22b1-a003",
+        "job-1b243a2bdfee22b1-a004",
+        "job-38caaa8120d4a303-a001",
+        "job-38caaa8120d4a303-a002",
+        "job-38caaa8120d4a303-a003",
+        "job-38caaa8120d4a303-a004",
+        "job-38caaa8120d4a303-a005",
+        "job-38caaa8120d4a303-a006"
+      ],
+      "jobIds": [
+        "job-1b243a2bdfee22b1",
+        "job-38caaa8120d4a303"
+      ],
+      "poseId": "melee-ul",
+      "selectedAttemptId": "job-38caaa8120d4a303-a006",
+      "state": "promoted"
+    },
+    {
+      "attemptIds": [
+        "job-8d5c9871c64e9e4b-a001",
+        "job-ce5a38dfdcdcb04b-a001",
+        "job-33b591a0de916181-a001",
+        "job-9c8a49b12ae5683e-a001",
+        "job-f8c3ac316cfe7021-a001",
+        "job-94179e71f9db3ed5-a001",
+        "job-7423a5fc8cd94098-a001",
+        "job-8ea704ad390748f2-a001"
+      ],
+      "jobIds": [
+        "job-8d5c9871c64e9e4b",
+        "job-ce5a38dfdcdcb04b",
+        "job-33b591a0de916181",
+        "job-9c8a49b12ae5683e",
+        "job-f8c3ac316cfe7021",
+        "job-94179e71f9db3ed5",
+        "job-7423a5fc8cd94098",
+        "job-8ea704ad390748f2"
+      ],
+      "poseId": "cast-dr",
+      "selectedAttemptId": null,
+      "state": "active"
+    },
+    {
+      "attemptIds": [],
+      "jobIds": [],
+      "poseId": "cast-ul",
+      "selectedAttemptId": null,
+      "state": "pending"
+    },
+    {
+      "attemptIds": [],
+      "jobIds": [],
+      "poseId": "hit-dr",
+      "selectedAttemptId": null,
+      "state": "pending"
+    },
+    {
+      "attemptIds": [],
+      "jobIds": [],
+      "poseId": "hit-ul",
+      "selectedAttemptId": null,
+      "state": "pending"
+    },
+    {
+      "attemptIds": [],
+      "jobIds": [],
+      "poseId": "death",
+      "selectedAttemptId": null,
+      "state": "pending"
+    }
+  ],
+  "provisionalAnchorAttemptId": null,
+  "schemaVersion": 1,
+  "seriesId": "demonbound-nine-pose-v1",
+  "limitChangeIds": [
+    "series-limit-change-914456b3a517af9f"
+  ]
+}

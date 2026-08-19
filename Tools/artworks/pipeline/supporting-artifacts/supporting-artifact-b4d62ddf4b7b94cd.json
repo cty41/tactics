@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 2,
+  "supportingArtifactId": "supporting-artifact-b4d62ddf4b7b94cd",
+  "artifact": {
+    "path": "Tools/artworks/doge/candidates/doge_capsule_demonbound_cast_dr_composite_preview_v01.png",
+    "sha256": "be017bb608b4cb1172d96433690dbb1b50f9117a85b05bc85546ad9d7e40a137"
+  },
+  "role": "supporting-derived",
+  "note": "Human-accepted Cast DR composition preview: calibrated body-layer v05 visual candidate plus sword-layer v01 at 70 percent scale and DR visual-center placement; not a promotable sprite until deterministic layer-composition lineage is implemented."
+}

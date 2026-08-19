@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "feedbackId": "feedback-075ce89dccf9a8b6",
+  "attemptId": "job-1b243a2bdfee22b1-a004",
+  "candidateSha256": "ce49f6e63b34e72a6f25ec78d995db595368aec6b4855520e41d7741fc1a8dd5",
+  "reviewer": "cty41",
+  "verdict": "retry",
+  "strengths": [
+    "The body lean is now close to the desired subtle 3-5 degrees; up-left blade direction, forehead patch, alternate ear, four paws, and no-scabbard state remain recognizable."
+  ],
+  "defects": [
+    "The generated core is substantially larger than the formal Idle UL anchor.",
+    "The sword guard still touches the eye, the grip remains projected in front of the face, and the sword-side paw is almost fully visible rather than hidden behind the rear-view core."
+  ],
+  "nextPromptDelta": "Use the new deterministic pose guide. Keep the hidden grip inside the upper core, make the body occlude the grip, sword-side paw, handle, and almost all of the guard, and let only the blade root and a tiny red-gem rim emerge from the left collar contour below the eye. Match formal Idle UL core size and retain the subtle 3-5 degree left lean.",
+  "recordedAt": "2026-08-18T13:55:09+08:00"
+}

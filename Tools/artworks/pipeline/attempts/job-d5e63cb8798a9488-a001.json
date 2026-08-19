@@ -1,0 +1,30 @@
+{
+  "approvalId": null,
+  "artifacts": {
+    "prepared": {
+      "path": "Tools/artworks/pipeline/artifacts/job-d5e63cb8798a9488/job-d5e63cb8798a9488-a001/prepared.png",
+      "sha256": "00274a0f6385f2d6da8a69105e02c989a2ead75a1572fa532604654f4fc93075"
+    },
+    "raw": {
+      "path": "Tools/artworks/pipeline/artifacts/job-d5e63cb8798a9488/job-d5e63cb8798a9488-a001/raw.png",
+      "sha256": "e1137ad83de38d2770f0cc0b15bd7eb4a02950e484c44d4f4ed1794b96cad015"
+    },
+    "source": {
+      "path": "Tools/artworks/doge/concepts/doge_capsule_demonbound_idle_ul_chroma_source_v01.png",
+      "sha256": "e1137ad83de38d2770f0cc0b15bd7eb4a02950e484c44d4f4ed1794b96cad015"
+    }
+  },
+  "attemptId": "job-d5e63cb8798a9488-a001",
+  "feedbackId": "feedback-0c98ddb3f734573b",
+  "jobId": "job-d5e63cb8798a9488",
+  "ordinal": 1,
+  "parentAttemptId": null,
+  "promptDelta": null,
+  "report": {
+    "path": "Tools/artworks/pipeline/reports/report-dc04d05373580971.json",
+    "sha256": "fa9bf04e98f27918641478d554b9dc21cd6f8949296dbfa3893cf145fb0c73e9"
+  },
+  "retryFeedbackId": null,
+  "schemaVersion": 1,
+  "state": "technical_failed"
+}

@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 1,
+  "feedbackId": "feedback-f428e023c2dc135e",
+  "attemptId": "job-38caaa8120d4a303-a005",
+  "candidateSha256": "1c71c3fc515c3604e262c7b242025985859c8786544406b15a62d1e4e3e6a79b",
+  "reviewer": "codex",
+  "verdict": "technical_failed",
+  "strengths": [
+    "correct labels and chroma cleanup now pass"
+  ],
+  "defects": [
+    "baseline and head-appendage overlap need deterministic mask calibration fix"
+  ],
+  "nextPromptDelta": "no visual regeneration; preserve raw hash",
+  "recordedAt": "2026-08-18T12:05:00+08:00"
+}

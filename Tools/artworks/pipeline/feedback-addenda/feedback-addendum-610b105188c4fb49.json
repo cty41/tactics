@@ -1,0 +1,13 @@
+{
+  "schemaVersion": 2,
+  "feedbackAddendumId": "feedback-addendum-610b105188c4fb49",
+  "attemptId": "job-7423a5fc8cd94098-a001",
+  "parentFeedbackId": "feedback-b5972b67feee10ea",
+  "reviewer": "cty41",
+  "defects": [
+    "blade is too long: tip should reach approximately ear-tip height; blade should partially cover the inner edge of both eyes so the eyes are closer and natural; sword guard and metal hilt must match Idle DR silver-gray metal rather than gold"
+  ],
+  "recordedAt": "2026-08-19T10:20:00+08:00",
+  "authorType": "human",
+  "disposition": "retry"
+}

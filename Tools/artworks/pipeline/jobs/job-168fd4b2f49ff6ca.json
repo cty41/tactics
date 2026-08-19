@@ -1,0 +1,27 @@
+{
+  "conceptOnly": false,
+  "contractId": "contract-ec4ac7b36559dc82",
+  "contractSha256": "e746e64b84c52d30960c248cfbf54dbdf2ed4adfdedb4d459f1a1eb5975ddc5c",
+  "inputs": [
+    {
+      "path": "Tools/artworks/doge/calibrated/doge_capsule_hunter_color_calibrated_v01.png",
+      "role": "core_anchor",
+      "sha256": "68a35da9d5d646d497ae7bf99eebc5871bcc5be26a893441d9fcece57877ac07"
+    }
+  ],
+  "jobId": "job-168fd4b2f49ff6ca",
+  "prompt": {
+    "path": "Tools/artworks/doge/demonbound/idle_down_right_prompt.md",
+    "sha256": "e2c8e6b2cfb7d99893aa54a1314e3d5ac230f620ffb8f6a61d1c580ac8f7f903"
+  },
+  "schemaVersion": 1,
+  "series": {
+    "poseId": "idle-dr",
+    "seriesId": "demonbound-nine-pose-v1"
+  },
+  "state": "ready",
+  "target": {
+    "direction": "down-right",
+    "pose": "idle"
+  }
+}
