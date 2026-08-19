@@ -32,9 +32,14 @@ internal static class ReloadSafeEditorResourceLoader
         if (raw is null)
             return Invalid<T>($"Resource is missing: {path}");
 
-        HashSet<string> propertyNames = raw.GetPropertyList()
-            .Select(property => property["name"].AsString())
-            .ToHashSet(StringComparer.Ordinal);
+        var propertyNames = new HashSet<string>(StringComparer.Ordinal);
+        global::Godot.Collections.Array<global::Godot.Collections.Dictionary> properties = raw.GetPropertyList();
+        using global::Godot.Collections.Array propertyStorage = (global::Godot.Collections.Array)properties;
+        foreach (global::Godot.Collections.Dictionary property in properties)
+        {
+            using Variant name = property["name"];
+            propertyNames.Add(name.AsString());
+        }
         string scriptPath = GetScriptPath(raw);
         return Inspect<T>(raw, path, expectedScriptPath, propertyNames, scriptPath, requiredProperties);
     }
@@ -97,7 +102,7 @@ internal static class ReloadSafeEditorResourceLoader
 
     private static string GetScriptPath(Resource resource)
     {
-        Variant scriptValue = resource.Get("script");
+        using Variant scriptValue = resource.Get("script");
         return scriptValue.Obj is Script script ? script.ResourcePath : string.Empty;
     }
 }
