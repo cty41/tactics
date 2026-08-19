@@ -65,6 +65,12 @@ public sealed class ProductionInputDecisionSource(int maximumActions) : IGodotGa
                 await context.WaitUntilPlayerReadyOrTerminalAsync(cancellationToken);
                 continue;
             }
+            if (await TryMoveTowardEnemyAsync(context, snapshot, cancellationToken))
+            {
+                actions++;
+                await context.WaitUntilPlayerReadyOrTerminalAsync(cancellationToken);
+                continue;
+            }
             await context.PressKeyAsync(Key.Enter, cancellationToken);
             actions++;
         }
@@ -128,6 +134,30 @@ public sealed class ProductionInputDecisionSource(int maximumActions) : IGodotGa
             await context.PressKeyAsync(Key.Escape, cancellationToken);
         }
         return false;
+    }
+
+    private static async Task<bool> TryMoveTowardEnemyAsync(GodotGameplayRuntimeContext context,
+        BattleUiSnapshot snapshot, CancellationToken cancellationToken)
+    {
+        if (snapshot.MoveAvailability?.IsAvailable != true || snapshot.LegalMoveCells.Count == 0) return false;
+        BattleUiUnitSnapshot active = snapshot.Units.Single(value => value.UnitId == snapshot.ActiveUnitId);
+        BattleUiUnitSnapshot[] enemies = snapshot.Units
+            .Where(value => value.IsAlive && value.PlayerNumber != active.PlayerNumber).ToArray();
+        if (enemies.Length == 0) return false;
+        static int Distance(GridPoint left, GridPoint right) => Math.Abs(left.X - right.X) + Math.Abs(left.Y - right.Y);
+        int currentDistance = enemies.Min(enemy => Distance(active.Cell, enemy.Cell));
+        GridPoint? destination = snapshot.LegalMoveCells
+            .Select(cell => new { Cell = cell, Distance = enemies.Min(enemy => Distance(cell, enemy.Cell)) })
+            .Where(value => value.Distance < currentDistance)
+            .OrderBy(value => value.Distance).ThenBy(value => value.Cell.X).ThenBy(value => value.Cell.Y)
+            .Select(value => (GridPoint?)value.Cell).FirstOrDefault();
+        if (destination is not GridPoint target) return false;
+
+        await context.ClickPointerAsync("MoveAction", Parameters(("targetKind", "UiElement")), cancellationToken);
+        BattleAuthorityStamp beforeCommit = context.CaptureBattleAuthorityStamp();
+        await context.ClickPointerAsync($"{target.X},{target.Y}", Parameters(("targetKind", "BattleCell")), cancellationToken);
+        await context.WaitForBattleCommitAsync(beforeCommit, cancellationToken);
+        return true;
     }
 
     private static Dictionary<string, JsonElement> Parameters(params (string Key, object Value)[] values) =>
@@ -621,25 +651,43 @@ public sealed class GodotGameplayRuntimeContext(GodotGameplayScenarioPlan plan, 
         Control expectedControl, string identity, CancellationToken token)
     {
         Viewport viewport = Main.GetViewport();
-        (Vector2 Point, bool Local)[] candidates =
-        [
-            (viewport.GetCanvasTransform() * logicalPoint, false),
-            (logicalPoint, true),
-            (logicalPoint, false)
-        ];
+        Vector2[] logicalCandidates = expectedControl is Button
+            ? ButtonPointerCandidates(expectedControl.GetGlobalRect())
+            : [logicalPoint];
         (Vector2 Point, bool Local)? resolved = null;
-        foreach ((Vector2 candidatePoint, bool local) in candidates)
+        foreach (Vector2 logicalCandidate in logicalCandidates)
         {
-            viewport.PushInput(new InputEventMouseMotion { Position = candidatePoint, GlobalPosition = candidatePoint }, local);
-            await WaitFramesAsync(1, token);
-            Control? hovered = viewport.GuiGetHoveredControl();
-            if (hovered == expectedControl || hovered is not null && expectedControl.IsAncestorOf(hovered))
-            { resolved = (candidatePoint, local); break; }
+            (Vector2 Point, bool Local)[] candidates =
+            [
+                (viewport.GetCanvasTransform() * logicalCandidate, false),
+                (logicalCandidate, true),
+                (logicalCandidate, false)
+            ];
+            foreach ((Vector2 candidatePoint, bool local) in candidates)
+            {
+                viewport.PushInput(new InputEventMouseMotion { Position = new Vector2(-100, -100), GlobalPosition = new Vector2(-100, -100) }, local);
+                await WaitFramesAsync(1, token);
+                viewport.PushInput(new InputEventMouseMotion { Position = candidatePoint, GlobalPosition = candidatePoint }, local);
+                await WaitFramesAsync(1, token);
+                Control? hovered = viewport.GuiGetHoveredControl();
+                if (hovered == expectedControl || hovered is not null && expectedControl.IsAncestorOf(hovered))
+                { resolved = (candidatePoint, local); break; }
+            }
+            if (resolved is not null) break;
         }
         if (resolved is null) throw new GodotGameplayScenarioException(GodotGameplayFailureKind.Action,
             $"pointer_target_not_hovered:{identity}:logical={logicalPoint}:hovered={viewport.GuiGetHoveredControl()?.Name ?? "none"}:viewport={viewport.GetVisibleRect()}");
         return (viewport, resolved.Value.Point, resolved.Value.Local);
     }
+
+    private static Vector2[] ButtonPointerCandidates(Rect2 rect) =>
+    [
+        rect.GetCenter(),
+        new Vector2(rect.Position.X + rect.Size.X * .25f, rect.Position.Y + rect.Size.Y * .5f),
+        new Vector2(rect.Position.X + rect.Size.X * .75f, rect.Position.Y + rect.Size.Y * .5f),
+        new Vector2(rect.Position.X + rect.Size.X * .5f, rect.Position.Y + rect.Size.Y * .3f),
+        new Vector2(rect.Position.X + rect.Size.X * .5f, rect.Position.Y + rect.Size.Y * .7f)
+    ];
 
     private async Task<(Viewport Viewport, Vector2 Point, bool Local)> ResolveMapPointerAsync(
         GodotRogueMapView map, string nodeId, CancellationToken token)
