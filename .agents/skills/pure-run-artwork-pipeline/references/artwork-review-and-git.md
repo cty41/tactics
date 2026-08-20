@@ -26,7 +26,7 @@ git diff --cached --check
 git status --short
 ```
 
-按路径暂存文档、OKF 和 skill 文件；不要使用 `git add -A`，不要暂存 `.hermes/`、`tmp/` 或 Unity 运行时文件。Tools/artworks 位于项目艺术资源目录而非 Unity `Assets`，本计划不要求 `.meta` 配对，但后续若移动到 `Assets` 必须一并检查。
+按路径暂存文档、OKF 和 skill 文件；不要使用 `git add -A`，不要暂存 `.hermes/`、`tmp/` 或未授权的 Godot 运行时文件。`Tools/artworks` 是候选与审计目录；只有获得运行时接入授权后，才可通过项目资产管线复制到 `godot/assets`。
 
 ## 提交边界
 

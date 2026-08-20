@@ -1,0 +1,35 @@
+{
+  "schemaVersion": 3,
+  "jobId": "job-18bef1a6a8527bbe",
+  "state": "ready",
+  "contractId": "contract-ca988f14944a786f",
+  "contractSha256": "2a20849b38ec75ecc9a66647c7002035ddcadbb2a07b4097837c98760193cb75",
+  "prompt": {
+    "path": "Tools/artworks/doge/demonbound/death_crossed_eye_prompt_v1.md",
+    "sha256": "daceefa6c7dd6e2036a701045034444c2ea41a43d699669a04a3be987753a809"
+  },
+  "inputs": [
+    {
+      "role": "edit_target",
+      "path": "Tools/artworks/doge/candidates/doge_capsule_demonbound_death_geometry_wip_v04.png",
+      "sha256": "6679c76575de7c340dafed107ce485498dfe6e4cb308a19240cc6fa2aad032c0"
+    },
+    {
+      "role": "eye_guide",
+      "path": "Tools/artworks/doge/demonbound/death_crossed_eye_guide_v1.png",
+      "sha256": "fb78f7261e85506d39ccab6d1cfc6f221196bb2063d0a866ca76765f7f0c225d"
+    }
+  ],
+  "target": {
+    "direction": "down-right",
+    "pose": "death"
+  },
+  "series": null,
+  "conceptOnly": false,
+  "contractRequirements": null,
+  "requiresInvocation": true,
+  "poseGuide": {
+    "poseGuideId": "pose-guide-fe48e3f5e66d2e26",
+    "sha256": "21612e1acbaebbaede3727a28f2c207b219fe10058975564c421dfa75d3ce6d6"
+  }
+}

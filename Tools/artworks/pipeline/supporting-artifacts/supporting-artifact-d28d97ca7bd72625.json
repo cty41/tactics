@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 2,
+  "supportingArtifactId": "supporting-artifact-d28d97ca7bd72625",
+  "artifact": {
+    "path": "Tools/artworks/doge/candidates/doge_capsule_demonbound_death_wip_v01.png",
+    "sha256": "c3e787eab04bdc4f423e39339b8f531cc3d099d4971bbf5dc14aed4af61ab748"
+  },
+  "role": "candidate-preview",
+  "note": "Demonbound Death v1 scaled candidate for human visual review; not approved or promoted."
+}

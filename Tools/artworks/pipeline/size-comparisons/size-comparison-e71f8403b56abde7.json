@@ -1,0 +1,92 @@
+{
+  "schemaVersion": 1,
+  "sizeComparisonId": "size-comparison-e71f8403b56abde7",
+  "inputs": [
+    {
+      "label": "Identity",
+      "artifact": {
+        "path": "Tools/artworks/doge/calibrated/doge_capsule_demonbound_idle_dr_v01.png",
+        "sha256": "21559ca7aedd3e146feb2b93c5a6633affc6ce544122628c960972a982b0b5e7"
+      }
+    },
+    {
+      "label": "Previous",
+      "artifact": {
+        "path": "Tools/artworks/doge/candidates/doge_capsule_demonbound_death_wip_v02.png",
+        "sha256": "5ae88b13e64dd2402fd50b40749ece730fe56395ca5d3ec422b1162751e54381"
+      }
+    },
+    {
+      "label": "Pose reference",
+      "artifact": {
+        "path": "Tools/artworks/doge/calibrated/doge_capsule_hunter_death_color_v04.png",
+        "sha256": "f5997651edd71cc78b926d5824ef4ac178f28604f5d7c9846f5a81ee0a2b3d19"
+      }
+    },
+    {
+      "label": "Candidate",
+      "artifact": {
+        "path": "Tools/artworks/doge/candidates/doge_capsule_demonbound_death_round_wip_v04.png",
+        "sha256": "90218c756be1a4e3a40d8221667536f53d665447c24cca597f5f01eef0b462a0"
+      }
+    }
+  ],
+  "measurements": [
+    {
+      "label": "Identity",
+      "bbox": [
+        44,
+        57,
+        81,
+        119
+      ],
+      "bboxSize": [
+        37,
+        62
+      ]
+    },
+    {
+      "label": "Previous",
+      "bbox": [
+        39,
+        35,
+        89,
+        93
+      ],
+      "bboxSize": [
+        50,
+        58
+      ]
+    },
+    {
+      "label": "Pose reference",
+      "bbox": [
+        36,
+        43,
+        92,
+        85
+      ],
+      "bboxSize": [
+        56,
+        42
+      ]
+    },
+    {
+      "label": "Candidate",
+      "bbox": [
+        36,
+        40,
+        92,
+        88
+      ],
+      "bboxSize": [
+        56,
+        48
+      ]
+    }
+  ],
+  "artifact": {
+    "path": "Tools/artworks/doge/reviews/doge_capsule_demonbound_death_round_size_compare_v05.png",
+    "sha256": "8468924ab31547f44e8a264c13014e839f0f8a76887853ed86f4cd64ff0300ab"
+  }
+}

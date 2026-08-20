@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 2,
+  "compiledPromptId": "compiled-prompt-1a999958aabe5434",
+  "jobId": "job-d94ae6b36ac49852",
+  "poseGuideId": "pose-guide-fe48e3f5e66d2e26",
+  "artifact": {
+    "path": "Tools/artworks/doge/demonbound/death_compiled_prompt_v1.md",
+    "sha256": "8b2bde2a6eca012868113ab971d83291ed40a1cf9b2821a8caefd3068bfbf618"
+  }
+}

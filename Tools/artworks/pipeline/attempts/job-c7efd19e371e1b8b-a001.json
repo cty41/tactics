@@ -1,0 +1,37 @@
+{
+  "schemaVersion": 2,
+  "attemptId": "job-c7efd19e371e1b8b-a001",
+  "jobId": "job-c7efd19e371e1b8b",
+  "ordinal": 1,
+  "parentAttemptId": null,
+  "retryFeedbackId": null,
+  "promptDelta": null,
+  "technicalRemediation": false,
+  "state": "prepared",
+  "artifacts": {
+    "source": {
+      "path": "Tools/artworks/doge/concepts/doge_capsule_demonbound_hit_ul_chroma_source_v01.png",
+      "sha256": "43d82243275297cc71b853df915cd83731f545440991789856143e0531190042"
+    },
+    "raw": {
+      "path": "Tools/artworks/pipeline/artifacts/job-c7efd19e371e1b8b/job-c7efd19e371e1b8b-a001/raw.png",
+      "sha256": "43d82243275297cc71b853df915cd83731f545440991789856143e0531190042"
+    },
+    "prepared": {
+      "path": "Tools/artworks/pipeline/artifacts/job-c7efd19e371e1b8b/job-c7efd19e371e1b8b-a001/prepared.png",
+      "sha256": "9be06f91e0d75e0e75965321e34368a8edd083d02ccbc1f1ff794cee09aa159f"
+    }
+  },
+  "report": null,
+  "approvalId": null,
+  "feedbackId": "feedback-b865086790fe8925",
+  "generationInvocationId": "generation-invocation-b2aa030c01aef9a5",
+  "generationDeliveryId": "generation-delivery-336f824da1dfb7b2",
+  "preparation": {
+    "chroma": "00ff00",
+    "chromaTolerance": 160
+  },
+  "feedbackAddendumIds": [
+    "feedback-addendum-338ba1f8e755137f"
+  ]
+}

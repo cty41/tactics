@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 2,
+  "supportingArtifactId": "supporting-artifact-8ed9b470b2d01ba7",
+  "artifact": {
+    "path": "Tools/artworks/doge/reviews/doge_capsule_demonbound_cast_dr_ul_sword_depth_compare_wip_v08.png",
+    "sha256": "8a41e96e6c79d64bdbc578a8f16cb7a31d6c107139db04e08f02dbf077193b9d"
+  },
+  "role": "assembly-review-wip",
+  "note": "DR, front-layer UL, and mostly occluded UL sword comparison."
+}

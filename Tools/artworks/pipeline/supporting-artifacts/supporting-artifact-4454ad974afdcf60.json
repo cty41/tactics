@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 2,
+  "supportingArtifactId": "supporting-artifact-4454ad974afdcf60",
+  "artifact": {
+    "path": "Tools/artworks/doge/candidates/doge_capsule_demonbound_death_wip_v02.png",
+    "sha256": "5ae88b13e64dd2402fd50b40749ece730fe56395ca5d3ec422b1162751e54381"
+  },
+  "role": "candidate-preview",
+  "note": "Demonbound Death v2 compact-core and narrow detached-sword candidate for human visual review; not approved or promoted."
+}

@@ -251,6 +251,54 @@ This is the current cross-project manual acceptance state. Stable IDs are author
 
 ## Passed
 
+### MQA-ARTWORK-DEMONBOUND-DEATH — Rounded death Sprite identity and size
+
+- Status: `passed`
+- Source: Demonbound Death Round v04 visual review
+- Action: Compare Demonbound Idle DR, previous Death v02, approved Hunter Death and Round v04 at the same 128-pixel scale.
+- Expected: Round v04 preserves the Demonbound identity, X eyes, detached sword and cohesive rounded corpse; its centered `56×48` preview footprint does not introduce a visible scale problem relative to the approved references.
+- Observe: `Tools/artworks/doge/reviews/doge_capsule_demonbound_death_round_size_compare_v05.png`.
+- Preserve on failure: Comparison PNG, selected candidate and exact observed size or identity mismatch.
+- Save boundary: Artwork review only; no Godot runtime Resource or save data is changed.
+- Automated evidence: Artwork strict inventory reports 385 items with zero issues; release Sprite validation reports 129 files with zero failures. Automation covers RGBA, chroma residue, centered AABB and paired preview, not visual approval.
+- User verdict: User explicitly reported `ok 没问题` after reviewing the four-way size comparison on 2026-08-20.
+
+### MQA-ARTWORK-DEMONBOUND-HIT-UL — Hit UL recoil, rear layering and right-hand sword
+
+- Status: `passed`
+- Source: Demonbound Hit UL v3 visual review
+- Action: Compare the approved Demonbound Melee UL sword reference, accepted swordless Hit UL v2 and right-hand sword Hit UL v3.
+- Expected: The native rear three-quarter body recoils toward screen-left while both ears trail screen-right; the body covers both feet upper edges; exactly one visible eye and tear remain; the anatomical right hand at screen-left grips the approved compact narrow ancestral sword without changing the accepted body pose.
+- Observe: `Tools/artworks/doge/reviews/doge_capsule_demonbound_hit_ul_sword_compare_v03.png`.
+- Preserve on failure: The comparison image and the first incorrect ear, foot, hand, sword or body edge.
+- Save boundary: Offline artwork review only; no runtime asset or Run save is modified.
+- Automated evidence: Invocation/delivery and immutable human feedback are recorded, and artwork strict provenance validation passes. Semantic masking, deterministic calibration, complete bound reviews, approval receipt and runtime integration remain outside this visual verdict.
+- User verdict: Passed explicitly on 2026-08-20; approval is limited to the Hit UL v3 visual arrangement.
+
+### MQA-ARTWORK-DEMONBOUND-HIT-DR — Hit DR body pose and reaction language
+
+- Status: `passed`
+- Source: Demonbound Hit DR v2 visual review
+- Action: Compare the approved Demonbound Idle DR identity, approved Hunter Hit reaction language, failed Hit DR v1 and swordless Hit DR v2.
+- Expected: Demonbound keeps its gray-black identity and red collar while the rigid capsule core leans screen-right; folded ears, widened eyes, exactly two tear streaks and the tense mouth read as the approved hit peak; the incorrect generated sword is absent so the approved Demonbound sword can be assembled separately.
+- Observe: `Tools/artworks/doge/reviews/doge_capsule_demonbound_hit_dr_identity_pose_review_v02.png`.
+- Preserve on failure: The comparison image and the first identity, pose or expression mismatch.
+- Save boundary: Offline artwork review only; no runtime asset or Run save is modified.
+- Automated evidence: Invocation/delivery and immutable feedback receipts are recorded, and artwork strict provenance validation passes. Chroma cleanup, semantic masking, final equipment assembly and runtime integration remain outside this visual verdict.
+- User verdict: Passed explicitly on 2026-08-20; approval is limited to the swordless Hit DR v2 body frame.
+
+### MQA-ARTWORK-DEMONBOUND-CAST-UL — Cast UL component depth and silhouette
+
+- Status: `passed`
+- Source: Capsule sprite component assembly v08 visual review
+- Action: Compare the approved Cast DR pose with Cast UL v08 and inspect the feet, hidden paws, reused sword silhouette and body occlusion.
+- Expected: Both paws are fully hidden behind the back-facing body; the accepted DR sword keeps its width and scale, sits behind the body and exposes only the short tip between the ears; both feet retain the accepted partial body occlusion.
+- Observe: `Tools/artworks/doge/reviews/doge_capsule_demonbound_cast_dr_ul_sword_depth_compare_wip_v08.png`.
+- Preserve on failure: The comparison image, exact component transform and the first incorrect visible edge.
+- Save boundary: Offline artwork review only; no runtime asset or Run save is modified.
+- Automated evidence: Artwork strict provenance validation passes. Layering, silhouette readability and 3D interpretation remain human-only.
+- User verdict: Passed explicitly on 2026-08-20; approval is limited to the Cast UL v08 visual arrangement and does not authorize runtime integration.
+
 ### MQA-GODOT-FULL-RUN — Complete Run shell and route recovery
 
 - Status: `passed`

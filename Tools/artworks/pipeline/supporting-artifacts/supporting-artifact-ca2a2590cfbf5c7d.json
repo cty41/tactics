@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 2,
+  "supportingArtifactId": "supporting-artifact-ca2a2590cfbf5c7d",
+  "artifact": {
+    "path": "Tools/artworks/doge/reviews/doge_capsule_demonbound_cast_ul_reused_clean_sword_behind_body_wip_v08.png",
+    "sha256": "564650d6e788840f909389295a8b6c5f4e62fa16621230cd45cbd8e01e34c70a"
+  },
+  "role": "assembly-review-wip",
+  "note": "Clean DR sword shifted upward 18px behind UL body; only sword tip remains visible."
+}

@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 2,
+  "approvalId": "approval-0d8b685cfe3dd279",
+  "attemptId": "job-c4e3583c3ad96d21-a001",
+  "candidateSha256": "90218c756be1a4e3a40d8221667536f53d665447c24cca597f5f01eef0b462a0",
+  "maskSha256": null,
+  "reviewer": "cty41",
+  "reviewSha256": {
+    "sizeComparison": "8468924ab31547f44e8a264c13014e839f0f8a76887853ed86f4cd64ff0300ab"
+  },
+  "decision": "approved",
+  "reason": "Round v04 identity, cohesive corpse shape and same-scale footprint accepted after four-way comparison.",
+  "decidedAt": "2026-08-20T23:59:00+08:00",
+  "annotation": null,
+  "reportSha256": "ab94496d8846421bf691eed7032cb395d1f52ee8ff48bbfab5b22c8e752c552a"
+}

@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 2,
+  "supportingArtifactId": "supporting-artifact-d8c08cb6deed1c96",
+  "artifact": {
+    "path": "Tools/artworks/doge/demonbound/death_crossed_eye_guide_v1.png",
+    "sha256": "fb78f7261e85506d39ccab6d1cfc6f221196bb2063d0a866ca76765f7f0c225d"
+  },
+  "role": "death-expression-guide",
+  "note": "Deterministic guide for the crossed-eye overlay generation."
+}

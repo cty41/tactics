@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 2,
+  "supportingArtifactId": "supporting-artifact-90b3ea6ff1cb78f6",
+  "artifact": {
+    "path": "Tools/artworks/doge/candidates/doge_capsule_demonbound_cast_ul_far_paw_component_v01.png",
+    "sha256": "987c6425723e42d7e877123b799d527767cf70104c594436f2a25a6aeba8b32e"
+  },
+  "role": "component-candidate-wip",
+  "note": "Transparent far paw candidate; not approved."
+}

@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 2,
+  "supportingArtifactId": "supporting-artifact-4795f89741efe228",
+  "artifact": {
+    "path": "Tools/artworks/doge/candidates/doge_capsule_demonbound_death_round_wip_v04_128.png",
+    "sha256": "dd077a665618ef75024bdfb4eed823ac761466dcdede835f3ed3150cc5aed98c"
+  },
+  "role": "death-round-preview",
+  "note": "128px preview paired with the rounded Demonbound death candidate."
+}

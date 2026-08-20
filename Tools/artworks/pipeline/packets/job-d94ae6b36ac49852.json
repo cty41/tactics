@@ -1,0 +1,40 @@
+{
+  "schemaVersion": 2,
+  "jobId": "job-d94ae6b36ac49852",
+  "state": "ready",
+  "contractId": "contract-12606b2f52d43683",
+  "contractSha256": "7f552e463a3aea24c551c6896a72f9c5dc7695da34195de722f9d1854c1ddc9b",
+  "prompt": {
+    "path": "Tools/artworks/doge/demonbound/death_prompt_v1.md",
+    "sha256": "c52a9a0dd19e3331c0ddeb894cad07eafd770666739daebf28fa69bf4da5db23"
+  },
+  "inputs": [
+    {
+      "role": "equipment",
+      "path": "Tools/artworks/doge/calibrated/doge_capsule_demonbound_melee_dr_v01.png",
+      "sha256": "a0fee8512cf8578f57b8b3d3c5e2b74a1f68ac3afdcbefd15a87c82f5a85eaf5"
+    },
+    {
+      "role": "identity",
+      "path": "Tools/artworks/doge/calibrated/doge_capsule_demonbound_idle_dr_v01.png",
+      "sha256": "21559ca7aedd3e146feb2b93c5a6633affc6ce544122628c960972a982b0b5e7"
+    },
+    {
+      "role": "pose",
+      "path": "Tools/artworks/doge/calibrated/doge_capsule_hunter_death_color_v04.png",
+      "sha256": "f5997651edd71cc78b926d5824ef4ac178f28604f5d7c9846f5a81ee0a2b3d19"
+    }
+  ],
+  "target": {
+    "direction": "down-right",
+    "pose": "death"
+  },
+  "series": null,
+  "conceptOnly": false,
+  "contractRequirements": null,
+  "requiresInvocation": true,
+  "poseGuide": {
+    "poseGuideId": "pose-guide-fe48e3f5e66d2e26",
+    "sha256": "21612e1acbaebbaede3727a28f2c207b219fe10058975564c421dfa75d3ce6d6"
+  }
+}

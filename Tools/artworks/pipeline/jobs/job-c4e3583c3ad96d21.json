@@ -1,0 +1,36 @@
+{
+  "schemaVersion": 2,
+  "jobId": "job-c4e3583c3ad96d21",
+  "state": "ready",
+  "contractId": "contract-12606b2f52d43683",
+  "contractSha256": "7f552e463a3aea24c551c6896a72f9c5dc7695da34195de722f9d1854c1ddc9b",
+  "prompt": null,
+  "inputs": [
+    {
+      "path": "Tools/artworks/doge/concepts/doge_capsule_demonbound_death_chroma_source_v03.png",
+      "sha256": "07f75e0c2a7911c59bdd3740fbab3245236ac493e822efd5e727a70d50dc78a0"
+    },
+    {
+      "path": "Tools/artworks/doge/candidates/doge_capsule_demonbound_death_round_wip_v04.png",
+      "sha256": "90218c756be1a4e3a40d8221667536f53d665447c24cca597f5f01eef0b462a0"
+    },
+    {
+      "path": "Tools/artworks/doge/candidates/doge_capsule_demonbound_death_round_wip_v04_128.png",
+      "sha256": "dd077a665618ef75024bdfb4eed823ac761466dcdede835f3ed3150cc5aed98c"
+    },
+    {
+      "path": "Tools/artworks/doge/reviews/doge_capsule_demonbound_death_round_size_compare_v05.png",
+      "sha256": "8468924ab31547f44e8a264c13014e839f0f8a76887853ed86f4cd64ff0300ab"
+    }
+  ],
+  "target": {
+    "direction": "down-right",
+    "pose": "death"
+  },
+  "series": null,
+  "conceptOnly": false,
+  "contractRequirements": null,
+  "requiresInvocation": false,
+  "sourceMode": "reviewed_import",
+  "reviewedImportId": "reviewed-import-8790518f7fee8714"
+}

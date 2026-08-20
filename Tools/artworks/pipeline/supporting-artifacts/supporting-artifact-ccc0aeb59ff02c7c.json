@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 2,
+  "supportingArtifactId": "supporting-artifact-ccc0aeb59ff02c7c",
+  "artifact": {
+    "path": "Tools/artworks/doge/candidates/doge_capsule_demonbound_cast_ul_near_paw_component_v01.png",
+    "sha256": "26add2507045864d17c1606c3bd22c273dec4fca54b03f2348e4287eb2414967"
+  },
+  "role": "component-candidate-wip",
+  "note": "Transparent near paw candidate; not approved."
+}

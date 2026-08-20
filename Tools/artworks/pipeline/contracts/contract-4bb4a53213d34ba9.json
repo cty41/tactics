@@ -1,0 +1,39 @@
+{
+  "schemaVersion": 2,
+  "contractId": "contract-4bb4a53213d34ba9",
+  "assetId": "demonbound-hit-ul-v3-sword",
+  "approvedAssetId": "demonbound-idle-ul",
+  "kind": "action_pose",
+  "direction": "up-left",
+  "pose": "hit",
+  "anchor": {
+    "path": "Tools/artworks/doge/calibrated/doge_capsule_demonbound_idle_ul_v01.png",
+    "sha256": "ef9fd7521afafc4f46ef8fd355fc90337b493e268de61eaebfcd8d2ea3e529f4"
+  },
+  "maskRequired": true,
+  "noArms": true,
+  "handSides": {
+    "near_hand": "left",
+    "far_hand": "right"
+  },
+  "occlusion": null,
+  "compositionSpec": {
+    "compositionId": "composition-940d0be5469c2472",
+    "sha256": "4ffd773363e0cb6296c57df244518d7d61f5134aae8046535fa3f4466d960882"
+  },
+  "identitySpec": null,
+  "requiresInvocation": true,
+  "tolerances": {
+    "sizePx": 4,
+    "centerPx": 4
+  },
+  "outputs": {
+    "master": "Tools/artworks/doge/calibrated/doge_capsule_demonbound_hit_ul_v03.png",
+    "preview": "Tools/artworks/doge/calibrated/doge_capsule_demonbound_hit_ul_v03_128.png"
+  },
+  "rights": {
+    "rightsHolder": "cty41",
+    "license": "CC-BY-4.0",
+    "provenance": "project-owned-gpt-generated"
+  }
+}

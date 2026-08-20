@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 2,
+  "supportingArtifactId": "supporting-artifact-aa46755b39766940",
+  "artifact": {
+    "path": "Tools/artworks/doge/reviews/doge_capsule_demonbound_cast_ul_component_compare_wip_v01.png",
+    "sha256": "d4c69afb3e2f10ac06fbbe31d44c440bafa887c9cdd64d8c48fc15850858cab2"
+  },
+  "role": "assembly-review-wip",
+  "note": "Initial component comparison; far paw fully occluded."
+}

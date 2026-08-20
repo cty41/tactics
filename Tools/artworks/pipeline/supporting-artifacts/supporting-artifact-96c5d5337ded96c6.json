@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 2,
+  "supportingArtifactId": "supporting-artifact-96c5d5337ded96c6",
+  "artifact": {
+    "path": "Tools/artworks/doge/reviews/doge_capsule_demonbound_cast_ul_reused_clean_sword_behind_body_wip_v07.png",
+    "sha256": "018e5e9b22a760e2caae2ff35b25bd784438ea183ff7156e556cc6f4b69094ff"
+  },
+  "role": "assembly-review-wip",
+  "note": "Clean DR sword at accepted position, fully occluded by UL body; diagnostic."
+}

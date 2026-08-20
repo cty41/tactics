@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 2,
+  "supportingArtifactId": "supporting-artifact-6fd222e658727ddd",
+  "artifact": {
+    "path": "Tools/artworks/doge/reviews/doge_capsule_demonbound_cast_ul_reused_sword_dr_offset_wip_v05.png",
+    "sha256": "efbecd9dd856ab35cb65930ea96ae4fa793c2ab889a202708813c6ee8950fec0"
+  },
+  "role": "assembly-review-wip",
+  "note": "Reused approved DR sword at its original DR transform; paws fully occluded."
+}

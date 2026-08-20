@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 2,
+  "supportingArtifactId": "supporting-artifact-215277225e2283ff",
+  "artifact": {
+    "path": "Tools/artworks/doge/reviews/doge_capsule_demonbound_cast_ul_component_compare_wip_v04.png",
+    "sha256": "a11ecf507b4838c4b3a703efe6b98959e181e06daae732b8276a990a7eeb9abb"
+  },
+  "role": "assembly-review-wip",
+  "note": "Pose-depth comparison v04 with lower paw placement; no approval."
+}

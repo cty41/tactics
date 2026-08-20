@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 2,
+  "supportingArtifactId": "supporting-artifact-faad80bc074b6fd2",
+  "artifact": {
+    "path": "Tools/artworks/doge/reviews/doge_capsule_demonbound_cast_ul_six_layer_wip_v01.png",
+    "sha256": "4a34a21152a9ac74cb0079dacfd4c01b41b8d29a53d957be49e37b3c22a7f2b3"
+  },
+  "role": "assembly-review-wip",
+  "note": "Initial six-layer WIP; far paw fully occluded."
+}

@@ -1,0 +1,71 @@
+{
+  "schemaVersion": 1,
+  "assetId": "demonbound-death-v5-crossed-eyes",
+  "spec": {
+    "path": "Tools/artworks/doge/demonbound/death_recipe_v5.json",
+    "sha256": "cf7dd23023eb4bee78cde176f797343681ed8ff64ea0a86d8f6a498136ab35db"
+  },
+  "source": {
+    "path": "Tools/artworks/doge/candidates/doge_capsule_demonbound_death_wip_v02.png",
+    "sha256": "5ae88b13e64dd2402fd50b40749ece730fe56395ca5d3ec422b1162751e54381"
+  },
+  "sourceMask": {
+    "path": "Tools/artworks/doge/demonbound/death_v2_semantic_mask.png",
+    "sha256": "895cbe53182cb2c57ed7901abfe6ad99762f185d0d1e6c9512cb1fd88c7c8b5a"
+  },
+  "referenceMask": {
+    "path": "Tools/artworks/doge/demonbound/hunter_death_core_reference_mask.png",
+    "sha256": "17c15659669e7d4645230ad5a4b5e8f833fbd40db46780b5d27b88233a92c494"
+  },
+  "expressionOverlay": {
+    "path": "Tools/artworks/doge/components/doge_capsule_demonbound_death_crossed_eye_overlay_wip_v01.png",
+    "sha256": "ee17b4d36ca0a153b50d24b2f0f06c0304cff41a54fc6c29c3cf071a329504b7"
+  },
+  "sourceGeometry": {
+    "centerX": 128.88854760860028,
+    "centerY": 119.46752961825362,
+    "angleRadians": -0.8238937018503785,
+    "angleDegrees": -47.20563188343647,
+    "major": 98.8894342423094,
+    "minor": 60.463767941873435,
+    "ratio": 1.635515575830079
+  },
+  "referenceGeometry": {
+    "centerX": 127.50261780104712,
+    "centerY": 128.4959162303665,
+    "angleRadians": -0.17497698230081343,
+    "angleDegrees": -10.025442597771914,
+    "major": 105.73487021667555,
+    "minor": 51.928122493088836,
+    "ratio": 2.0361774148631677
+  },
+  "resultGeometry": {
+    "centerX": 128.59714599341382,
+    "centerY": 113.55625686059275,
+    "angleRadians": -0.18039096629005733,
+    "angleDegrees": -10.33564103070699,
+    "major": 99.38938042258714,
+    "minor": 49.13623212807784,
+    "ratio": 2.0227310096451863
+  },
+  "shift": [
+    0,
+    -6
+  ],
+  "report": {
+    "angleErrorDegrees": 0.310198432935076,
+    "ratioError": 0.006603749319597019,
+    "passed": true
+  },
+  "artifacts": {
+    "prepared": {
+      "path": "Tools/artworks/doge/candidates/doge_capsule_demonbound_death_wip_v03.png",
+      "sha256": "2c8dc8748e39132f97b496c1c17e9e3805b4a6e3e8d8e595cd00ec7cc5db4b15"
+    },
+    "review": {
+      "path": "Tools/artworks/doge/reviews/doge_capsule_demonbound_death_amazon_compare_v03.png",
+      "sha256": "a3cebcc2b60ad8dc2c024dde4487ec78e6a6eb60d1b6446d85c6ab84a79cde44"
+    }
+  },
+  "deathRecipeId": "death-recipe-07f0fb6b0542b627"
+}

@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 2,
+  "supportingArtifactId": "supporting-artifact-5715101d10d9310a",
+  "artifact": {
+    "path": "Tools/artworks/doge/reviews/doge_capsule_demonbound_hit_ul_amazon_compare_v02.png",
+    "sha256": "2256628cfe5d8f2ccdd70ebef32c83c3669a2a00d321398067c2690524170214"
+  },
+  "role": "comparison-review",
+  "note": "Left to right: Demonbound Idle UL identity anchor, official Amazon Hit UL pose reference, Demonbound Hit UL v1, Demonbound Hit UL v2."
+}

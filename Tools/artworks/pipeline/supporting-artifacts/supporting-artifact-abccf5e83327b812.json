@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 2,
+  "supportingArtifactId": "supporting-artifact-abccf5e83327b812",
+  "artifact": {
+    "path": "Tools/artworks/doge/reviews/doge_capsule_demonbound_cast_ul_component_compare_wip_v02.png",
+    "sha256": "db98faee960f581b2a6f7fb2995d376e7050b5dd3b6b66c05dfa0f791540f43e"
+  },
+  "role": "assembly-review-wip",
+  "note": "Adjusted component comparison candidate; no approval."
+}

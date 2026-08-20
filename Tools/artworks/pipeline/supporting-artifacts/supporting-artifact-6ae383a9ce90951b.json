@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 2,
+  "supportingArtifactId": "supporting-artifact-6ae383a9ce90951b",
+  "artifact": {
+    "path": "Tools/artworks/doge/reviews/doge_capsule_demonbound_death_round_size_compare_v04.png",
+    "sha256": "ffe0acda3db8380814e92efbd7cf9deaca4b638b669c41abe4ff2c322aeb5f85"
+  },
+  "role": "death-round-size-review",
+  "note": "Idle, previous death, Hunter Death and rounded v04 comparison for manual size review."
+}

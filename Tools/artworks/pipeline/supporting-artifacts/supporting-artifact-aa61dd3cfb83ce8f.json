@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 2,
+  "supportingArtifactId": "supporting-artifact-aa61dd3cfb83ce8f",
+  "artifact": {
+    "path": "Tools/artworks/doge/reviews/doge_capsule_demonbound_cast_ul_six_layer_wip_v02.png",
+    "sha256": "c1b1569485a2799d893e7eba96f5e7fbbd18e5475a53962f13301b46a3dd1476"
+  },
+  "role": "assembly-review-wip",
+  "note": "Adjusted six-layer WIP candidate; no approval."
+}

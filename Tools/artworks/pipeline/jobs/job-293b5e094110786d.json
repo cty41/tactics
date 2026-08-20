@@ -1,0 +1,35 @@
+{
+  "schemaVersion": 2,
+  "jobId": "job-293b5e094110786d",
+  "state": "ready",
+  "contractId": "contract-830bc87590be6a06",
+  "contractSha256": "501f57949aedc948191039b4b20245dce526b433279d453acb0fba3836a89c55",
+  "prompt": {
+    "path": "Tools/artworks/doge/demonbound/hit_down_right_prompt_v1.md",
+    "sha256": "b9b675b043adc6bdfd9981097addd39bb13c3e537c001c25b83a34489b10fec1"
+  },
+  "inputs": [
+    {
+      "role": "hit_pose",
+      "path": "godot/assets/units/actions/doge_hunter_hit_dr.png",
+      "sha256": "a921486bec40be843d02efdce8617e2a1b764c33e6a9e8e4278cf76c92fa9e01"
+    },
+    {
+      "role": "identity",
+      "path": "Tools/artworks/doge/calibrated/doge_capsule_demonbound_idle_dr_v01.png",
+      "sha256": "21559ca7aedd3e146feb2b93c5a6633affc6ce544122628c960972a982b0b5e7"
+    }
+  ],
+  "target": {
+    "direction": "down-right",
+    "pose": "hit"
+  },
+  "series": null,
+  "conceptOnly": false,
+  "contractRequirements": null,
+  "requiresInvocation": true,
+  "poseGuide": {
+    "poseGuideId": "pose-guide-e75dda19ce5632f0",
+    "sha256": "8d43f2baedfa37b7814c4fc689e7ebe0d61d377096ff2f7f43c08926528c48e8"
+  }
+}

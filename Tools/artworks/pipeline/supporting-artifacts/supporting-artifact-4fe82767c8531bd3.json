@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 2,
+  "supportingArtifactId": "supporting-artifact-4fe82767c8531bd3",
+  "artifact": {
+    "path": "Tools/artworks/doge/candidates/doge_capsule_demonbound_hit_dr_wip_v02.png",
+    "sha256": "80c4c75b9b52dacc637fb579174a2316cb8e8d0226eb5a4ab4aa41ed27e70ba2"
+  },
+  "role": "action-candidate-wip",
+  "note": "Swordless Hit DR v2 body candidate; visual review pending and green fringe remains technical."
+}

@@ -1,0 +1,43 @@
+{
+  "schemaVersion": 3,
+  "contractId": "contract-ca988f14944a786f",
+  "assetId": "demonbound-death-crossed-eye-overlay-v1c",
+  "approvedAssetId": "demonbound-idle-dr",
+  "kind": "death_pose",
+  "direction": "down-right",
+  "pose": "death",
+  "anchor": {
+    "path": "Tools/artworks/doge/calibrated/doge_capsule_demonbound_idle_dr_v01.png",
+    "sha256": "21559ca7aedd3e146feb2b93c5a6633affc6ce544122628c960972a982b0b5e7"
+  },
+  "maskRequired": false,
+  "noArms": false,
+  "handSides": {
+    "near_hand": null,
+    "far_hand": null
+  },
+  "occlusion": null,
+  "compositionSpec": {
+    "compositionId": "composition-d3c9088f74d8a526",
+    "sha256": "2f7fd11c75fa3ead14a64cee7fba1dcad582abc39847869f0fd1e0404fbd077b"
+  },
+  "identitySpec": null,
+  "requiresInvocation": true,
+  "tolerances": {
+    "sizePx": 0,
+    "centerPx": 0
+  },
+  "outputs": {
+    "master": "Tools/artworks/doge/components/doge_capsule_demonbound_death_crossed_eye_overlay_v01.png",
+    "preview": "Tools/artworks/doge/components/doge_capsule_demonbound_death_crossed_eye_overlay_v01_128.png"
+  },
+  "rights": {
+    "rightsHolder": "cty41",
+    "license": "CC-BY-4.0",
+    "provenance": "project-owned-gpt-generated"
+  },
+  "assetRole": "component",
+  "componentKind": "death_expression_overlay",
+  "sourceMode": "generated",
+  "runtimeEligible": false
+}

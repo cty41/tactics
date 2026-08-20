@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 2,
+  "supportingArtifactId": "supporting-artifact-8d67c83b1e081108",
+  "artifact": {
+    "path": "Tools/artworks/doge/calibrated/doge_capsule_demonbound_death_v01_128.png",
+    "sha256": "dd077a665618ef75024bdfb4eed823ac761466dcdede835f3ed3150cc5aed98c"
+  },
+  "role": "human-approved-death-preview-import",
+  "note": "Exact Round v04 selected by cty41 after Idle, previous v02 and Hunter Death size comparison on 2026-08-20; explicit reviewed import because the preview generation predates an invocation receipt; no runtime integration."
+}

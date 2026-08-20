@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 2,
+  "supportingArtifactId": "supporting-artifact-026434f9764bc7ff",
+  "artifact": {
+    "path": "Tools/artworks/doge/reviews/doge_capsule_demonbound_cast_ul_pose_depth_wip_v03.png",
+    "sha256": "189b8db0f1d11bf8a13654f6e593298528b57fa07ab6d06a399cc111358ef495"
+  },
+  "role": "assembly-review-wip",
+  "note": "Pose-depth diagnostic: body occludes sword, paws, and feet; grip placement remains unresolved."
+}

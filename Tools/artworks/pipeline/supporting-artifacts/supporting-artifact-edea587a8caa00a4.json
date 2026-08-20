@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 2,
+  "supportingArtifactId": "supporting-artifact-edea587a8caa00a4",
+  "artifact": {
+    "path": "Tools/artworks/doge/candidates/doge_capsule_demonbound_hit_dr_wip_v01.png",
+    "sha256": "f47b910a93c92c1292016ea34610e5541542cafec152dc3f95f740d71c488610"
+  },
+  "role": "action-candidate-wip",
+  "note": "Hit DR v1 scaled review candidate; sword identity drift and green fringe require retry."
+}

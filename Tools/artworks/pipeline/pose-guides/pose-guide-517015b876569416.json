@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 2,
+  "poseGuideId": "pose-guide-517015b876569416",
+  "compositionId": "composition-f673a2eb6bde965c",
+  "compositionSha256": "056a4cb9b5dc3efce0679b267339b4e98a07ae9015e291ab884fa8e38436dd22",
+  "anchorSha256": "ef9fd7521afafc4f46ef8fd355fc90337b493e268de61eaebfcd8d2ea3e529f4",
+  "artifact": {
+    "path": "Tools/artworks/doge/demonbound/hit_up_left_pose_guide_v2.png",
+    "sha256": "67de2f0f8b9a1d1e2300f5f34f54110bd8861a3297a8b5851fa01f87061d0712"
+  },
+  "role": "supporting-derived"
+}

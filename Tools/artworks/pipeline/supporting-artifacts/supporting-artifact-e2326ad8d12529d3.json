@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 2,
+  "supportingArtifactId": "supporting-artifact-e2326ad8d12529d3",
+  "artifact": {
+    "path": "Tools/artworks/doge/components/doge_capsule_demonbound_death_crossed_eye_overlay_wip_v01.png",
+    "sha256": "ee17b4d36ca0a153b50d24b2f0f06c0304cff41a54fc6c29c3cf071a329504b7"
+  },
+  "role": "death-expression-overlay",
+  "note": "Generated crossed-eye expression overlay for the Demonbound death candidate; candidate support only."
+}

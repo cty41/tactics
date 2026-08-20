@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 2,
+  "compiledPromptId": "compiled-prompt-9c352554f31c677b",
+  "jobId": "job-c7efd19e371e1b8b",
+  "poseGuideId": "pose-guide-b13872c522ad1e3d",
+  "artifact": {
+    "path": "Tools/artworks/doge/demonbound/hit_up_left_compiled_prompt_v1.md",
+    "sha256": "ff7443ed4c783a6745bea545d5d6670ecab6c758c1032eacb8a379f630d31795"
+  }
+}

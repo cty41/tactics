@@ -1,0 +1,14 @@
+{
+  "schemaVersion": 1,
+  "assetId": "demonbound-death-v5-crossed-eyes",
+  "sourceImage": "Tools/artworks/doge/candidates/doge_capsule_demonbound_death_wip_v02.png",
+  "sourceMask": "Tools/artworks/doge/demonbound/death_v2_semantic_mask.png",
+  "referenceMask": "Tools/artworks/doge/demonbound/hunter_death_core_reference_mask.png",
+  "expressionOverlay": "Tools/artworks/doge/components/doge_capsule_demonbound_death_crossed_eye_overlay_wip_v01.png",
+  "eyeRegions": [[128, 100, 142, 113], [142, 100, 156, 115]],
+  "output": "Tools/artworks/doge/candidates/doge_capsule_demonbound_death_wip_v03.png",
+  "reviewOutput": "Tools/artworks/doge/reviews/doge_capsule_demonbound_death_amazon_compare_v03.png",
+  "angleToleranceDegrees": 2.0,
+  "ratioTolerance": 0.03,
+  "axisPolicy": "toward-reference-no-expand"
+}

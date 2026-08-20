@@ -738,10 +738,11 @@ class ArtworkPipelineTests(unittest.TestCase):
         self.assertIn("far_hand_missing_for_layer_rule", report["issues"])
         self.assertIn("equipment_visibility_cap_exceeded", report["issues"])
 
-    def v3_contract(self, asset_id: str, role: str, component_kind: str | None, source_mode: str):
+    def v3_contract(self, asset_id: str, role: str, component_kind: str | None, source_mode: str,
+                    no_arms: bool = False):
         return pipeline.create_contract(self.store, self.ns(
             asset_id=asset_id, approved_asset_id=asset_id, kind="tile", direction="down-right", pose="cast",
-            anchor=None, anchor_mask=None, mask_required=True, no_arms=False,
+            anchor=None, anchor_mask=None, mask_required=True, no_arms=no_arms,
             near_hand_side=None, far_hand_side=None, size_tolerance=3, center_tolerance=2,
             layer_rule=[], visibility_cap=[], composition_id=None, identity_anchor_mask=None,
             forehead_blaze_min_iou=0.45, pose_reference=False,
@@ -750,8 +751,8 @@ class ArtworkPipelineTests(unittest.TestCase):
             rights_holder="cty41", license="CC-BY-4.0", provenance="project-owned-gpt-generated-or-derived",
             asset_role=role, component_kind=component_kind, source_mode=source_mode))
 
-    def approved_component(self, asset_id: str, kind: str, image: Image.Image):
-        contract = self.v3_contract(asset_id, "component", kind, "derived")
+    def approved_component(self, asset_id: str, kind: str, image: Image.Image, source_mode: str = "generated"):
+        contract = self.v3_contract(asset_id, "component", kind, source_mode)
         path = self.root / f"Tools/artworks/components/{asset_id}.png"
         path.parent.mkdir(parents=True, exist_ok=True); image.save(path)
         artifact = {"path": self.store.relative(path), "sha256": pipeline.sha256_file(path)}
@@ -770,23 +771,25 @@ class ArtworkPipelineTests(unittest.TestCase):
             "contractSha256": pipeline.sha256_file(self.store.record("contracts", contract["contractId"])),
             "prompt": None, "inputs": [], "target": {"direction": "down-right", "pose": "cast"},
             "series": None, "conceptOnly": False, "contractRequirements": None,
-            "requiresInvocation": False, "sourceMode": "derived"})
+            "requiresInvocation": False, "sourceMode": source_mode})
         attempt_id = f"{job_id}-a001"
+        approval_id = f"approval-{asset_id}"
         pipeline.write_json_idempotent(self.store.record("attempts", attempt_id), {
             "schemaVersion": 3, "attemptId": attempt_id, "jobId": job_id, "ordinal": 1,
             "parentAttemptId": None, "retryFeedbackId": None, "promptDelta": None,
             "technicalRemediation": False, "state": "approved",
             "artifacts": {"prepared": artifact, "mask": mask_artifact},
-            "report": None, "approvalId": "fixture-approval", "feedbackId": None})
+            "report": None, "approvalId": approval_id, "feedbackId": None})
+        pipeline.write_json_idempotent(self.store.record("approvals", approval_id), {
+            "schemaVersion": 3, "approvalId": approval_id, "attemptId": attempt_id,
+            "candidateSha256": artifact["sha256"], "maskSha256": mask_artifact["sha256"],
+            "reviewer": "cty41", "decision": "approved", "reason": "fixture",
+            "decidedAt": "2026-08-19T00:00:00+08:00"})
         return attempt_id, contract, artifact
 
     def test_schema_v3_component_cannot_promote(self):
         image = Image.new("RGBA", (256, 256), (0, 0, 0, 0)); ImageDraw.Draw(image).rectangle((100, 100, 140, 180), fill="red")
         attempt_id, _contract, artifact = self.approved_component("body-component", "body", image)
-        pipeline.write_json_idempotent(self.store.record("approvals", "fixture-approval"), {
-            "schemaVersion": 3, "approvalId": "fixture-approval", "attemptId": attempt_id,
-            "candidateSha256": artifact["sha256"], "maskSha256": None, "reviewer": "cty41",
-            "decision": "approved", "reason": "fixture", "decidedAt": "2026-08-19T00:00:00+08:00"})
         with self.assertRaisesRegex(pipeline.PipelineError, "components cannot be promoted"):
             pipeline.promote(self.store, self.ns(attempt_id=attempt_id))
 
@@ -796,11 +799,15 @@ class ArtworkPipelineTests(unittest.TestCase):
         sword = transparent(); ImageDraw.Draw(sword).rectangle((126, 40, 130, 180), fill=(210, 210, 220, 255))
         far = transparent(); ImageDraw.Draw(far).ellipse((115, 160, 127, 172), fill=(255, 128, 0, 255))
         near = transparent(); ImageDraw.Draw(near).ellipse((130, 158, 142, 170), fill=(255, 128, 0, 255))
+        far_foot = transparent(); ImageDraw.Draw(far_foot).ellipse((112, 220, 132, 240), fill=(200, 100, 0, 255))
+        near_foot = transparent(); ImageDraw.Draw(near_foot).ellipse((130, 218, 152, 240), fill=(255, 128, 0, 255))
         components = [
+            ("far_foot_overlay", *self.approved_component("assembly-far-foot-base", "foot_overlay", far_foot)),
+            ("far_paw_overlay", *self.approved_component("assembly-far", "paw_overlay", far)),
             ("body", *self.approved_component("assembly-body", "body", body)),
             ("equipment", *self.approved_component("assembly-sword", "equipment", sword)),
-            ("far_paw_overlay", *self.approved_component("assembly-far", "paw_overlay", far)),
             ("near_paw_overlay", *self.approved_component("assembly-near", "paw_overlay", near)),
+            ("near_foot_overlay", *self.approved_component("assembly-near-foot-base", "foot_overlay", near_foot)),
         ]
         final_contract = self.v3_contract("assembled-cast", "assembled_sprite", None, "derived")
         spec = {
@@ -821,7 +828,7 @@ class ArtworkPipelineTests(unittest.TestCase):
         unapproved = pipeline.load_json(self.store.record("attempts", components[1][1])); unapproved["state"] = "prepared"
         pipeline.write_json_idempotent(self.store.record("attempts", components[1][1]), unapproved)
         spec_path.write_text(json.dumps(spec), encoding="utf-8")
-        with self.assertRaisesRegex(pipeline.PipelineError, "approved components"):
+        with self.assertRaisesRegex(pipeline.PipelineError, "human approval"):
             pipeline.create_assembly(self.store, self.ns(spec=str(spec_path)))
 
     def test_derive_paw_overlay_uses_only_requested_semantic_label(self):
@@ -839,23 +846,97 @@ class ArtworkPipelineTests(unittest.TestCase):
         self.assertGreater(output.getpixel((24, 24))[3], 0)
         self.assertEqual(0, output.getpixel((44, 24))[3])
 
+    def test_derive_body_and_equipment_partition_complete_pose_semantics(self):
+        source = Image.new("RGBA", (256, 256), (0, 0, 0, 0))
+        draw = ImageDraw.Draw(source)
+        draw.rectangle((20, 20, 29, 29), fill=(80, 70, 60, 255))
+        draw.rectangle((30, 20, 39, 29), fill=(120, 90, 70, 255))
+        draw.rectangle((40, 20, 49, 29), fill=(220, 220, 230, 255))
+        draw.rectangle((50, 20, 59, 29), fill=(255, 128, 0, 255))
+        attempt_id, _contract, _artifact = self.approved_component("derive-complete", "body", source)
+        mask_path = self.root / "derive-complete-mask.png"
+        mask = Image.new("RGBA", (256, 256), (0, 0, 0, 0)); md = ImageDraw.Draw(mask)
+        md.rectangle((20, 20, 29, 29), fill=pipeline.MASK_COLORS["core"])
+        md.rectangle((30, 20, 39, 29), fill=pipeline.MASK_COLORS["head_appendage"])
+        md.rectangle((40, 20, 49, 29), fill=pipeline.MASK_COLORS["equipment"])
+        md.rectangle((50, 20, 59, 29), fill=pipeline.MASK_COLORS["near_hand"])
+        mask.save(mask_path)
+        attempt = pipeline.load_json(self.store.record("attempts", attempt_id))
+        attempt["artifacts"]["mask"] = {"path": self.store.relative(mask_path), "sha256": pipeline.sha256_file(mask_path)}
+        pipeline.write_json_idempotent(self.store.record("attempts", attempt_id), attempt)
+
+        body_contract = self.v3_contract("derived-body", "component", "body", "derived")
+        equipment_contract = self.v3_contract("derived-equipment", "component", "equipment", "derived")
+        body = pipeline.derive_component(self.store, self.ns(
+            contract_id=body_contract["contractId"], source_attempt_id=attempt_id, label="body"))
+        equipment = pipeline.derive_component(self.store, self.ns(
+            contract_id=equipment_contract["contractId"], source_attempt_id=attempt_id, label="equipment"))
+        body_image = Image.open(self.store.absolute(body["artifacts"]["prepared"]["path"])).convert("RGBA")
+        equipment_image = Image.open(self.store.absolute(equipment["artifacts"]["prepared"]["path"])).convert("RGBA")
+        self.assertGreater(body_image.getpixel((24, 24))[3], 0)
+        self.assertGreater(body_image.getpixel((34, 24))[3], 0)
+        self.assertEqual(0, body_image.getpixel((44, 24))[3])
+        self.assertGreater(equipment_image.getpixel((44, 24))[3], 0)
+        self.assertEqual(0, equipment_image.getpixel((54, 24))[3])
+
+    def test_derived_component_uses_passing_report_instead_of_human_approval(self):
+        transparent = lambda: Image.new("RGBA", (256, 256), (0, 0, 0, 0))
+        source = transparent(); ImageDraw.Draw(source).ellipse((130, 158, 142, 170), fill=(255, 128, 0, 255))
+        source_attempt_id, _contract, _artifact = self.approved_component("derive-near-source", "body", source)
+        source_mask_path = self.root / "derive-near-source-mask.png"
+        source_mask = transparent(); ImageDraw.Draw(source_mask).ellipse((130, 158, 142, 170), fill=pipeline.MASK_COLORS["near_hand"]); source_mask.save(source_mask_path)
+        source_attempt = pipeline.load_json(self.store.record("attempts", source_attempt_id))
+        source_attempt["artifacts"]["mask"] = {
+            "path": self.store.relative(source_mask_path), "sha256": pipeline.sha256_file(source_mask_path)}
+        pipeline.write_json_idempotent(self.store.record("attempts", source_attempt_id), source_attempt)
+        derived_contract = self.v3_contract("derived-near-paw", "component", "paw_overlay", "derived")
+        derived = pipeline.derive_component(self.store, self.ns(
+            contract_id=derived_contract["contractId"], source_attempt_id=source_attempt_id, label="near_hand"))
+        report = pipeline.validate_attempt(self.store, self.ns(attempt_id=derived["attemptId"]))
+        self.assertTrue(report["passed"])
+        derived = pipeline.load_json(self.store.record("attempts", derived["attemptId"]))
+        self.assertEqual("review_pending", derived["state"])
+        self.assertIsNone(derived["approvalId"])
+
+        body = transparent(); ImageDraw.Draw(body).rectangle((100, 80, 155, 230), fill=(90, 80, 70, 255))
+        equipment = transparent(); ImageDraw.Draw(equipment).rectangle((126, 40, 130, 180), fill=(210, 210, 220, 255))
+        far_hand = transparent(); ImageDraw.Draw(far_hand).ellipse((115, 160, 127, 172), fill=(220, 110, 0, 255))
+        far_foot = transparent(); ImageDraw.Draw(far_foot).ellipse((112, 218, 132, 236), fill=(200, 100, 0, 255))
+        near_foot = transparent(); ImageDraw.Draw(near_foot).ellipse((130, 218, 152, 236), fill=(255, 128, 0, 255))
+        components = [
+            ("far_foot_overlay", self.approved_component("derived-fixture-far-foot", "foot_overlay", far_foot)[0]),
+            ("far_paw_overlay", self.approved_component("derived-fixture-far-paw", "paw_overlay", far_hand)[0]),
+            ("body", self.approved_component("derived-fixture-body", "body", body)[0]),
+            ("equipment", self.approved_component("derived-fixture-equipment", "equipment", equipment)[0]),
+            ("near_paw_overlay", derived["attemptId"]),
+            ("near_foot_overlay", self.approved_component("derived-fixture-near-foot", "foot_overlay", near_foot)[0]),
+        ]
+        final_contract = self.v3_contract("derived-assembly", "assembled_sprite", None, "derived")
+        spec = {"assetId": "derived-assembly", "contractId": final_contract["contractId"], "canvas": [256, 256],
+                "layers": [{"role": role, "attemptId": attempt_id,
+                            "transform": {"scalePercent": 100, "translate": [0, 0], "flipHorizontal": False}}
+                           for role, attempt_id in components]}
+        spec_path = self.root / "derived-assembly.json"; spec_path.write_text(json.dumps(spec), encoding="utf-8")
+        assembly = pipeline.create_assembly(self.store, self.ns(spec=str(spec_path)))
+        self.assertEqual([role for role, _attempt_id in components], [layer["role"] for layer in assembly["layers"]])
+
     def test_foot_overlays_render_behind_body_in_canonical_order(self):
         transparent = lambda: Image.new("RGBA", (256, 256), (0, 0, 0, 0))
         body = transparent(); ImageDraw.Draw(body).rectangle((100, 80, 155, 230), fill=(90, 80, 70, 255))
-        far = transparent(); ImageDraw.Draw(far).ellipse((112, 220, 132, 240), fill=(200, 100, 0, 255))
-        near = transparent(); ImageDraw.Draw(near).ellipse((130, 218, 152, 240), fill=(255, 128, 0, 255))
+        far = transparent(); ImageDraw.Draw(far).ellipse((112, 218, 132, 236), fill=(200, 100, 0, 255))
+        near = transparent(); ImageDraw.Draw(near).ellipse((130, 218, 152, 236), fill=(255, 128, 0, 255))
         sword = transparent(); ImageDraw.Draw(sword).rectangle((126, 40, 130, 180), fill=(210, 210, 220, 255))
         far_hand = transparent(); ImageDraw.Draw(far_hand).ellipse((115, 160, 127, 172), fill=(220, 110, 0, 255))
         near_hand = transparent(); ImageDraw.Draw(near_hand).ellipse((130, 158, 142, 170), fill=(255, 128, 0, 255))
         components = [
             ("far_foot_overlay", *self.approved_component("assembly-far-foot", "foot_overlay", far)),
-            ("near_foot_overlay", *self.approved_component("assembly-near-foot", "foot_overlay", near)),
+            ("far_paw_overlay", *self.approved_component("assembly-foot-far-hand", "paw_overlay", far_hand)),
             ("body", *self.approved_component("assembly-foot-body", "body", body)),
             ("equipment", *self.approved_component("assembly-foot-sword", "equipment", sword)),
-            ("far_paw_overlay", *self.approved_component("assembly-foot-far-hand", "paw_overlay", far_hand)),
             ("near_paw_overlay", *self.approved_component("assembly-foot-near-hand", "paw_overlay", near_hand)),
+            ("near_foot_overlay", *self.approved_component("assembly-near-foot", "foot_overlay", near)),
         ]
-        final_contract = self.v3_contract("assembled-feet", "assembled_sprite", None, "derived")
+        final_contract = self.v3_contract("assembled-feet", "assembled_sprite", None, "derived", no_arms=True)
         spec = {"assetId": "assembled-feet", "contractId": final_contract["contractId"], "canvas": [256, 256],
                 "layers": [{"role": role, "attemptId": attempt_id,
                             "transform": {"scalePercent": 100, "translate": [0, 0], "flipHorizontal": False}}
@@ -865,14 +946,115 @@ class ArtworkPipelineTests(unittest.TestCase):
         rendered = pipeline.render_assembly(self.store, self.ns(assembly_id=assembly["assemblyId"]))
         output = Image.open(self.store.absolute(rendered["artifacts"]["prepared"]["path"])).convert("RGBA")
         self.assertEqual((90, 80, 70, 255), output.getpixel((120, 225)))
+        report = pipeline.validate_attempt(self.store, self.ns(attempt_id=rendered["attemptId"]))
+        self.assertFalse(any(issue.endswith("_contact_lt_3") for issue in report["issues"]))
+        review = pipeline.render_review(self.store, self.ns(attempt_id=rendered["attemptId"]))
+        layer_review_path = self.store.absolute(review["outputs"]["assemblyLayerReview"]["path"])
+        with Image.open(layer_review_path) as layer_review:
+            self.assertEqual((256 * 6, 512), layer_review.size)
+
+        detached = json.loads(json.dumps(spec))
+        detached["layers"][0]["transform"]["translate"] = [-80, 0]
+        spec_path.write_text(json.dumps(detached), encoding="utf-8")
+        detached_assembly = pipeline.create_assembly(self.store, self.ns(spec=str(spec_path)))
+        detached_render = pipeline.render_assembly(self.store, self.ns(assembly_id=detached_assembly["assemblyId"]))
+        detached_report = pipeline.validate_attempt(self.store, self.ns(attempt_id=detached_render["attemptId"]))
+        self.assertIn("far_foot_contact_lt_3", detached_report["issues"])
         incomplete = json.loads(json.dumps(spec)); incomplete["layers"] = incomplete["layers"][:3]
         spec_path.write_text(json.dumps(incomplete), encoding="utf-8")
-        with self.assertRaisesRegex(pipeline.PipelineError, "complete"):
+        with self.assertRaisesRegex(pipeline.PipelineError, "exactly once"):
             pipeline.create_assembly(self.store, self.ns(spec=str(spec_path)))
-        bad = json.loads(json.dumps(spec)); bad["layers"][0], bad["layers"][2] = bad["layers"][2], bad["layers"][0]
+        pose_depth = json.loads(json.dumps(spec))
+        pose_depth["layers"] = [pose_depth["layers"][index] for index in (0, 5, 1, 4, 3, 2)]
+        spec_path.write_text(json.dumps(pose_depth), encoding="utf-8")
+        depth_assembly = pipeline.create_assembly(self.store, self.ns(spec=str(spec_path)))
+        self.assertEqual(["far_foot_overlay", "near_foot_overlay", "far_paw_overlay",
+                          "near_paw_overlay", "equipment", "body"],
+                         [layer["role"] for layer in depth_assembly["layers"]])
+        bad = json.loads(json.dumps(spec)); bad["layers"][0]["role"] = bad["layers"][1]["role"]
         spec_path.write_text(json.dumps(bad), encoding="utf-8")
-        with self.assertRaisesRegex(pipeline.PipelineError, "complete"):
+        with self.assertRaisesRegex(pipeline.PipelineError, "exactly once"):
             pipeline.create_assembly(self.store, self.ns(spec=str(spec_path)))
+
+        far_attempt = pipeline.load_json(self.store.record("attempts", components[0][1]))
+        far_mask_path = self.store.absolute(far_attempt["artifacts"]["mask"]["path"])
+        contaminated = Image.open(far_mask_path).convert("RGBA")
+        contaminated.putpixel((120, 225), pipeline.MASK_COLORS["near_foot"])
+        contaminated.save(far_mask_path)
+        spec_path.write_text(json.dumps(spec), encoding="utf-8")
+        with self.assertRaisesRegex(pipeline.PipelineError, "foreign semantic label"):
+            pipeline.create_assembly(self.store, self.ns(spec=str(spec_path)))
+
+    def test_death_recipe_cli_is_retired_but_reviewed_import_promotes_exact_bytes(self):
+        parser = pipeline.build_parser()
+        self.assertNotIn("render-death-recipe", parser._subparsers._group_actions[0].choices)
+        contract, _job, _job_args = self.contract_and_job()
+        source = self.png("Tools/artworks/concepts/death-source.png")
+        candidate_path = self.root / "Tools/artworks/candidates/death.png"; candidate_path.parent.mkdir(parents=True)
+        candidate = Image.new("RGBA", (256, 256), (0, 0, 0, 0)); ImageDraw.Draw(candidate).ellipse((73, 81, 182, 174), fill=(80, 70, 65, 255)); candidate.save(candidate_path)
+        preview_path = self.root / "Tools/artworks/candidates/death_128.png"
+        preview = Image.new("RGBA", (128, 128), (0, 0, 0, 0)); ImageDraw.Draw(preview).ellipse((36, 40, 91, 87), fill=(80, 70, 65, 255)); preview.save(preview_path)
+        comparison = pipeline.render_size_comparison(self.store, self.ns(
+            identity=str(source), previous=str(candidate_path), reference=str(candidate_path),
+            candidate=str(candidate_path), output="Tools/artworks/reviews/death-size.png"))
+        adopted = pipeline.adopt_reviewed_sprite(self.store, self.ns(
+            contract_id=contract["contractId"], source=str(source), candidate=str(candidate_path), preview=str(preview_path),
+            size_comparison=comparison["artifact"]["path"], reviewer="cty41", reason="visual size accepted",
+            accepted_at="2026-08-21T00:00:00+08:00"))
+        attempt_id = adopted["attempt"]["attemptId"]
+        pipeline.decide(self.store, self.ns(attempt_id=attempt_id, reviewer="cty41", reason="visual size accepted",
+                                             decided_at="2026-08-21T00:00:00+08:00"), "approved")
+        master_output = self.store.absolute(contract["outputs"]["master"]); master_output.parent.mkdir(parents=True, exist_ok=True)
+        preview_output = self.store.absolute(contract["outputs"]["preview"]); preview_output.parent.mkdir(parents=True, exist_ok=True)
+        master_output.write_bytes(candidate_path.read_bytes()); preview_output.write_bytes(preview_path.read_bytes())
+        pipeline.register_supporting_artifact(self.store, self.ns(path=str(master_output), role="pre-promotion-copy", note="upgrade regression"))
+        pipeline.register_supporting_artifact(self.store, self.ns(path=str(preview_output), role="pre-promotion-copy", note="upgrade regression"))
+        promoted = pipeline.promote(self.store, self.ns(attempt_id=attempt_id))
+        self.assertEqual(pipeline.sha256_file(candidate_path), promoted["artifacts"]["promoted"]["master"]["sha256"])
+        self.assertEqual(pipeline.sha256_file(preview_path), promoted["artifacts"]["promoted"]["preview"]["sha256"])
+        self.assertTrue(pipeline.strict_check(self.store, True)["ok"])
+
+    def test_reviewed_import_rejects_non_human_or_off_center_candidate(self):
+        contract, _job, _job_args = self.contract_and_job()
+        source = self.png("Tools/artworks/concepts/source.png")
+        candidate_path = self.root / "Tools/artworks/candidates/off-center.png"; candidate_path.parent.mkdir(parents=True)
+        candidate = Image.new("RGBA", (256, 256), (0, 0, 0, 0)); ImageDraw.Draw(candidate).ellipse((10, 10, 80, 80), fill=(80, 70, 65, 255)); candidate.save(candidate_path)
+        preview_path = self.root / "Tools/artworks/candidates/preview.png"
+        Image.new("RGBA", (128, 128), (0, 0, 0, 0)).save(preview_path)
+        review = self.root / "Tools/artworks/reviews/review.png"; review.parent.mkdir(parents=True); Image.new("RGBA", (576, 176), (32, 32, 32, 255)).save(review)
+        args = self.ns(contract_id=contract["contractId"], source=str(source), candidate=str(candidate_path), preview=str(preview_path),
+                       size_comparison=str(review), reviewer="agent", reason="invalid", accepted_at="2026-08-21T00:00:00+08:00")
+        with self.assertRaisesRegex(pipeline.PipelineError, "reviewer must be cty41"):
+            pipeline.adopt_reviewed_sprite(self.store, args)
+        args.reviewer = "cty41"
+        comparison = pipeline.render_size_comparison(self.store, self.ns(
+            identity=str(source), previous=str(candidate_path), reference=str(candidate_path), candidate=str(candidate_path),
+            output="Tools/artworks/reviews/review.png"))
+        args.size_comparison = comparison["artifact"]["path"]
+        with self.assertRaisesRegex(pipeline.PipelineError, "visible AABB must be centered"):
+            pipeline.adopt_reviewed_sprite(self.store, args)
+
+    def test_reviewed_import_requires_native_rgba_and_matching_comparison_candidate(self):
+        contract, _job, _job_args = self.contract_and_job()
+        source = self.png("Tools/artworks/concepts/source.png")
+        first = self.root / "Tools/artworks/candidates/first.png"; first.parent.mkdir(parents=True)
+        second = self.root / "Tools/artworks/candidates/second.png"
+        for path, color in ((first, (80, 70, 65, 255)), (second, (90, 80, 75, 255))):
+            image = Image.new("RGBA", (256, 256), (0, 0, 0, 0)); ImageDraw.Draw(image).ellipse((73, 81, 182, 174), fill=color); image.save(path)
+        preview = self.root / "Tools/artworks/candidates/preview.png"
+        image = Image.new("RGBA", (128, 128), (0, 0, 0, 0)); ImageDraw.Draw(image).ellipse((36, 40, 91, 87), fill=(80, 70, 65, 255)); image.save(preview)
+        comparison = pipeline.render_size_comparison(self.store, self.ns(
+            identity=str(source), previous=str(first), reference=str(first), candidate=str(first),
+            output="Tools/artworks/reviews/size.png"))
+        args = self.ns(contract_id=contract["contractId"], source=str(source), candidate=str(second), preview=str(preview),
+                       size_comparison=comparison["artifact"]["path"], reviewer="cty41", reason="test",
+                       accepted_at="2026-08-21T00:00:00+08:00")
+        with self.assertRaisesRegex(pipeline.PipelineError, "Candidate does not match"):
+            pipeline.adopt_reviewed_sprite(self.store, args)
+        args.candidate = str(first)
+        Image.new("RGB", (128, 128), (0, 0, 0)).save(preview)
+        with self.assertRaisesRegex(pipeline.PipelineError, "must be 128x128 RGBA"):
+            pipeline.adopt_reviewed_sprite(self.store, args)
 
 
 if __name__ == "__main__":

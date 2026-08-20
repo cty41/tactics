@@ -1,0 +1,35 @@
+{
+  "schemaVersion": 2,
+  "jobId": "job-c7efd19e371e1b8b",
+  "state": "ready",
+  "contractId": "contract-4fdb2e70d50e9ac9",
+  "contractSha256": "fd84b3ece2dab35589f2802f50ea2a0bf2cac4582cfcc4c1af0591ca7d2d73c7",
+  "prompt": {
+    "path": "Tools/artworks/doge/demonbound/hit_up_left_prompt_v1.md",
+    "sha256": "47383a76236cbc809ab723511d07250d4dd4b453ae3b16d5589269df3d58aeee"
+  },
+  "inputs": [
+    {
+      "role": "action",
+      "path": "Tools/artworks/doge/candidates/doge_capsule_demonbound_hit_dr_wip_v02.png",
+      "sha256": "80c4c75b9b52dacc637fb579174a2316cb8e8d0226eb5a4ab4aa41ed27e70ba2"
+    },
+    {
+      "role": "identity",
+      "path": "Tools/artworks/doge/calibrated/doge_capsule_demonbound_idle_ul_v01.png",
+      "sha256": "ef9fd7521afafc4f46ef8fd355fc90337b493e268de61eaebfcd8d2ea3e529f4"
+    }
+  ],
+  "target": {
+    "direction": "up-left",
+    "pose": "hit"
+  },
+  "series": null,
+  "conceptOnly": false,
+  "contractRequirements": null,
+  "requiresInvocation": true,
+  "poseGuide": {
+    "poseGuideId": "pose-guide-b13872c522ad1e3d",
+    "sha256": "98c5ce4df47ab796e1268fa5fd2c3e6d033a9926aa86f374a7bb3a1f7e34a665"
+  }
+}

@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 2,
+  "feedbackId": "feedback-b865086790fe8925",
+  "attemptId": "job-c7efd19e371e1b8b-a001",
+  "candidateSha256": "9be06f91e0d75e0e75965321e34368a8edd083d02ccbc1f1ff794cee09aa159f",
+  "reviewer": "codex",
+  "verdict": "retry",
+  "strengths": [
+    "Native back-facing anatomy, one visible eye, one tear streak, Demonbound palette and swordless component boundary are correct."
+  ],
+  "defects": [
+    "Pose axis is horizontally inverted: Demonbound UL top lies right of its foot center, while the approved Amazon Hit UL action requires top left of foot center."
+  ],
+  "nextPromptDelta": "Keep the current back-facing identity and one-eye/one-tear visibility, but reverse only the screen-space body lean so the top center is left of the foot center, matching approved Amazon Hit UL. Remain swordless.",
+  "recordedAt": "2026-08-20T12:03:27.6891456+08:00",
+  "authorType": "agent",
+  "categories": [
+    "pose_axis"
+  ],
+  "disposition": "retry",
+  "frozenInvariants": [],
+  "pendingFixes": [
+    "Pose axis is horizontally inverted: Demonbound UL top lies right of its foot center, while the approved Amazon Hit UL action requires top left of foot center."
+  ]
+}

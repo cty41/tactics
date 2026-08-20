@@ -1,0 +1,39 @@
+{
+  "schemaVersion": 2,
+  "contractId": "contract-830bc87590be6a06",
+  "assetId": "demonbound-hit-dr-v1",
+  "approvedAssetId": "demonbound-idle-dr",
+  "kind": "action_pose",
+  "direction": "down-right",
+  "pose": "hit",
+  "anchor": {
+    "path": "Tools/artworks/doge/calibrated/doge_capsule_demonbound_idle_dr_v01.png",
+    "sha256": "21559ca7aedd3e146feb2b93c5a6633affc6ce544122628c960972a982b0b5e7"
+  },
+  "maskRequired": true,
+  "noArms": true,
+  "handSides": {
+    "near_hand": "right",
+    "far_hand": "left"
+  },
+  "occlusion": null,
+  "compositionSpec": {
+    "compositionId": "composition-a917431f9be609e1",
+    "sha256": "0609e91c234f4e78bf1f6b897de389cf3c604787158df5ad44dab2dcbec4c04f"
+  },
+  "identitySpec": null,
+  "requiresInvocation": true,
+  "tolerances": {
+    "sizePx": 4,
+    "centerPx": 4
+  },
+  "outputs": {
+    "master": "Tools/artworks/doge/calibrated/doge_capsule_demonbound_hit_dr_v01.png",
+    "preview": "Tools/artworks/doge/calibrated/doge_capsule_demonbound_hit_dr_v01_128.png"
+  },
+  "rights": {
+    "rightsHolder": "cty41",
+    "license": "CC-BY-4.0",
+    "provenance": "project-owned-gpt-generated"
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 2,
+  "supportingArtifactId": "supporting-artifact-9d612c25eb22458e",
+  "artifact": {
+    "path": "Tools/artworks/doge/reviews/doge_capsule_demonbound_cast_ul_reused_sword_behind_body_wip_v06.png",
+    "sha256": "ce2e79a211dc8e2fe6f758d849e34c5c90bf3cd1e7c685df577b42907f89668a"
+  },
+  "role": "assembly-review-wip",
+  "note": "Legacy migrated sword behind body; diagnostic revealed full occlusion and green fringe."
+}

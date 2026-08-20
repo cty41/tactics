@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 2,
+  "supportingArtifactId": "supporting-artifact-fb640b857b7dad80",
+  "artifact": {
+    "path": "Tools/artworks/doge/demonbound/hunter_death_core_reference_mask.png",
+    "sha256": "17c15659669e7d4645230ad5a4b5e8f833fbd40db46780b5d27b88233a92c494"
+  },
+  "role": "death-reference-mask",
+  "note": "Amazon Hunter death core reference mask used only for geometry measurement."
+}
