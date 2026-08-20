@@ -1,7 +1,7 @@
 # C# 分层合同
 
 ```text
-Tactics.Core <- Tactics.Application <- Unity Exporter / Godot Runtime / Godot Editor / CLI
+Tactics.Core <- Tactics.Application <- Godot Runtime / Godot Editor / CLI
 ```
 
 - Core：状态、规则、命令、事件、ContentId、确定性 RNG。

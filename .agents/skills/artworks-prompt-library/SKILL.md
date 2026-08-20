@@ -1,11 +1,11 @@
 ---
 name: artworks-prompt-library
-description: "Use when creating reusable GPT Image prompt libraries for Unity 2D character sprites — analyzes a reference image plus a short character brief and writes structured prompt docs to Tools/artworks/<character>/"
+description: "Use when creating reusable GPT Image prompt libraries for Godot 2D character sprites — analyzes a reference image plus a short character brief and writes structured prompt docs to Tools/artworks/<character>/"
 ---
 
 # Artworks Prompt Library
 
-为 Unity 2D 角色 sprite 生成可复用的提示词库真相源。这个 skill 只负责**产出 prompt 文档**，不负责实际生图、sprite sheet 拼接或 Unity 导入。
+为 Godot 2D 角色 sprite 生成可复用的提示词库真相源。这个 skill 只负责**产出 prompt 文档**，不负责实际生图、sprite sheet 拼接或运行时导入。
 
 ## Quick Reference
 
@@ -20,7 +20,7 @@ description: "Use when creating reusable GPT Image prompt libraries for Unity 2D
 
 ## When to use
 
-- 用户希望基于参考图，为某个 Unity 2D 角色建立提示词库
+- 用户希望基于参考图，为某个 Godot 2D 角色建立提示词库
 - 需要把 sprite prompt 从聊天内容沉淀为 `Tools/artworks/<角色名>/` 下的稳定文档
 - 需要复用统一的 isometric pixel-art sprite 约束到多个角色
 - 需要后续继续扩展 idle / walk / attack 等动作帧
@@ -165,7 +165,7 @@ description: "Use when creating reusable GPT Image prompt libraries for Unity 2D
 
 - 不调用 GPT Image 或其他生图工具
 - 不保存 PNG、sprite sheet 或中间图片
-- 不处理 Unity slicing、pivot、导入设置
+- 不处理 Godot import、pivot 或运行时资源设置
 - 不自动推断完整世界观或剧情设定
 
 ```markdown
@@ -186,7 +186,7 @@ description: "Use when creating reusable GPT Image prompt libraries for Unity 2D
 | 为 idle 独立生成多张成品图 | 先用单张等分 sequence sheet 验证连续性 | 独立生图会重画角色轮廓、装备和构图 |
 | 切分后逐帧自动裁切 | 保留统一 tile canvas，只允许整张 sheet 的背景清理 | 独立裁切会制造基线和体量抖动 |
 | 用镜像补齐所有等距方向 | 对不对称装备角色默认做 4 向原生绘制 | 否则长矛手和盾手会反掉 |
-| 在 skill 里顺带规定 Unity 导入 | 把边界限定在 prompt 库 | 第一版目标是稳定提示词真相源 |
+| 在 skill 里顺带规定 Godot 导入 | 把边界限定在 prompt 库 | 第一版目标是稳定提示词真相源 |
 | 为了好看放宽到像素插画 | 优先 production-ready sprite 约束 | 用户目标是游戏资源，不是展示插画 |
 
 ## Checklist
@@ -200,4 +200,4 @@ description: "Use when creating reusable GPT Image prompt libraries for Unity 2D
 - [ ] 每帧都包含 body-part 级骨架字段
 - [ ] 如需 idle 连续性测试，已写明 sheet 网格、读取顺序、空白格和禁止逐帧裁切规则
 - [ ] 已写明 60fps 游戏下的推荐播放节奏
-- [ ] 文档没有混入生图执行或 Unity 导入步骤
+- [ ] 文档没有混入生图执行或 Godot 导入步骤

@@ -4,13 +4,11 @@ resource: https://github.com/cty41/tactics
 title: Battle System
 description: Godot Pure Run 的棋盘、回合、技能、状态、AI 合法性、结算与表现投影主链。
 tags: [gameplay, battle, turn-based, godot]
-timestamp: "2026-08-18T19:10:03+08:00"
+timestamp: "2026-08-20T20:45:06+08:00"
 status: active
 catalog_scope: battle-system
 repo_paths:
   - .agents/docs/battle-line-of-sight-rules.md
-  - .agents/docs/attribute-system-design.md
-  - .agents/docs/buff-system-rules.md
   - .agents/docs/three-class-skill-design.md
   - src/Tactics.Core/Battle
   - src/Tactics.Core/Board
@@ -22,7 +20,7 @@ repo_paths:
   - godot/src/Tactics.Godot.Adapter/Runtime/GodotPlayableRunMain.cs
   - godot/tests/CoreGoldenVectorGodotTests.cs
 verified_revision: 04c75ec4
-source_fingerprint: sha256:01aa83b6474e9179320a8196c1badc4d9bcde0fc786afdb7469d417f9bf496b7
+source_fingerprint: sha256:52571c9b54d8673f1d5db737a28588dfd6bf4648561604587ba97dfb1f7fc20a
 ---
 
 # Current State

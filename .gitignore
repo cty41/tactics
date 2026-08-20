@@ -91,19 +91,10 @@ CLAUDE.md
 .mimocode/.cron-lock
 Tests/gameplay-specs/compiled
 
-# Worktree-local agent endpoints. Templates and tooling remain tracked.
-/.agents/mcp.json
-/.agents/mcp.local.json
-/.agents/mcp.json.*.tmp
-/.agents/mcp.json.*.bak
-/.agents/mcp.local.json.*.tmp
-/.agents/mcp.local.json.*.bak
+# Worktree-local Godot agent endpoints.
 /.codex/config.toml
 /.codex/config.toml.*.tmp
 /.codex/config.toml.*.bak
-/.opencode/opencode.json
-/.opencode/opencode.json.*.tmp
-/.opencode/opencode.json.*.bak
 /.mimocode/mimocode.json
 /.mimocode/mimocode.json.*.tmp
 /.mimocode/mimocode.json.*.bak

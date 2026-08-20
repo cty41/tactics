@@ -1,63 +1,36 @@
 ---
 type: Game System
-resource: https://github.com/cty41/tactics/tree/main/Assets/Tactics/Scripts/Common/ai/MonsterAI
+resource: https://github.com/cty41/tactics/tree/main/src/Tactics.Core/AI
 title: Monster AI
-description: 基于规则门禁、候选评分、决策图和固定执行器的怪物战斗决策系统。
-tags: [gameplay, ai, combat, unity]
-timestamp: "2026-08-16T12:55:23+08:00"
+description: Godot Pure Run 中基于合法候选、规则门禁、稳定评分和确定性执行的怪物决策系统。
+tags: [gameplay, ai, combat, godot]
+timestamp: "2026-08-20T20:45:05+08:00"
 status: active
 catalog_scope: monster-ai
 repo_paths:
-  - .agents/skills/monster-ai-mcp-workflow/SKILL.md
   - src/Tactics.Core/AI
   - src/Tactics.Application/AI
   - src/Tactics.Core.Tests/AiEncounterRuntimeTests.cs
   - godot/src/Tactics.Godot.Adapter/Runtime/AiEncounterBatchValidator.cs
   - godot/content
-  - Tools/balance/pure-run-playtest-template.csv
 verified_revision: c56d71ad4ebd
-source_fingerprint: sha256:1ea6ea7e9a16c80bfbdb74c3ff81e27a1566db1b31502b2cbfd00b29356456b6
+source_fingerprint: sha256:cb1b779eac7f2b24ac7a65047eb96e06318dcd373db89861115a9e2013127ab5
 ---
 
 # Current State
 
-Godot Core 另有魔剑士附身控制路径：所属阵营保持玩家方，但 controller 切换为 AI；候选先面向存活队友，队友全 Down 后才回退敌人，自身增益/治疗仍可作为合法决策。该路径复用正式 transition legality，附身后技能不再继续累积腐化。
+Monster AI 以 Core 战斗状态构建候选，复用正式移动、技能目标、资源支付和执行合法性；规则门禁先拒绝非法候选，稳定评分与固定 tie-break 再选择行动。Pattern 游标、技能次数、MP、召唤物和附身控制均保存在正式战斗状态中，不建立第二套规则。
 
-`AiContextBuilder` 构建战斗快照，`IntentGenerator` 生成“可达站位 × 合法技能目标点”候选，`RuleFilter` 执行硬门禁，`IntentScorer` 评分，`IntentResolver` 稳定选取结果，`IntentExecutor` 执行移动与技能计划。可达站位消费 Battle System 已派生的移动预算；固定 10×10 战场统一使用 `clamp(ceil(Speed / 2), 1, 4)`，AI 不另行放大 Speed 或维护第二套移动公式。
+Godot Adapter 负责从 typed Resource/Catalog 装载 AI 配置，并通过正式运行时执行决策。配置作者链使用 Application 的 typed authoring contract 与 Tactics Authoring MCP；不得恢复旧编辑器资产或任意序列化字段 patch。
 
-玩家预览、AI 和执行前重验证共享 `IAbilityTargetingProvider`，AI 候选还自然消费能力统一的 `CanPerform`/可用性门禁；因此 `MaxUsesPerTurn` 达到本回合上限后不会继续生成或执行该技能，无需 AI 维护独立次数。`AiBrainAsset` 组合 `AiDecisionGraph`、`AIProfile` 和可选 Pattern；Pattern 游标按单位保存，失败或 Generic fallback 不推进。Brain 可选配置偏好战斗距离和过近时的重定位优先级；关闭时不改变旧 Brain 候选与评分。
-
-普通攻击的合法性不再由 `Unit.AttackRange` 形成第二套真值。`AiBasicAttackTargeting` 统一解析 canonical basic attack、`CanPerform` 和 `IAbilityTargetingProvider.QueryTargets`；`RuleFilter`、`IntentGenerator`、Engage/FinishOff follow-up 与 `IntentExecutor` 都消费同一合法目标及目标点。执行前目标失效、能力不再可用或 executor 缺失时返回结构化失败，不再把 legacy no-op 当成功推进回合。
-
-单位朝向属于共享战斗状态而不是 AI 私有状态。AI 的普通路径移动通过共享 `FacingCoordinator` 在每个新路径段开始前转向，成功执行目标技能后朝向目标；失败执行恢复到点击/执行前的最后预览朝向。AI 不在回合末自动面向最近敌人，也不显示独立箭头。方向型技能继续读取这一共享朝向与 `SkillTargetingProtocol`。
-
-`Unit.ApplyFacingVisual()` 在 Animator 参数写入后可将主 Sprite 显示委托给 `FourDirectionSpriteVisual`；该组件只按既有 `FacingDirection` 选择两张原生图并水平镜像，不改写朝向状态、`FacingResolver`、移动、技能目标或 AI 决策。未配置组件的单位继续使用原有 East/West Renderer 翻转回退。
-
-Pure Run 的 Charger、Ranged、AOE、Support、EliteCharger 与 ElitePoisonCaster 各自绑定独立 Brain/Profile。三个正式怪物技能当前均为每回合最多成功使用 1 次：Charge Strike 法力 0、基础伤害 8、射程 3；Area Blast 法力 0、基础伤害 6、中心射程 3、半径 2；Heavy Shot 法力 8、基础伤害 6、射程 4。普通 Ranged Attack 的合法区间为 2–4，Support 的伤害加深射程为 4。Charger 贴近并强化技能效果，Ranged 维持 2–4 格，AOE 与 Support 维持 2–3 格；正式 Ranged 配方最低起始法力为 15，HunterBlue 的 Intelligence 为 5，使首次 Heavy Shot 后的回合末回蓝足以支持下一回合继续支付。AOE 提高覆盖评分，Support 提高减益评分；两个 Elite 通过固定 Pattern 顺序执行高威胁技能并在不合法时回退 Generic AI。旧 `BasicMeleeBrain` 仍服务未迁移内容，FireDemon 继续使用 2–3 格偏好距离。
-
-通用单位资源规则在自身回合结束时按 Intelligence 回复 MP、受 MaxMana 限制；因此敌方与召唤物同样遵循一次回合结束回蓝，AI 的可支付技能候选在下一次决策前读取该更新后的 MP。
-
-SkillGraph AI 元数据会从范围收集节点识别 AOE，并从 Harmful Buff 或死灵诅咒节点识别 Debuff。候选进入评分前拒绝会造成友军伤害的 AOE 中心，也拒绝向已持有同一负面状态/诅咒类别的目标重复施加 Debuff；这两项是硬合法性约束，不依赖权重碰巧压低分数。`ScoreNode.Parameter` 已序列化但仍未由 `IntentScorer` 消费。
-
-亚马逊诱饵沿用普通敌人的候选生成与合法性，不建立专用 Brain。若当前生成结果中存在可达诱饵的移动或攻击候选，`IntentGenerator` 会只保留这些诱饵候选；没有可达诱饵候选时继续使用正常敌方目标，避免不可达诱饵令 AI 停摆。
-
-低生命撤退只在敌人已经进入其即时攻击包络时生成；拉开一个安全间距后必须恢复正常接敌，避免大地图上永久风筝导致玩家输入旅程无法自然结束。AI 行动队列在选择前和每个异步等待后都会过滤已被同步致死销毁的单位。回合启动与单位间表现等待使用全局 scaled gameplay 时钟，随暂停冻结并随 2×/4× 加速；每次 `AIPlayer.Play` 创建并全程复用独立取消令牌，回合结束、战斗结束或新一轮 Play 会取消旧流程。取消令牌贯穿 `AiBrainRunner.Execute`/`ExecuteTurn` 与 `IntentExecutor.ExecuteWithResult` 及其各 intent handler：入口与每个异步步骤后都会检查令牌，`OperationCanceledException` 穿透执行器的通用异常恢复直接上抛；AI 动作执行期间发生的取消会中止后续步骤（含 Engage 追击），并跳过该单位的收尾标记（MarkAsFriendly/MarkAsFinished/UnitDeselected）。取消只是信号，不代表 `async void Play` continuation 已退出；销毁战斗对象或切换自动模拟样本前必须调用并等待 `AIPlayer.CancelAndDrainAsync()`。该 contract 会追踪并 drain 所有仍活跃的 Play task，而不只等待最新一轮。防死锁保护仍按 realtime 边界处理。
-
-Pure Run 平衡探测由 `[Explicit]` `PureRunAiVsAiBenchmarkTests` 承担：固定三人 party 按已记录通用 AI policy（Mage=AOEBrain、Necromancer=SupportBrain、Amazon=RangedBrain）在 N1–N6 配方 × 3 个模拟种子下各打一场，单场 15 秒 realtime 超时，逐场把结果写入 `temporaryCachePath` 下的 baseline CSV；它是 AI 代理指标，不能替代人工 playtest 协议。teardown fail-safe：每场结束与 fixture 收尾都先 cancel+drain AI players、再等待 runtime scope drain，`finally` 恢复 `Random.state`、1× 速度与资产初始化状态，观察到的 fault 显式暴露而非吞掉。最近独立终态（2026-08-06，PlayMode job `5e84917d5ee44f418c2e509b78ac1b1f`）：18 场全部产生 CSV 行并完成清理，但 18/18 在 round 1 超时、测试按设计失败于 no-timeout 断言——该结果只证明 harness 行为，不构成平衡成功或实战胜率证据；战斗为何停在 round 1 仍需单独调查，平衡结论以人工 playtest 为准。
+固定 Seed 与 AI-vs-AI 结果只用于诊断候选、回合推进和清理，不作为平衡或玩家体验通过证据。人工体验结论继续由试玩协议和验收账本记录。
 
 # Relationships
 
-- 技能候选与执行依赖[SkillGraph](skill-graph.md)。
-- 结构化 AI 结果可由[Gameplay Test Framework](gameplay-test-framework.md)验证。
-- 移动、攻击和回合推进发生在[Battle System](battle.md)。
-- 敌人设计可参考[Mewgenics Analysis](../references/mewgenics-analysis.md)，外部机制不视为已实现。
-- 具体未实施项见[Project Known Gaps](../plans/project-known-gaps.md)。
+- 技能合法性与执行依赖 [SkillGraph](skill-graph.md)。
+- 移动、攻击和回合推进依赖 [Battle System](battle.md)。
+- 结构化旅程由 [Gameplay Test Framework](gameplay-test-framework.md)验证。
 
 # Verification Guidance
 
-判断支持面时同时检查 runtime 类型、实际 Brain/Graph/Profile 资产和 PlayMode 测试；不得仅根据历史计划推断行为。
-
-# Citations
-
-[1] [Monster AI runtime](https://github.com/cty41/tactics/tree/main/Assets/Tactics/Scripts/Common/ai/MonsterAI)
-[2] [AI assets](https://github.com/cty41/tactics/tree/main/Assets/Tactics/AI)
+同时核对 Core 候选/评分、Application 作者合同、Godot Resource、运行时执行和固定 Seed 回归；不得仅根据历史计划或冻结来源推断当前行为。

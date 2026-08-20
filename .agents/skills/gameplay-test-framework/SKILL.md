@@ -1,11 +1,11 @@
 ---
 name: gameplay-test-framework
-description: "Use when generating, validating, compiling, or running gameplay automation tests from natural language, design docs, or batch templates — guides agents through Tools/gameplay-test-spec and Unity or Godot runtime execution"
+description: "Use when generating, validating, compiling, or running gameplay automation tests from natural language, design docs, or batch templates — guides agents through Tools/gameplay-test-spec and the Godot runtime runner"
 ---
 
 # Gameplay Test Framework
 
-使用 Agent-first Spec 工具链创建和运行 Gameplay 自动化测试。能力与命令以 `Tools/gameplay-test-spec` 和 Unity adapters 为准，系统概览见 `../../docs/gameplay-test-framework.md`。
+使用 Agent-first Spec 工具链创建和运行 Gameplay 自动化测试。能力与命令以 `Tools/gameplay-test-spec` 和 Godot runtime runner 为准，系统概览见 `../../docs/gameplay-test-framework.md`。
 
 ## Quick Reference
 
@@ -15,20 +15,20 @@ description: "Use when generating, validating, compiling, or running gameplay au
 | 校验 | `validate-spec -s <spec>` |
 | 编译 | `compile-spec -s <spec> -o <plan>` |
 | 批处理 | `batch-validate -d <dir>` / `batch-compile -d <dir> -o <dir>` |
-| 执行 | Unity `GameplayRuntimeRunner` / Godot `GodotGameplayRuntimeRunner` |
+| 执行 | Godot `GodotGameplayRuntimeRunner` |
 
 ## When to use
 
 - 将需求或设计文档转成可执行 Gameplay 测试。
 - 添加或修改 Skill、Battle、Map、UI adapter 场景。
-- 排查 Spec 校验、编译或 Unity 运行失败。
+- 排查 Spec 校验、编译或 Godot 运行失败。
 - 用真实资产回归技能、战斗或 Roguelike 行为。
 
 ## Workflow
 
 ### 1. 先核对支持面
 
-检查 `Tools/gameplay-test-spec/src` 的 schema/validator/compiler 和 `Assets/Tactics/Scripts/Common/Testing/Gameplay/` 的 adapter。不要根据旧阶段文档猜 action/assertion 名称。
+检查 `Tools/gameplay-test-spec/src` 的 schema/validator/compiler 和 Godot runtime runner 的 adapter。不要根据旧阶段文档猜 action/assertion 名称。
 
 当前 adapter 包括 Skill、Battle、Map、UI；它们按场景需要组合，不存在必须先完成某一 adapter 才能使用其他 adapter 的阶段限制。
 
@@ -60,14 +60,7 @@ node Tools/gameplay-test-spec/dist/src/cli.js batch-compile -d <spec-directory> 
 
 修改 TypeScript 后先按 package scripts 构建。校验失败必须修复 Spec 或 schema，不跳过 validator 直接改生成计划。
 
-### 4. Unity 执行
-
-- 让 Unity Runner 消费编译后的 plan。
-- 使用实际需要的 adapter，并确认其能解析所有 setup/action/assertion。
-- 资产行为测试应引用真实资产；记录失败步骤、诊断码和可观察状态。
-- 若改动 `.cs`，遵守 Unity 自动编译与测试规则。
-
-### 5. Godot 执行
+### 4. Godot 执行
 
 - Godot v2 plan 必须声明 `runtime: Godot`、能力、adapter、隔离存档、watchdog 和可选 validated checkpoint。
 - Runner 加载正式 `Main.tscn`，玩家动作通过 `Viewport.PushInput` 进入生产输入链，不直接调用业务服务证明输入成功。
@@ -98,5 +91,5 @@ node Tools/gameplay-test-spec/dist/src/cli.js generate-test-from-spec -s <skill-
 - [ ] 已核对当前 schema 与 adapter 支持面。
 - [ ] 源 Spec 清晰且进入版本控制。
 - [ ] TS 测试、validate 和 compile 通过。
-- [ ] Unity 使用需要的真实资产与 adapter 执行。
+- [ ] Godot 使用需要的真实 Resource 与 adapter 执行。
 - [ ] 失败信息能定位到具体步骤/断言。

@@ -13,8 +13,6 @@ import yaml
 POLICY_REFERENCE = "foreground-interaction.md"
 POLICY_PATH = ".agents/rules/foreground-interaction.md"
 AGENTS_PATH = "AGENTS.md"
-UNITY_CORE_SKILL_PATH = ".agents/skills/unity-mcp-core/SKILL.md"
-MCP_TROUBLESHOOTING_SKILL_PATH = ".agents/skills/mcp-connection-troubleshooting/SKILL.md"
 PURE_RUN_ARTWORK_SKILL_PATH = ".agents/skills/pure-run-artwork-pipeline/SKILL.md"
 GODOT_LIFECYCLE_SKILL_PATH = ".agents/skills/godot-editor-lifecycle/SKILL.md"
 CATALOG_PATH = ".agents/knowledge/catalog-scopes.yaml"
@@ -30,23 +28,19 @@ REQUIRED_POLICY_TOKENS = (
 
 REQUIRED_CONSUMER_REFERENCES = (
     AGENTS_PATH,
-    UNITY_CORE_SKILL_PATH,
-    MCP_TROUBLESHOOTING_SKILL_PATH,
     PURE_RUN_ARTWORK_SKILL_PATH,
     GODOT_LIFECYCLE_SKILL_PATH,
 )
 
 REQUIRED_SCOPE_PATHS = {
-    "unity-agent-workflow": (
+    "godot-agent-workflow": (
         AGENTS_PATH,
         POLICY_PATH,
-        UNITY_CORE_SKILL_PATH,
-        MCP_TROUBLESHOOTING_SKILL_PATH,
+        GODOT_LIFECYCLE_SKILL_PATH,
         "Tools/agent-policy/validate_foreground_interaction_policy.py",
         "Tools/agent-policy/test_validate_foreground_interaction_policy.py",
     ),
     "pure-run-artwork": (PURE_RUN_ARTWORK_SKILL_PATH,),
-    "godot-agent-workflow": (GODOT_LIFECYCLE_SKILL_PATH,),
 }
 
 
@@ -83,10 +77,6 @@ def validate_policy(repo_root: Path) -> list[str]:
         consumer_text = read_required_file(repo_root, consumer_path, errors)
         if consumer_text and POLICY_REFERENCE not in consumer_text:
             errors.append(f"{consumer_path} 未引用 {POLICY_REFERENCE}")
-
-    agents_text = read_required_file(repo_root, AGENTS_PATH, errors)
-    if agents_text and "manual_visual_qa_pending" not in agents_text:
-        errors.append(f"{AGENTS_PATH} 缺少 manual_visual_qa_pending 停止条件")
 
     pure_run_text = read_required_file(repo_root, PURE_RUN_ARTWORK_SKILL_PATH, errors)
     if pure_run_text and "manual_visual_qa_pending" not in pure_run_text:

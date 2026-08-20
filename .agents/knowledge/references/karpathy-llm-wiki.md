@@ -15,7 +15,7 @@ LLM Wiki 将原始来源、LLM 维护的 wiki 和约束维护方式的 schema �
 
 # Tactics Adaptation
 
-Tactics 使用现有 docs、plans、代码、Unity 资产和测试作为来源层，以本 OKF bundle 作为综合 wiki，并通过 `AGENTS.md`、规则和 skill 约束维护流程。
+Tactics 使用现有 docs、plans、代码、Godot Resource 和测试作为来源层，以本 OKF bundle 作为综合 wiki，并通过 `AGENTS.md`、规则和 skill 约束维护流程。
 
 普通查询不会自动写回；只有形成持久决策、实现状态变化或用户明确要求 ingest 时才修改 bundle，以控制仓库噪声。
 
