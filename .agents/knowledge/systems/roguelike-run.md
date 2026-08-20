@@ -4,7 +4,7 @@ resource: https://github.com/cty41/tactics/tree/main/src/Tactics.Core/Runs
 title: Roguelike Run
 description: Godot Pure Run 的七层路线、节点事务、队伍成长、存档和终局主链。
 tags: [gameplay, roguelike, map, progression, godot]
-timestamp: "2026-08-20T20:44:39+08:00"
+timestamp: "2026-08-20T21:53:49+08:00"
 status: active
 catalog_scope: roguelike-run
 repo_paths:
@@ -17,14 +17,14 @@ repo_paths:
   - godot/src/Tactics.Godot.Adapter/Runtime/GodotPlayableRunMain.cs
   - Tests/gameplay-specs/godot
 verified_revision: c56d71ad4ebd
-source_fingerprint: sha256:58171b52450238cd227803b4de08fbf20965da23d170c963ca84a48e213bea43
+source_fingerprint: sha256:5013a83ab4003fda349c0fdf48d5fe93ad46afd4a8c82c0ffcd9d385dc1a38a6
 ---
 
 # Current State
 
-Pure Run 使用七层只前进路线、稳定节点 ID 和持久化 `RunAdventureState`。Application transition 统一移动、路线选择、节点事务、战斗请求/结算、成长、Inventory 与终局；成功事务使用稳定 key 防止重入时重复扣款、发奖或结算。
+Pure Run 使用七层只前进路线、稳定节点 ID 和持久化 `RunAdventureState`。每个节点的 Tile 场景只展示当前节点的直接后继出口；领队移动到相邻格并点击后立即选择目标，不存在开局两组路线预提交。Application transition 统一移动、即时出口、节点事务、战斗请求/结算、成长、Inventory 与终局；成功事务使用稳定 key 防止重入时重复扣款、发奖或结算。
 
-Godot Adventure Board 使用正式 Tile 投影和生产输入链呈现路线、队伍位置与节点状态。存档采用版本化文档、revision、hash、temp 重读与 backup 回退；损坏证据隔离保存，不静默覆盖。
+Godot Adventure Board 使用正式 Tile 投影和生产输入链呈现出口、队伍位置与节点状态；Rogue Map 仅作只读总览。战斗节点先进入 Tile 场景，胜利后恢复同一 resolved 场景再开放出口。存档采用 V10、revision、hash、temp 重读与 backup 回退；V9 活跃 Run/Pending Setup 要求新局，Terminal Summary 保留，损坏证据隔离保存且不静默覆盖。
 
 当前可选角色、战斗、事件、休息、商店、宝箱、Elite、Boss、成长和终局均由代码、typed Resource 与测试共同定义。自动旅程验证逻辑和持久化边界；地图可读性、操作手感和视觉反馈由人工验收账本负责。
 

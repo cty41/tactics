@@ -38,7 +38,7 @@ public sealed record GodotAdventureRuntimeProbe(
     string? LeaderId,
     IReadOnlyDictionary<string, string> ActorCells,
     IReadOnlyDictionary<string, string> ObjectStates,
-    IReadOnlyList<string> RouteCandidateNodeIds,
+    IReadOnlyList<string> ImmediateSuccessorNodeIds,
     string? NodeLifecycle,
     string? EventResolution,
     string? PendingBattleContextKind,
@@ -48,7 +48,7 @@ public sealed record GodotAdventureRuntimeProbe(
     int StoreSoldOfferCount,
     int LeaderRevision,
     int InteractionRevision,
-    int RouteRevision,
+    int ExitRevision,
     int SceneRevision);
 
 public sealed record GodotBattleUnitProjection(UnitInstanceId UnitId, int MaxHealth, int MaxMana,

@@ -36,20 +36,20 @@ public class GodotGameplayRuntimeRunnerTests
 
     [TestCase]
     [RequireGodotRuntime]
-    public void ValidatedCheckpointCatalogProducesStableCanonicalV9Hashes()
+    public void ValidatedCheckpointCatalogProducesStableCanonicalV10Hashes()
     {
         var expected = new Dictionary<string, string>(StringComparer.Ordinal)
         {
-            ["inventory-store-ready-v1"] = "871fdd3d6a37e66b3b072fd0cb5add3bf54d9ae4985e4b03d80bae3dd7c8e625",
-            ["defeat-no-summon-v1"] = "c4dfaf31b13248f6b151810e187ee5601f902abbc9e0402c5d2dc8757a78189f",
-            ["numbers-mana-v1"] = "a946a748226f95abbcf3769743570eddccf3afb00b856c4c363e13ab5249bc20",
-            ["numbers-miss-v1"] = "f7bda3a52483e83f4b44595b5a4a3bf6e9f1dc2f4937e73e61867863bb5fadc6",
-            ["reload-pending-battle-v1"] = "12c95663706165bae8a178d8f39b9ba63b8d4754b96d5c93bbb4db75d7701230",
-            ["demonbound-ready-v1"] = "be97eff7ae17ad478fa596f2baa23ddc9ce9977c39be1da9b46369dc049fe959",
-            ["layer4-choice-ready-v1"] = "26d40a899332e71a34f8cf3016082b6cc899c0071c453f094cc58a527c9156ab",
-            ["layer4-event-ready-v1"] = "e87eba856e590e14226d417ed9d61b7b5e7656933597a83dc0fb29fe7ed6fa72",
-            ["layer6-event-ready-v1"] = "81fdf128c8db01120597f18749fec38ce63032bc5f5152b305164cfaa81082ca",
-            ["layer6-escort-ready-v1"] = "be224262f4ab5fa41a48b27bcec5ccf1684d6d199c00f17abc992e57c27a467c"
+            ["inventory-store-ready-v1"] = "f0178ece6249cfa8e978550fa36e3871ea2ecc2b7b05f138d1d76598e659d8b9",
+            ["defeat-no-summon-v1"] = "ca88be359b96f0e3a2b193d9052618ddb6b086c8c63065175ac36acfe5a6ea0c",
+            ["numbers-mana-v1"] = "c418483a77bdc78b3388d33b88abac8ee82d6291cae0dfbf7ad4a2939c7fca78",
+            ["numbers-miss-v1"] = "e15e9251b934399c4c598f99de4cf161fd0589375bfcc2be8e8063d658e9f7cf",
+            ["reload-pending-battle-v1"] = "8ee5dc0cf76134f6a816ff1c49fb41192afc0ccd4609a487c0f8f55027aa1d98",
+            ["demonbound-ready-v1"] = "8eb6407f3a930534b9aa6d11e65787fba59b56bff018f2561c8e5a09ebc4f7cf",
+            ["layer4-choice-ready-v1"] = "2d0ab502e474b2c61c413be755279126fa509dcf9cfb5afdb9ce3f66b20f9ac2",
+            ["layer4-event-ready-v1"] = "c6ed0dc0ff3f12ffaeb2459ea37aba19be6647b42e5620b095bc9ee1970dfb8d",
+            ["layer6-event-ready-v1"] = "27961cf36a0c8d73c22bfb367d5005dfeedfc009229ba22f120b1821d3c01198",
+            ["layer6-escort-ready-v1"] = "08f4a87c3e25a3008af4a5441567ad0fa88985a66b8b3a2e42aed5d1993a86e2"
         };
         var mismatches = new List<string>();
         foreach ((string id, string hash) in expected)
@@ -77,8 +77,8 @@ public class GodotGameplayRuntimeRunnerTests
             ("adventure-start-camp", null),
             ("adventure-starting-skills", null),
             ("adventure-exploration-controls", null),
-            ("adventure-route-commit", null),
-            ("adventure-route-reload", null),
+            ("adventure-immediate-exit-selection", "layer4-choice-ready-v1"),
+            ("adventure-immediate-exit-reload", "layer4-choice-ready-v1"),
             ("adventure-rest-node", "layer4-choice-ready-v1"),
             ("adventure-store-node", "layer4-choice-ready-v1"),
             ("adventure-treasure-node", "layer4-choice-ready-v1"),
@@ -197,9 +197,9 @@ public class GodotGameplayRuntimeRunnerTests
 
     [TestCase]
     [RequireGodotRuntime]
-    public async Task AdventureRouteCommitUsesTwoOrderedChoiceGroups()
+    public async Task AdventureExitSelectsOnlyAnImmediateSuccessor()
     {
-        GodotGameplayScenarioPlan plan = LoadCompiledPlan("adventure-route-commit");
+        GodotGameplayScenarioPlan plan = LoadCompiledPlan("adventure-immediate-exit-selection");
         GodotGameplayScenarioResult result = await new GodotGameplayRuntimeRunner().ExecuteAsync(plan);
 
         if (!result.Succeeded)
@@ -366,9 +366,9 @@ public class GodotGameplayRuntimeRunnerTests
         {
             new GodotGameplayPlanAssertion("adventureActorCellEquals", "Map", "party-mage", JsonSerializer.SerializeToElement("4,4"), []),
             new GodotGameplayPlanAssertion("activeAdventureLeaderEquals", "Map", null, JsonSerializer.SerializeToElement("party-mage"), []),
-            new GodotGameplayPlanAssertion("routeCandidateNodeIdsEqual", "Map", null,
+            new GodotGameplayPlanAssertion("immediateSuccessorNodeIdsEqual", "Map", null,
                 JsonSerializer.SerializeToElement(new[] { "layer04-rest", "layer04-store", "layer04-event" }), []),
-            new GodotGameplayPlanAssertion("runSaveSchemaVersionEquals", "Map", null, JsonSerializer.SerializeToElement(9), [])
+            new GodotGameplayPlanAssertion("runSaveSchemaVersionEquals", "Map", null, JsonSerializer.SerializeToElement(10), [])
         };
         GodotGameplayScenarioPlan plan = Plan("Runner.AdventureContract", [], actions, assertions) with { SchemaVersion = 3 };
 

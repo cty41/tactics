@@ -9,15 +9,13 @@ namespace Tactics.Core.Tests;
 public sealed class RunAdventureTransitionServiceTests
 {
     [Test]
-    public void RouteAndEventTransitionsArePersistedAndMonotonic()
+    public void ImmediateExitAndEventTransitionsArePersistedAndMonotonic()
     {
         var service = new RunAdventureTransitionService();
         PureRunState run = Run(service);
-        run = service.BeginRouteSelection(run, new ContentId("adventure-board.route"));
-        run = service.SelectRoute(run, 1, "route-a-rest");
-        run = service.SelectRoute(run, 2, "route-b-event");
-        run = service.CommitRoute(run);
-        run = service.ActivateMap(run, new ContentId("map.main"));
+        PureRunMapDefinition map = Map();
+        run = service.CommitExit(run, map, "layer_01_battle");
+        run = service.EnterBoard(run, new ContentId("adventure-board.node.layer-01-battle"));
         run = service.BeginEventBattle(run, RunAdventureEventContextKind.CursedChestMimic, "node-event", "cursed-chest");
 
         long pendingRevision = run.Revision;
@@ -31,6 +29,20 @@ public sealed class RunAdventureTransitionServiceTests
             Assert.That(run.AdventureState.PendingEventObjectId, Is.Null);
         });
         Assert.That(service.ResolveEventBattle(run), Is.SameAs(run));
+    }
+
+    [Test]
+    public void ExitOnlyAcceptsImmediateSuccessorAndRequiresResolvedNode()
+    {
+        var service = new RunAdventureTransitionService();
+        PureRunState run = Run(service);
+        PureRunMapDefinition map = Map();
+        Assert.Throws<InvalidOperationException>(() => service.CommitExit(run, map, "layer_02_battle"));
+        PureRunState entered = service.EnterBoard(service.CommitExit(run, map, "layer_01_battle"),
+            new ContentId("adventure-board.node.layer-01-battle"));
+        Assert.Throws<InvalidOperationException>(() => service.CommitExit(entered, map, "layer_02_battle"));
+        PureRunState resolved = service.ResolveBoard(entered);
+        Assert.DoesNotThrow(() => service.CommitExit(resolved, map, "layer_02_battle"));
     }
 
     [Test]
@@ -57,4 +69,15 @@ public sealed class RunAdventureTransitionServiceTests
     private static AdventureBoardDefinition Board(RunAdventureState state) => new(
         state.BoardContentId, 10, 10, [], [], state.ActorCells.Select(value => new AdventureActorPlacement(value.ActorId, value.Cell)).ToArray(),
         new GridPoint(0, 0), new GridPoint(9, 9));
+
+    private static PureRunMapDefinition Map() => new(new ContentId("map"), 2,
+    [
+        new("start", 0, PureRunNodeKind.Rest, new ContentId("start")),
+        new("layer_01_battle", 1, PureRunNodeKind.Battle, new ContentId("n1")),
+        new("layer_02_battle", 2, PureRunNodeKind.Battle, new ContentId("n2"))
+    ],
+    [
+        new("start", "layer_01_battle"),
+        new("layer_01_battle", "layer_02_battle")
+    ]);
 }

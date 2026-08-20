@@ -148,7 +148,7 @@ const supportedPlayerObservables = new Set([
   "adventureBoardReady",
   "adventureLeaderChanged",
   "adventureInteractionResolved",
-  "routeCommitted",
+  "exitCommitted",
   "eventBattleReady",
   "adventureSceneChanged",
 ]);
@@ -180,7 +180,7 @@ const supportedAssertionKinds = new Set([
   "adventureActorCellEquals",
   "activeAdventureLeaderEquals",
   "runNodeLifecycleEquals",
-  "routeCandidateNodeIdsEqual",
+  "immediateSuccessorNodeIdsEqual",
   "adventureObjectStateEquals",
   "storeOfferCountEquals",
   "storeSoldOfferCountEquals",
@@ -819,7 +819,7 @@ function validateAssertion(assertion: ScenarioAssertion, state: AliasState, diag
         code: "InvalidAssertionExpectedType", severity: "error", message: `${assertion.kind} requires a boolean expected value.`, path: assertion.id ?? assertion.kind
       });
       break;
-    case "routeCandidateNodeIdsEqual":
+    case "immediateSuccessorNodeIdsEqual":
     case "pendingPartyOrderEquals":
     case "activePartyStartingSkillIdsEqual":
     case "partyResourceSummaryEquals":

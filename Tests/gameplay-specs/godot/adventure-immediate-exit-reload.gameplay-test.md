@@ -1,7 +1,7 @@
 ---
 feature: AdventureBoard
-scenario: RestCampfireResolution
-tags: [godot, adventure-board, isolated-save, validated-checkpoint]
+scenario: ImmediateExitReload
+tags: [godot, adventure-board, isolated-save, validated-checkpoint, reload]
 requiredAdapters: [Map, PlayerInput, UI]
 setup:
   - kind: loadValidatedCheckpoint
@@ -25,32 +25,25 @@ actions:
     adapter: PlayerInput
     target: "exit:layer_04_rest"
     parameters: { targetKind: AdventureObject }
-  - kind: waitForPlayerObservable
-    adapter: PlayerInput
-    parameters: { observable: adventureBoardReady, maximumFrames: 180 }
-  - kind: clickPointerTarget
-    adapter: PlayerInput
-    target: 6,5
-    parameters: { targetKind: AdventureCell }
-  - kind: clickPointerTarget
-    adapter: PlayerInput
-    target: rest-campfire
-    parameters: { targetKind: AdventureObject }
-  - kind: waitForPlayerObservable
-    adapter: PlayerInput
-    target: Confirm Rest
-    parameters: { observable: uiElement, elementName: Confirm Rest, maximumFrames: 180 }
-  - kind: clickPointerTarget
-    adapter: PlayerInput
-    target: Confirm Rest
-    parameters: { targetKind: UiElement }
+  - kind: restartGodotMain
+    adapter: UI
+    parameters: {}
   - kind: waitForPlayerObservable
     adapter: PlayerInput
     parameters: { observable: adventureBoardReady, maximumFrames: 180 }
 assertions:
-  - kind: partyResourceSummaryEquals
+  - kind: runNodeLifecycleEquals
     adapter: Map
-    expected: ["pure_run_mage:12/20:5/15", "pure_run_necromancer:12/20:6/18", "pure_run_amazon:12/20:5/15"]
+    expected: MapActive
+    parameters: {}
+  - kind: immediateSuccessorNodeIdsEqual
+    adapter: Map
+    expected: [layer_05_battle]
+    parameters: {}
+  - kind: adventureObjectStateEquals
+    adapter: Map
+    target: rest-campfire
+    expected: Ready
     parameters: {}
   - kind: runtimeHasNoErrors
     adapter: UI
@@ -63,6 +56,6 @@ assertions:
 timeoutMs: 30000
 ---
 
-# Rest campfire resolution
+# Immediate exit reload
 
-从经过哈希验证的 Layer 3 已结算场景点击直接后继 Rest 出口，进入 Tile 场景，点击火堆打开正式结算界面并确认恢复。
+选择当前节点的直接后继 Rest 出口后重启 Main，仍恢复 Rest Tile 场景及其未结算交互状态，不恢复任何预提交路线总览。

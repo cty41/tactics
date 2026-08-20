@@ -43,7 +43,7 @@ const godotAssertionKinds = new Set([
   "adventureActorCellEquals",
   "activeAdventureLeaderEquals",
   "runNodeLifecycleEquals",
-  "routeCandidateNodeIdsEqual",
+  "immediateSuccessorNodeIdsEqual",
   "adventureObjectStateEquals",
   "storeOfferCountEquals",
   "storeSoldOfferCountEquals",

@@ -210,10 +210,6 @@ public sealed record RunEscortState(
 public enum RunAdventureLifecycle
 {
     InitialExploration,
-    RouteGroupOne,
-    RouteGroupTwo,
-    RouteReady,
-    RouteCommitted,
     MapActive
 }
 
@@ -233,15 +229,13 @@ public sealed record RunAdventureState(
     ContentId BoardContentId,
     string LeaderId,
     IReadOnlyList<RunAdventureActorCell> ActorCells,
-    string? RouteGroupOneSelection,
-    string? RouteGroupTwoSelection,
     RunAdventureEventContextKind PendingEventContext,
     string? PendingEventNodeId,
     string? PendingEventObjectId,
     long Revision,
     long LeaderRevision,
     long InteractionRevision,
-    long RouteRevision,
+    long ExitRevision,
     long SceneRevision);
 
 public sealed record PureRunState

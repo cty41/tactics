@@ -6,7 +6,7 @@ requiredAdapters: [Map, PlayerInput, UI]
 setup:
   - kind: loadValidatedCheckpoint
     adapter: Map
-    parameters: { id: reload-pending-battle-v1, path: "validated://reload-pending-battle-v1", semanticHash: 12c95663706165bae8a178d8f39b9ba63b8d4754b96d5c93bbb4db75d7701230 }
+    parameters: { id: reload-pending-battle-v1, path: "validated://reload-pending-battle-v1", semanticHash: 8ee5dc0cf76134f6a816ff1c49fb41192afc0ccd4609a487c0f8f55027aa1d98 }
   - kind: initializePlayerInput
     adapter: PlayerInput
     parameters: {}

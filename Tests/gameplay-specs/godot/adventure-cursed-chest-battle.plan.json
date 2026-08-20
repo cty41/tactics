@@ -26,7 +26,7 @@
       "parameters": {
         "id": "layer4-event-ready-v1",
         "path": "validated://layer4-event-ready-v1",
-        "semanticHash": "e87eba856e590e14226d417ed9d61b7b5e7656933597a83dc0fb29fe7ed6fa72"
+        "semanticHash": "c6ed0dc0ff3f12ffaeb2459ea37aba19be6647b42e5620b095bc9ee1970dfb8d"
       }
     },
     {
@@ -40,16 +40,24 @@
       "adapter": "PlayerInput",
       "kind": "waitForPlayerObservable",
       "parameters": {
-        "observable": "mapReady",
+        "observable": "adventureBoardReady",
         "maximumFrames": 180
       }
     },
     {
       "adapter": "PlayerInput",
       "kind": "clickPointerTarget",
-      "target": "layer_04_event",
+      "target": "7,7",
       "parameters": {
-        "targetKind": "MapNode"
+        "targetKind": "AdventureCell"
+      }
+    },
+    {
+      "adapter": "PlayerInput",
+      "kind": "clickPointerTarget",
+      "target": "exit:layer_04_event",
+      "parameters": {
+        "targetKind": "AdventureObject"
       }
     },
     {
@@ -165,7 +173,7 @@
   "checkpoint": {
     "id": "layer4-event-ready-v1",
     "source": "validated_checkpoint",
-    "semanticHash": "e87eba856e590e14226d417ed9d61b7b5e7656933597a83dc0fb29fe7ed6fa72",
+    "semanticHash": "c6ed0dc0ff3f12ffaeb2459ea37aba19be6647b42e5620b095bc9ee1970dfb8d",
     "path": "validated://layer4-event-ready-v1"
   },
   "saveIsolation": {

@@ -390,7 +390,7 @@ public sealed class GodotGameplayRuntimeRunner
                 actorCell == assertion.Expected.GetString(),
             "activeAdventureLeaderEquals" => probe.Adventure?.LeaderId == assertion.Expected.GetString(),
             "runNodeLifecycleEquals" => probe.Adventure?.NodeLifecycle == assertion.Expected.GetString(),
-            "routeCandidateNodeIdsEqual" => probe.Adventure?.RouteCandidateNodeIds.SequenceEqual(
+            "immediateSuccessorNodeIdsEqual" => probe.Adventure?.ImmediateSuccessorNodeIds.SequenceEqual(
                 assertion.Expected.EnumerateArray().Select(value => value.GetString()!), StringComparer.Ordinal) == true,
             "adventureObjectStateEquals" => probe.Adventure?.ObjectStates.TryGetValue(assertion.Target ?? string.Empty, out string? objectState) == true &&
                 objectState == assertion.Expected.GetString(),
@@ -402,7 +402,7 @@ public sealed class GodotGameplayRuntimeRunner
             "pendingBattleContextKindEquals" => probe.Adventure?.PendingBattleContextKind == assertion.Expected.GetString(),
             "escortStateEquals" => probe.Adventure?.EscortState == assertion.Expected.GetString(),
             "protectedNpcAliveEquals" => probe.Adventure?.ProtectedNpcAlive == assertion.Expected.GetBoolean(),
-            "runSaveSchemaVersionEquals" => RunSaveDocumentV9.SchemaVersion == assertion.Expected.GetInt32(),
+            "runSaveSchemaVersionEquals" => RunSaveDocumentV10.SchemaVersion == assertion.Expected.GetInt32(),
             "pendingPartyOrderEquals" => probe.SaveSnapshot?.PendingRunSetup?.SelectedCharacterIds.SequenceEqual(
                 assertion.Expected.EnumerateArray().Select(value => value.GetString()!), StringComparer.Ordinal) == true,
             "activePartyStartingSkillIdsEqual" => probe.SaveSnapshot?.ActiveRun?.Party.Select(value => value.StartingSkillContentId?.Value)
@@ -764,7 +764,7 @@ public sealed class GodotGameplayRuntimeContext(GodotGameplayScenarioPlan plan, 
                 "adventureBoardReady" => probe.Adventure is not null,
                 "adventureLeaderChanged" => probe.Adventure is not null && probe.Adventure.LeaderRevision > _lastActionAdventure.Leader,
                 "adventureInteractionResolved" => probe.Adventure is not null && probe.Adventure.InteractionRevision > _lastActionAdventure.Interaction,
-                "routeCommitted" => probe.Adventure is not null && probe.Adventure.RouteRevision > _lastActionAdventure.Route,
+                "exitCommitted" => probe.Adventure is not null && probe.Adventure.ExitRevision > _lastActionAdventure.Route,
                 "eventBattleReady" => probe.Adventure?.PendingBattleContextKind is not null and not "None" && probe.BattleSnapshot is not null,
                 "adventureSceneChanged" => probe.Adventure is not null && probe.Adventure.SceneRevision > _lastActionAdventure.Scene,
                 "uiVisible" or "uiElement" => locator is not null && IsUiVisible(locator),
@@ -1011,8 +1011,8 @@ public sealed class GodotGameplayRuntimeContext(GodotGameplayScenarioPlan plan, 
     {
         GodotAdventureRuntimeProbe? adventure = probe.Adventure;
         string actors = adventure is null ? "" : string.Join(';', adventure.ActorCells.OrderBy(value => value.Key, StringComparer.Ordinal).Select(value => $"{value.Key}={value.Value}"));
-        string candidates = adventure is null ? "" : string.Join(',', adventure.RouteCandidateNodeIds);
-        string value = $"{probe.PageTitle}|{probe.SaveSnapshot?.Revision}|{probe.SaveSnapshot?.ActiveRun?.Revision}|{probe.BattleSnapshot?.Round}|{probe.BattleSnapshot?.ActiveUnitId.Value}|{probe.BattleSnapshot?.Phase}|{probe.PresentationLocked}|{probe.PresentationPlaying}|{probe.AutomaticFramesPending}|{probe.PresentationNumberCount}|{probe.PlaybackPaused}|{probe.PlaybackSpeed}|{probe.QuitRequested}|{adventure?.BoardContentId}|{adventure?.NodeLifecycle}|{adventure?.LeaderId}|{actors}|{candidates}|{adventure?.PendingBattleContextKind}|{adventure?.LeaderRevision}|{adventure?.InteractionRevision}|{adventure?.RouteRevision}|{adventure?.SceneRevision}";
+        string candidates = adventure is null ? "" : string.Join(',', adventure.ImmediateSuccessorNodeIds);
+        string value = $"{probe.PageTitle}|{probe.SaveSnapshot?.Revision}|{probe.SaveSnapshot?.ActiveRun?.Revision}|{probe.BattleSnapshot?.Round}|{probe.BattleSnapshot?.ActiveUnitId.Value}|{probe.BattleSnapshot?.Phase}|{probe.PresentationLocked}|{probe.PresentationPlaying}|{probe.AutomaticFramesPending}|{probe.PresentationNumberCount}|{probe.PlaybackPaused}|{probe.PlaybackSpeed}|{probe.QuitRequested}|{adventure?.BoardContentId}|{adventure?.NodeLifecycle}|{adventure?.LeaderId}|{actors}|{candidates}|{adventure?.PendingBattleContextKind}|{adventure?.LeaderRevision}|{adventure?.InteractionRevision}|{adventure?.ExitRevision}|{adventure?.SceneRevision}";
         return Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(value))).ToLowerInvariant();
     }
 
@@ -1020,7 +1020,7 @@ public sealed class GodotGameplayRuntimeContext(GodotGameplayScenarioPlan plan, 
     {
         GodotAdventureRuntimeProbe? adventure = Main.CaptureTestProbe().Adventure;
         _lastActionAdventure = adventure is null ? default : new AdventureRevisionBaseline(
-            adventure.LeaderRevision, adventure.InteractionRevision, adventure.RouteRevision, adventure.SceneRevision);
+            adventure.LeaderRevision, adventure.InteractionRevision, adventure.ExitRevision, adventure.SceneRevision);
     }
 
     private readonly record struct AdventureRevisionBaseline(int Leader, int Interaction, int Route, int Scene);

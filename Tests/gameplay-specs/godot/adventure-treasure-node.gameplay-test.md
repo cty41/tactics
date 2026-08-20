@@ -6,18 +6,22 @@ requiredAdapters: [Map, PlayerInput, UI]
 setup:
   - kind: loadValidatedCheckpoint
     adapter: Map
-    parameters: { id: layer4-choice-ready-v1, path: "validated://layer4-choice-ready-v1", semanticHash: 26d40a899332e71a34f8cf3016082b6cc899c0071c453f094cc58a527c9156ab }
+    parameters: { id: layer4-choice-ready-v1, path: "validated://layer4-choice-ready-v1", semanticHash: 2d0ab502e474b2c61c413be755279126fa509dcf9cfb5afdb9ce3f66b20f9ac2 }
   - kind: initializePlayerInput
     adapter: PlayerInput
     parameters: {}
 actions:
   - kind: waitForPlayerObservable
     adapter: PlayerInput
-    parameters: { observable: mapReady, maximumFrames: 180 }
+    parameters: { observable: adventureBoardReady, maximumFrames: 180 }
   - kind: clickPointerTarget
     adapter: PlayerInput
-    target: layer_04_treasure
-    parameters: { targetKind: MapNode }
+    target: 8,8
+    parameters: { targetKind: AdventureCell }
+  - kind: clickPointerTarget
+    adapter: PlayerInput
+    target: "exit:layer_04_treasure"
+    parameters: { targetKind: AdventureObject }
   - kind: waitForPlayerObservable
     adapter: PlayerInput
     parameters: { observable: adventureBoardReady, maximumFrames: 180 }
@@ -39,8 +43,7 @@ actions:
     parameters: { targetKind: UiElement }
   - kind: waitForPlayerObservable
     adapter: PlayerInput
-    target: PURE RUN MAP
-    parameters: { observable: uiElement, elementName: PURE RUN MAP, maximumFrames: 180 }
+    parameters: { observable: adventureBoardReady, maximumFrames: 180 }
 assertions:
   - kind: backpackContainsContentId
     adapter: Map

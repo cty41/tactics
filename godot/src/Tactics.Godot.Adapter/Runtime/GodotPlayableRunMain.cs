@@ -88,12 +88,7 @@ public partial class GodotPlayableRunMain : Control
     private GodotRogueMapView? _mapView;
     private GodotAdventureBoardView? _adventureBoard;
     private readonly List<string> _partySelectionOrder = new();
-    private readonly Dictionary<string, string> _adventureObjectStates = new(StringComparer.Ordinal);
     private string? _adventureLastBoardContentId;
-    private string? _adventureEventResolution;
-    private int _adventureInteractionRevision;
-    private int _adventureRouteRevision;
-    private int _adventureSceneRevision;
     private Label? _mapDetail;
     private int _catalogCount;
     private string? _inventoryCharacterId;
@@ -174,48 +169,50 @@ public partial class GodotPlayableRunMain : Control
                 }, [], "PendingSetup", null, null, null, null,
                 0, 0, 0, _partySelectionOrder.Count, 0, 0);
         }
-        string[] candidates = adventure.Lifecycle switch
-        {
-            RunAdventureLifecycle.RouteGroupOne => ["route-a-rest", "route-a-store", "route-a-treasure"],
-            RunAdventureLifecycle.RouteGroupTwo => ["route-b-battle", "route-b-event", "route-b-escort"],
-            RunAdventureLifecycle.RouteReady or RunAdventureLifecycle.RouteCommitted =>
-                new[] { adventure.RouteGroupOneSelection, adventure.RouteGroupTwoSelection }.OfType<string>().ToArray(),
-            _ => []
-        };
+        string[] candidates = _mapDefinition is null ? [] : RunAdventureTransitionService
+            .ImmediateSuccessors(run!, _mapDefinition).Select(value => value.NodeId).ToArray();
         return new GodotAdventureRuntimeProbe(adventure.BoardContentId.Value, adventure.LeaderId,
             adventure.ActorCells.ToDictionary(value => value.ActorId, value => $"{value.Cell.X},{value.Cell.Y}", StringComparer.Ordinal),
             DeriveAdventureObjectStates(run!), candidates, adventure.Lifecycle.ToString(),
-            _adventureEventResolution, adventure.PendingEventContext.ToString(),
+            DeriveAdventureEventResolution(run!), adventure.PendingEventContext.ToString(),
             run?.EscortState?.Lifecycle.ToString(), run?.EscortState?.ProtectedNpcAlive,
             run?.MapState?.StoreOffers?.Count ?? 0, run?.MapState?.StoreOffers?.Count(value => value.Purchased) ?? 0,
             checked((int)adventure.LeaderRevision),
-            checked((int)adventure.InteractionRevision), checked((int)adventure.RouteRevision), checked((int)adventure.SceneRevision));
+            checked((int)adventure.InteractionRevision), checked((int)adventure.ExitRevision), checked((int)adventure.SceneRevision));
     }
 
-    private static IReadOnlyDictionary<string, string> DeriveAdventureObjectStates(PureRunState run)
+    private IReadOnlyDictionary<string, string> DeriveAdventureObjectStates(PureRunState run)
     {
         var states = new Dictionary<string, string>(StringComparer.Ordinal);
         RunAdventureState adventure = run.AdventureState!;
-        if (adventure.Lifecycle == RunAdventureLifecycle.InitialExploration) states["route-overview"] = "Ready";
-        if (adventure.RouteGroupOneSelection is { } first) states[first] = "Selected";
-        if (adventure.RouteGroupTwoSelection is { } second) states[second] = "Selected";
-        if (adventure.Lifecycle == RunAdventureLifecycle.RouteReady) states["route-submit"] = "Ready";
-        if (adventure.Lifecycle == RunAdventureLifecycle.RouteCommitted)
-        {
-            states["route-submit"] = "Committed";
-            states["route-depart"] = "Ready";
-        }
+        if (adventure.Lifecycle == RunAdventureLifecycle.InitialExploration) states["exit:layer_01_battle"] = "Ready";
+        foreach (PureRunMapNodeDefinition successor in RunAdventureTransitionService.ImmediateSuccessors(run, MapDefinition))
+            states[$"exit:{successor.NodeId}"] = RunAdventureTransitionService.IsExitUnlocked(run) ? "Ready" : "Locked";
+        string board = adventure.BoardContentId.Value;
+        bool committed = run.NodeTransaction?.Committed == true;
+        if (board.Contains(".rest", StringComparison.Ordinal)) states["rest-campfire"] = committed ? "Interacted" : "Ready";
+        if (board.Contains(".store", StringComparison.Ordinal)) states["store-merchant"] = committed ? "Interacted" : "Ready";
+        if (board.Contains(".treasure", StringComparison.Ordinal)) states["treasure-chest"] = committed ? "Interacted" : "Ready";
         if (adventure.PendingEventObjectId is { } pending) states[pending] = "Awakened";
         if (run.NodeTransaction is { } transaction) states[transaction.NodeId] = transaction.Committed ? "Committed" : "Pending";
         if (adventure.PendingEventContext == RunAdventureEventContextKind.None && run.NodeTransaction?.Committed == true)
         {
-            string board = adventure.BoardContentId.Value;
             if (board.Contains("cursedchestmimic", StringComparison.OrdinalIgnoreCase)) states["cursed-chest"] = "Defeated";
             if (board.Contains("fallenaltarguardian", StringComparison.OrdinalIgnoreCase)) states["fallen-altar"] = "Purified";
             if (board.Contains("lostvillagerescort", StringComparison.OrdinalIgnoreCase))
                 states["lost-villager"] = run.EscortState?.ProtectedNpcAlive == true ? "Safe" : "Down";
         }
         return states;
+    }
+
+    private static string? DeriveAdventureEventResolution(PureRunState run)
+    {
+        string board = run.AdventureState?.BoardContentId.Value ?? string.Empty;
+        if (!board.EndsWith(".resolved", StringComparison.Ordinal)) return null;
+        if (board.Contains("cursedchestmimic", StringComparison.OrdinalIgnoreCase)) return "CursedChestMimicDefeated";
+        if (board.Contains("fallenaltarguardian", StringComparison.OrdinalIgnoreCase)) return "FallenAltarGuardianDefeated";
+        if (board.Contains("lostvillagerescort", StringComparison.OrdinalIgnoreCase)) return "EscortCompleted";
+        return null;
     }
 
     public IReadOnlyList<GodotBattleUnitProjection> CaptureBattleUnitProjections() => _battle is null
@@ -579,10 +576,6 @@ public partial class GodotPlayableRunMain : Control
     {
         Control root = NewPage("NEW RUN — START CAMP", "Hover a candidate; click to add or remove. Select three, then click Start.");
         _partySelectionOrder.Clear();
-        _adventureObjectStates.Clear();
-        _adventureObjectStates["campfire"] = "Idle";
-        _adventureObjectStates["start-exit"] = "Locked";
-        _adventureInteractionRevision = 0;
         AdventureActorPlacement[] placements = _runDefinition!.Party.Select((value, index) =>
             new AdventureActorPlacement(value.CharacterId, new[] { new GridPoint(3, 4), new GridPoint(6, 4), new GridPoint(3, 7), new GridPoint(6, 7) }[index])).ToArray();
         AdventureBoardDefinition definition = CreateStartCampBoard(placements);
@@ -593,8 +586,6 @@ public partial class GodotPlayableRunMain : Control
         {
             if (_partySelectionOrder.Remove(characterId)) { }
             else if (_partySelectionOrder.Count < _runDefinition.ActivePartySize) _partySelectionOrder.Add(characterId);
-            _adventureObjectStates["start-exit"] = _partySelectionOrder.Count == _runDefinition.ActivePartySize ? "Ready" : "Locked";
-            _adventureInteractionRevision++;
             SetStatus($"Party {_partySelectionOrder.Count}/3: {string.Join(" → ", _partySelectionOrder)}");
         };
         _adventureBoard.ObjectPressed += objectId =>
@@ -603,8 +594,6 @@ public partial class GodotPlayableRunMain : Control
             if (_partySelectionOrder.Count != _runDefinition.ActivePartySize) { SetStatus("Choose exactly three candidates first."); return; }
             RunSessionResult result = _run!.ChooseParty(_partySelectionOrder);
             if (!result.Succeeded) { SetStatus(result.ErrorCode); return; }
-            _adventureObjectStates["start-exit"] = "Committed";
-            _adventureInteractionRevision++;
             if (result.Snapshot!.PendingRunSetup is not null) ShowNewRunSetup(result.Snapshot);
             else RouteRunState(result.Snapshot);
         };
@@ -661,15 +650,13 @@ public partial class GodotPlayableRunMain : Control
         };
         _adventureBoard.ObjectPressed += objectId =>
         {
-            if (objectId != "route-overview") return;
+            if (objectId != "exit:layer_01_battle") return;
             RunAdventureActorCell leader = adventure.ActorCells.Single(value => value.ActorId == adventure.LeaderId);
             if (!RunAdventureTransitionService.IsAdjacent(leader.Cell, definition.Objects.Single(value => value.ObjectId == objectId).Cell))
-            { SetStatus("Move the leader next to the route overview first."); return; }
-            RunSessionResult changed = _run!.ApplyMutation(state => new RunMutationResult(true, null,
-                new RunAdventureTransitionService().BeginRouteSelection(state, new ContentId("adventure-board.pure-run.route-overview"))));
-            if (!changed.Succeeded) { SetStatus(changed.ErrorCode); return; }
-            ShowRoutePlanning(changed.Snapshot!.ActiveRun!);
+            { SetStatus("Move the leader next to the exit first."); return; }
+            HandleAdventureExit(run, "layer_01_battle");
         };
+        root.AddChild(PlaceControl(Button("Inventory", () => ShowInventory(run)), new Vector2(1130, 720), new Vector2(360, 58)));
         _status = LabelAt(root, $"Leader: {adventure.LeaderId}", new Vector2(470, 810), 18);
     }
 
@@ -680,71 +667,9 @@ public partial class GodotPlayableRunMain : Control
             .Concat(Enumerable.Range(1, 8).SelectMany(value => new[] { new GridPoint(0, value), new GridPoint(9, value) }))
             .Distinct().ToArray();
         return new AdventureBoardDefinition(new ContentId("adventure-board.pure-run.initial"), 10, 10, perimeter,
-            [new AdventureBoardObject("route-overview", AdventureObjectKind.Exit, new GridPoint(8, 5), false, false)],
+            [new AdventureBoardObject("exit:layer_01_battle", AdventureObjectKind.Exit, new GridPoint(8, 5), false, false,
+                "layer_01_battle")],
             actors, new GridPoint(1, 5), new GridPoint(8, 5));
-    }
-
-    private void ShowRoutePlanning(PureRunState run)
-    {
-        RunAdventureState adventure = run.AdventureState ?? throw new InvalidOperationException("adventure.state_missing");
-        Control root = NewPage("PURE RUN — ROUTE OVERVIEW", "Choose one node from group A, then one from group B. Commit locks both choices.");
-        AddRunShell(root, run, "Route");
-        AdventureBoardDefinition definition = CreateRouteOverviewBoard();
-        _adventureBoard = new GodotAdventureBoardView { Name = "AdventureRouteOverviewBoard" };
-        root.AddChild(_adventureBoard);
-        _adventureBoard.SetBoard(definition);
-        _adventureBoard.ObjectPressed += objectId =>
-        {
-            if (objectId == "route-submit")
-            {
-                if (adventure.Lifecycle != RunAdventureLifecycle.RouteReady) { SetStatus("Choose one node from both route groups first."); return; }
-                RunSessionResult changed = _run!.ApplyMutation(state => new RunMutationResult(true, null, new RunAdventureTransitionService().CommitRoute(state)));
-                if (!changed.Succeeded) { SetStatus(changed.ErrorCode); return; }
-                ShowRoutePlanning(changed.Snapshot!.ActiveRun!);
-                return;
-            }
-            if (objectId == "route-depart")
-            {
-                if (adventure.Lifecycle != RunAdventureLifecycle.RouteCommitted) { SetStatus("Commit the route first."); return; }
-                ContentId mapId = run.MapState?.MapContentId ?? new ContentId("adventure-board.pure-run.map");
-                RunSessionResult changed = _run!.ApplyMutation(state => new RunMutationResult(true, null, new RunAdventureTransitionService().ActivateMap(state, mapId)));
-                if (!changed.Succeeded) { SetStatus(changed.ErrorCode); return; }
-                ShowRunMap(changed.Snapshot!.ActiveRun!);
-                return;
-            }
-            try
-            {
-                int group = objectId.StartsWith("route-a-", StringComparison.Ordinal) ? 1 : 2;
-                RunSessionResult changed = _run!.ApplyMutation(state => new RunMutationResult(true, null,
-                    new RunAdventureTransitionService().SelectRoute(state, group, objectId)));
-                if (!changed.Succeeded) { SetStatus(changed.ErrorCode); return; }
-                ShowRoutePlanning(changed.Snapshot!.ActiveRun!);
-            }
-            catch (Exception exception) when (exception is ArgumentException or InvalidOperationException)
-            {
-                SetStatus(exception.Message);
-            }
-        };
-        _status = LabelAt(root, $"Route: {adventure.Lifecycle}", new Vector2(470, 810), 18);
-    }
-
-    private static AdventureBoardDefinition CreateRouteOverviewBoard()
-    {
-        GridPoint[] perimeter = Enumerable.Range(0, 10).SelectMany(value =>
-                new[] { new GridPoint(value, 0), new GridPoint(value, 9) })
-            .Concat(Enumerable.Range(1, 8).SelectMany(value => new[] { new GridPoint(0, value), new GridPoint(9, value) }))
-            .Distinct().ToArray();
-        return new AdventureBoardDefinition(new ContentId("adventure-board.pure-run.route-overview"), 10, 10, perimeter,
-        [
-            new("route-a-rest", AdventureObjectKind.Rest, new GridPoint(2, 3), false, false),
-            new("route-a-store", AdventureObjectKind.Store, new GridPoint(5, 3), false, false),
-            new("route-a-treasure", AdventureObjectKind.Treasure, new GridPoint(8, 3), false, false),
-            new("route-b-battle", AdventureObjectKind.Battle, new GridPoint(2, 6), false, false),
-            new("route-b-event", AdventureObjectKind.Event, new GridPoint(5, 6), false, false),
-            new("route-b-escort", AdventureObjectKind.Escort, new GridPoint(8, 6), false, false),
-            new("route-submit", AdventureObjectKind.RouteSubmit, new GridPoint(5, 8), false, false),
-            new("route-depart", AdventureObjectKind.Exit, new GridPoint(8, 8), false, false)
-        ], [], new GridPoint(1, 5), new GridPoint(8, 8));
     }
 
     private void BeginReadyEncounter()
@@ -1115,10 +1040,12 @@ public partial class GodotPlayableRunMain : Control
             {
                 RunSessionResult layerFour=_run!.ApplyLayerFourBattleResult(battleResult);
                 if(!layerFour.Succeeded)return HandleSettlementFailure(layerFour);
+                layerFour=ResolveAdventureBoard(layerFour);
+                if(!layerFour.Succeeded)return HandleSettlementFailure(layerFour);
                 return CompleteSettlementNavigation(layerFour, () =>
                 {
                     if(layerFour.Snapshot?.TerminalSummary is PureRunSummary summary)ShowSummary(summary);
-                    else ShowRunMap(layerFour.Snapshot!.ActiveRun!);
+                    else RouteRunState(layerFour.Snapshot!);
                 });
             }
             if(battleResult.EncounterContentId.Value is "encounter.pure-run.e1" or "encounter.pure-run.e2" or "encounter.pure-run.special")
@@ -1129,11 +1056,18 @@ public partial class GodotPlayableRunMain : Control
                 {
                     RunSessionResult layerSix=_run!.ApplyLayerFourBattleResult(battleResult);
                     if(!layerSix.Succeeded)return HandleSettlementFailure(layerSix);
-                    return CompleteSettlementNavigation(layerSix, () => RouteMap(layerSix.Snapshot!.ActiveRun!));
+                    layerSix=ResolveAdventureBoard(layerSix);
+                    if(!layerSix.Succeeded)return HandleSettlementFailure(layerSix);
+                    return CompleteSettlementNavigation(layerSix, () => RouteRunState(layerSix.Snapshot!));
                 }
                 PureRunFullRunService full=new(_consumables.Keys);
                 RunSessionResult late=_run!.ApplyFullRunTransition(state=>boss?full.CompleteBoss(state,battleResult):full.CompleteLayerFive(state,battleResult));
                 if(!late.Succeeded)return HandleSettlementFailure(late);
+                if (!boss)
+                {
+                    late=ResolveAdventureBoard(late);
+                    if(!late.Succeeded)return HandleSettlementFailure(late);
+                }
                 return CompleteSettlementNavigation(late, () =>
                 {
                     if(late.Snapshot?.TerminalSummary is PureRunSummary terminal)ShowSummary(terminal);
@@ -1141,6 +1075,8 @@ public partial class GodotPlayableRunMain : Control
                 });
             }
             RunSessionResult settled=_run!.ApplyBattleResult(battleResult);
+            if(!settled.Succeeded)return HandleSettlementFailure(settled);
+            settled=ResolveAdventureBoard(settled);
             if(!settled.Succeeded)return HandleSettlementFailure(settled);
             return CompleteSettlementNavigation(settled, () => ShowSettlement(settled.Snapshot!));
         }
@@ -1157,6 +1093,14 @@ public partial class GodotPlayableRunMain : Control
             }
             return RejectSettlement(code);
         }
+    }
+
+    private RunSessionResult ResolveAdventureBoard(RunSessionResult result)
+    {
+        if (!result.Succeeded || result.Snapshot?.ActiveRun is null || result.Snapshot.TerminalSummary is not null)
+            return result;
+        return _run!.ApplyMutation(state => new RunMutationResult(true, null,
+            new RunAdventureTransitionService().ResolveBoard(state)));
     }
 
     private BattleSettlementDiagnostic CompleteSettlementNavigation(RunSessionResult result,Action navigate)
@@ -1373,12 +1317,12 @@ public partial class GodotPlayableRunMain : Control
     private void ShowRunMap(PureRunState run)
     {
         _adventureLastBoardContentId = null;
-        Control root = NewPage("PURE RUN MAP", "Choose an available node. Drag or use the wheel to inspect the route.");
+        Control root = NewPage("PURE RUN MAP", "Read-only route preview. Drag or use the wheel to inspect; choose exits in the current Tile scene.");
         PureRunFlowSnapshot flow = _flowProjector.Project(run, _runDefinition!, MapDefinition);
         AddRunShell(root, run, "Map");
         PanelAt(root, new Vector2(1120, 175), new Vector2(430, 590), GodotTacticsTheme.Card).Name = "MapDetailPanel";
         _mapView = new GodotRogueMapView { Position = new Vector2(60, 135), Size = new Vector2(1040, 700) };
-        _mapView.NodePressed += nodeId => ActivateMapNode(run, nodeId);
+        _mapView.NodePressed += nodeId => SetStatus($"Map preview only: {nodeId}. Choose through the current Tile scene exit.");
         _mapView.NodeHovered += node =>
         {
             if (_mapDetail is null) return;
@@ -1397,37 +1341,10 @@ public partial class GodotPlayableRunMain : Control
                 new Vector2(1140, 475), new Vector2(360, 58)));
         }
         root.AddChild(PlaceControl(Button("Inventory", () => ShowInventory(run)), new Vector2(1140, 560), new Vector2(360, 58)));
+        root.AddChild(PlaceControl(Button("Return to Current Scene", () => RouteRunState(new PureRunSaveSnapshot(run.Revision, run, null))),
+            new Vector2(1140, 630), new Vector2(360, 58)));
         _status = LabelAt(root, string.Empty, new Vector2(1140, 790), 16);
         BuildPauseMenu(root, false);
-    }
-
-    private void ActivateMapNode(PureRunState run, string nodeId)
-    {
-        PureRunMapNodeSnapshot node = _flowProjector.ProjectMap(run, _runDefinition!, MapDefinition).Nodes
-            .Single(value => value.NodeId == nodeId);
-        if (node.State == PureRunMapNodeState.Pending)
-        {
-            RouteRunState(new PureRunSaveSnapshot(run.Revision, run, null));
-            return;
-        }
-        if (node.State is not (PureRunMapNodeState.Available or PureRunMapNodeState.Current))
-        { SetStatus(node.UnavailableReason ?? "map.node_locked"); return; }
-        if (nodeId is "layer_01_battle" or "layer_02_battle" or "layer_03_battle")
-        { BeginReadyEncounter(); return; }
-        if (nodeId.StartsWith("layer_04_", StringComparison.Ordinal))
-        { SelectLayerFourNode(nodeId); return; }
-        if (nodeId == "layer_05_battle") { BeginLayerFive(); return; }
-        if (nodeId.StartsWith("layer_06_", StringComparison.Ordinal))
-        {
-            if (run.Phase == PureRunPhase.ReadyForLayerSix)
-            {
-                RunSessionResult unlocked = _run!.ApplyFullRunTransition(state =>
-                    new PureRunFullRunService(_consumables.Keys).UnlockLayerSix(state, MapDefinition));
-                if (!unlocked.Succeeded) { SetStatus(unlocked.ErrorCode); return; }
-            }
-            SelectLayerSixNode(nodeId); return;
-        }
-        if (nodeId == "layer_07_battle") BeginBoss();
     }
 
     private void AddRunShell(Control root, PureRunState run, string page)
@@ -1439,37 +1356,14 @@ public partial class GodotPlayableRunMain : Control
             new Vector2(1130, 138), 15).Size = new Vector2(390, 62);
     }
 
-    private void ShowLayerFourChoice(PureRunState run)
-    {
-        Control root=NewPage("LAYER 4 ROUTE","Choose exactly one route; completion ends the Phase 7C slice at ReadyForLayer5");
-        var menu=new VBoxContainer{Position=new Vector2(500,220),Size=new Vector2(600,520)};root.AddChild(menu);
-        menu.AddChild(Button("N4 Battle — split flank",()=>SelectLayerFourNode("layer_04_battle")));
-        menu.AddChild(Button("Rest — restore 30% HP/MP",()=>SelectLayerFourNode("layer_04_rest")));
-        menu.AddChild(Button("Store — deterministic 3 offers",()=>SelectLayerFourNode("layer_04_store")));
-        menu.AddChild(Button("Mystery — deterministic assigned event",()=>SelectLayerFourNode("layer_04_event")));
-        menu.AddChild(Button("Treasure — deterministic reward",()=>SelectLayerFourNode("layer_04_treasure")));
-    }
-
     private PureRunMapDefinition MapDefinition => _mapDefinition ??
         throw new InvalidOperationException("Authoritative run map is not loaded.");
 
-    private void SelectLayerFourNode(string nodeId)
-    {
-        RunSessionResult result=_run!.ApplyMutation(state=>
-        {
-            LayerFourNodeResolution selected=new PureRunLayerFourNodeService().SelectNode(state,MapDefinition,nodeId);
-            return new RunMutationResult(selected.Succeeded,selected.RejectionCode,selected.State);
-        });
-        if(!result.Succeeded){SetStatus(result.ErrorCode);return;}RouteLayerFour(result.Snapshot!.ActiveRun!);
-    }
-
     private void RouteLayerFour(PureRunState run)
     {
-        if(run.Phase==PureRunPhase.AwaitingLayerFourChoice){ShowLayerFourChoice(run);return;}
-        if(run.Phase==PureRunPhase.ReadyForLayerFive){ShowReadyForLayerFive(run);return;}
         switch(run.NodeTransaction?.Kind)
         {
-            case PureRunNodeKind.Battle: BeginLayerFourBattle(); break;
+            case PureRunNodeKind.Battle: ShowAdventureBattleEntry(run, run.NodeTransaction.NodeId, BeginLayerFourBattle); break;
             case PureRunNodeKind.Rest: ShowAdventureNodeEntry(run, PureRunNodeKind.Rest); break;
             case PureRunNodeKind.Store: ShowAdventureNodeEntry(run, PureRunNodeKind.Store); break;
             case PureRunNodeKind.Mystery: ShowAdventureEventEntry(run, "CursedChestMimic"); break;
@@ -1498,15 +1392,14 @@ public partial class GodotPlayableRunMain : Control
         string description = escort ? "The lost villager must survive the ambush." : altar ? "The altar is guarded." : "The chest moves when approached.";
         Control root = NewPage($"{LayerLabel(run)} — TILE EVENT", description);
         AddRunShell(root, run, "Event");
-        _adventureObjectStates.Clear();
-        _adventureObjectStates[objectId] = "Dormant";
         AdventureActorPlacement[] actors = run.AdventureState!.ActorCells.Select(value => new AdventureActorPlacement(value.ActorId, value.Cell)).ToArray();
         GridPoint[] perimeter = Enumerable.Range(0, 10).SelectMany(value =>
                 new[] { new GridPoint(value, 0), new GridPoint(value, 9) })
             .Concat(Enumerable.Range(1, 8).SelectMany(value => new[] { new GridPoint(0, value), new GridPoint(9, value) }))
             .Distinct().ToArray();
+        AdventureBoardObject[] exits = CreateExitObjects(run, run.NodeTransaction?.NodeId ?? RunAdventureTransitionService.CurrentNodeId(run), false);
         AdventureBoardDefinition definition = new(boardId, 10, 10, perimeter,
-            [new AdventureBoardObject(objectId, kind, new GridPoint(7, 5), false, false)], actors,
+            new[] { new AdventureBoardObject(objectId, kind, new GridPoint(7, 5), false, false) }.Concat(exits).ToArray(), actors,
             new GridPoint(1, 5), new GridPoint(8, 5));
         _adventureBoard = new GodotAdventureBoardView { Name = "AdventureEventBoard" };
         _adventureLastBoardContentId = definition.ContentId.Value;
@@ -1515,13 +1408,13 @@ public partial class GodotPlayableRunMain : Control
         WireAdventureMovement(run, definition, changed => ShowAdventureEventEntry(changed, contextKind));
         _adventureBoard.ObjectPressed += pressed =>
         {
+            if (pressed.StartsWith("exit:", StringComparison.Ordinal)) { SetStatus("Complete the event before leaving."); return; }
             if (pressed != objectId) return;
             RunAdventureActorCell leader = run.AdventureState.ActorCells.Single(value => value.ActorId == run.AdventureState.LeaderId);
-            if (!RunAdventureTransitionService.IsAdjacent(leader.Cell, definition.Objects.Single().Cell))
+            if (!RunAdventureTransitionService.IsAdjacent(leader.Cell, definition.Objects.Single(value => value.ObjectId == objectId).Cell))
             { SetStatus("Move the leader next to the event object first."); return; }
             try
             {
-                _adventureObjectStates[objectId] = "Awakened";
                 var encounterId = new ContentId("encounter.pure-run.n1");
                 RunSessionResult begun = _run!.ApplyMutation(state =>
                 {
@@ -1558,29 +1451,27 @@ public partial class GodotPlayableRunMain : Control
         bool escort = contextKind == "LostVillagerEscort";
         bool altar = contextKind == "FallenAltarGuardian";
         string objectId = escort ? "lost-villager" : altar ? "fallen-altar" : "cursed-chest";
-        _adventureEventResolution = escort
+        string eventResolution = escort
             ? run.EscortState?.Lifecycle == RunEscortLifecycle.Completed ? "EscortCompleted" : "EscortFailed"
             : altar ? "FallenAltarGuardianDefeated" : "CursedChestMimicDefeated";
-        _adventureObjectStates.Clear();
-        _adventureObjectStates[objectId] = escort
-            ? run.EscortState?.ProtectedNpcAlive == true ? "Safe" : "Down"
-            : altar ? "Purified" : "Defeated";
-        _adventureSceneRevision++;
         string resolvedDescription = escort
             ? run.EscortState?.ProtectedNpcAlive == true ? "The villager survived the ambush." : "The villager was lost."
             : altar ? "The altar is quiet." : "The mimic has collapsed into an opened chest.";
         Control root = NewPage($"{LayerLabel(run)} — EVENT RESOLVED", resolvedDescription);
         AddRunShell(root, run, "Event Result");
         AdventureActorPlacement[] actors = run.AdventureState!.ActorCells.Select(value => new AdventureActorPlacement(value.ActorId, value.Cell)).ToArray();
+        AdventureBoardObject[] exits = CreateExitObjects(run, run.NodeTransaction?.NodeId ?? RunAdventureTransitionService.CurrentNodeId(run), true);
         AdventureBoardDefinition definition = new(run.AdventureState.BoardContentId, 10, 10, [],
-            [new AdventureBoardObject(objectId, escort ? AdventureObjectKind.Npc : altar ? AdventureObjectKind.Altar : AdventureObjectKind.Chest, new GridPoint(7, 5), false, false)], actors,
+            new[] { new AdventureBoardObject(objectId, escort ? AdventureObjectKind.Npc : altar ? AdventureObjectKind.Altar : AdventureObjectKind.Chest, new GridPoint(7, 5), false, false) }.Concat(exits).ToArray(), actors,
             new GridPoint(1, 5), new GridPoint(8, 5));
         _adventureBoard = new GodotAdventureBoardView { Name = "ResolvedAdventureEventBoard" };
         _adventureLastBoardContentId = definition.ContentId.Value;
         root.AddChild(_adventureBoard);
         _adventureBoard.SetBoard(definition);
+        WireAdventureMovement(run, definition, changed => ShowPostEventScene(changed, contextKind));
+        _adventureBoard.ObjectPressed += pressed => HandleExitPointer(run, definition, pressed);
         root.AddChild(PlaceControl(Button("Continue", () => RouteMap(run)), new Vector2(650, 740), new Vector2(300, 50)));
-        _status = LabelAt(root, _adventureEventResolution, new Vector2(470, 810), 18);
+        _status = LabelAt(root, eventResolution, new Vector2(470, 810), 18);
     }
 
     private void ShowAdventureNodeEntry(PureRunState run, PureRunNodeKind kind)
@@ -1610,15 +1501,15 @@ public partial class GodotPlayableRunMain : Control
         }
         Control root = NewPage($"{LayerLabel(run)} — TILE {kind.ToString().ToUpperInvariant()}", "Move through the scene and interact with the highlighted object.");
         AddRunShell(root, run, kind.ToString());
-        _adventureObjectStates.Clear();
-        _adventureObjectStates[objectId] = "Ready";
         AdventureActorPlacement[] actors = run.AdventureState!.ActorCells.Select(value => new AdventureActorPlacement(value.ActorId, value.Cell)).ToArray();
         GridPoint[] perimeter = Enumerable.Range(0, 10).SelectMany(value =>
                 new[] { new GridPoint(value, 0), new GridPoint(value, 9) })
             .Concat(Enumerable.Range(1, 8).SelectMany(value => new[] { new GridPoint(0, value), new GridPoint(9, value) }))
             .Distinct().ToArray();
+        bool exitsOpen = kind == PureRunNodeKind.Store;
+        AdventureBoardObject[] exits = CreateExitObjects(run, run.NodeTransaction?.NodeId ?? RunAdventureTransitionService.CurrentNodeId(run), exitsOpen);
         AdventureBoardDefinition definition = new(boardId, 10, 10, perimeter,
-            [new AdventureBoardObject(objectId, objectKind, new GridPoint(7, 5), false, false)], actors,
+            new[] { new AdventureBoardObject(objectId, objectKind, new GridPoint(7, 5), false, false) }.Concat(exits).ToArray(), actors,
             new GridPoint(1, 5), new GridPoint(8, 5));
         _adventureBoard = new GodotAdventureBoardView { Name = $"{kind}AdventureBoard" };
         _adventureLastBoardContentId = definition.ContentId.Value;
@@ -1627,12 +1518,16 @@ public partial class GodotPlayableRunMain : Control
         WireAdventureMovement(run, definition, changed => ShowAdventureNodeEntry(changed, kind));
         _adventureBoard.ObjectPressed += pressed =>
         {
+            if (pressed.StartsWith("exit:", StringComparison.Ordinal))
+            {
+                if (kind != PureRunNodeKind.Store) { SetStatus($"Complete {kind} before leaving."); return; }
+                HandleExitPointer(run, definition, pressed);
+                return;
+            }
             if (pressed != objectId) return;
             RunAdventureActorCell leader = run.AdventureState.ActorCells.Single(value => value.ActorId == run.AdventureState.LeaderId);
-            if (!RunAdventureTransitionService.IsAdjacent(leader.Cell, definition.Objects.Single().Cell))
+            if (!RunAdventureTransitionService.IsAdjacent(leader.Cell, definition.Objects.Single(value => value.ObjectId == objectId).Cell))
             { SetStatus("Move the leader next to the interaction object first."); return; }
-            _adventureObjectStates[objectId] = "Interacted";
-            _adventureInteractionRevision++;
             switch (kind)
             {
                 case PureRunNodeKind.Rest: ShowRest(run); break;
@@ -1664,6 +1559,151 @@ public partial class GodotPlayableRunMain : Control
         };
     }
 
+    private AdventureBoardObject[] CreateExitObjects(PureRunState run, string currentNodeId, bool unlocked)
+    {
+        PureRunMapNodeDefinition[] successors = MapDefinition.Connections
+            .Where(edge => edge.FromNodeId == currentNodeId)
+            .Select(edge => MapDefinition.Nodes.Single(node => node.NodeId == edge.ToNodeId))
+            .Where(node => run.MapState?.ReachableNodeIds.Count is not > 0 ||
+                run.MapState.ReachableNodeIds.Contains(node.NodeId, StringComparer.Ordinal) ||
+                node.Layer is 1 or 2 or 3 or 5 or 7)
+            .OrderBy(node => node.Lane).ThenBy(node => node.NodeId, StringComparer.Ordinal).ToArray();
+        int[] xs = successors.Length switch
+        {
+            0 => [],
+            1 => [8],
+            2 => [3, 7],
+            3 => [2, 5, 8],
+            4 => [2, 4, 6, 8],
+            _ => Enumerable.Range(0, successors.Length).Select(index => 1 + index * 8 / Math.Max(1, successors.Length - 1)).ToArray()
+        };
+        return successors.Select((node, index) => new AdventureBoardObject($"exit:{node.NodeId}", AdventureObjectKind.Exit,
+            new GridPoint(xs[index], 8), false, false, node.NodeId, !unlocked)).ToArray();
+    }
+
+    private void HandleExitPointer(PureRunState run, AdventureBoardDefinition definition, string objectId)
+    {
+        AdventureBoardObject? exit = definition.Objects.FirstOrDefault(value => value.ObjectId == objectId && value.Kind == AdventureObjectKind.Exit);
+        if (exit?.TargetNodeId is null) return;
+        RunAdventureActorCell leader = run.AdventureState!.ActorCells.Single(value => value.ActorId == run.AdventureState.LeaderId);
+        if (!RunAdventureTransitionService.IsAdjacent(leader.Cell, exit.Cell))
+        { SetStatus("Move the leader next to the exit first."); return; }
+        if (exit.IsLocked) { SetStatus("Complete the current node before leaving."); return; }
+        HandleAdventureExit(run, exit.TargetNodeId);
+    }
+
+    private void HandleAdventureExit(PureRunState run, string targetNodeId)
+    {
+        if (run.NodeTransaction is { Kind: PureRunNodeKind.Store, Committed: false })
+        {
+            RunSessionResult left = _run!.ApplyLayerFourMutation(state =>
+            {
+                LayerFourNodeResolution result = new PureRunLayerFourNodeService().LeaveStore(state);
+                return new RunMutationResult(result.Succeeded, result.RejectionCode, result.State);
+            });
+            if (!left.Succeeded) { SetStatus(left.ErrorCode); return; }
+            run = left.Snapshot!.ActiveRun!;
+        }
+        if (targetNodeId.StartsWith("layer_06_", StringComparison.Ordinal) && run.Phase == PureRunPhase.ReadyForLayerSix)
+        {
+            RunSessionResult unlocked = _run!.ApplyFullRunTransition(state =>
+                new PureRunFullRunService(_consumables.Keys).UnlockLayerSix(state, MapDefinition));
+            if (!unlocked.Succeeded) { SetStatus(unlocked.ErrorCode); return; }
+            run = unlocked.Snapshot!.ActiveRun!;
+        }
+        RunSessionResult moved = _run!.ApplyMutation(state =>
+        {
+            try
+            {
+                var service = new RunAdventureTransitionService();
+                PureRunState exited = service.CommitExit(state, MapDefinition, targetNodeId);
+                PureRunState entered = service.EnterBoard(exited, AdventureBoardIdForNode(targetNodeId));
+                if (targetNodeId.StartsWith("layer_04_", StringComparison.Ordinal) ||
+                    targetNodeId.StartsWith("layer_06_", StringComparison.Ordinal))
+                {
+                    LayerFourNodeResolution selected = new PureRunLayerFourNodeService().SelectNode(entered, MapDefinition, targetNodeId);
+                    return new RunMutationResult(selected.Succeeded, selected.RejectionCode, selected.State);
+                }
+                return new RunMutationResult(true, null, entered);
+            }
+            catch (InvalidOperationException error) { return new RunMutationResult(false, error.Message, state); }
+        });
+        if (!moved.Succeeded) { SetStatus(moved.ErrorCode); return; }
+        PureRunState entered = moved.Snapshot!.ActiveRun!;
+        if (targetNodeId.StartsWith("layer_04_", StringComparison.Ordinal)) { RouteLayerFour(entered); return; }
+        if (targetNodeId.StartsWith("layer_06_", StringComparison.Ordinal)) { RouteLayerSixNode(entered); return; }
+        Action begin = targetNodeId switch
+        {
+            "layer_05_battle" => BeginLayerFive,
+            "layer_07_battle" => BeginBoss,
+            _ => BeginReadyEncounter
+        };
+        ShowAdventureBattleEntry(entered, targetNodeId, begin);
+    }
+
+    private void ShowAdventureBattleEntry(PureRunState run, string nodeId, Action beginBattle)
+    {
+        ContentId boardId = AdventureBoardIdForNode(nodeId);
+        if (run.AdventureState?.BoardContentId != boardId)
+        {
+            RunSessionResult entered = _run!.ApplyMutation(state => new RunMutationResult(true, null,
+                new RunAdventureTransitionService().EnterBoard(state, boardId)));
+            if (!entered.Succeeded) { SetStatus(entered.ErrorCode); return; }
+            run = entered.Snapshot!.ActiveRun!;
+        }
+        Control root = NewPage($"{nodeId} — TILE BATTLE", "Approach the encounter marker to begin combat.");
+        AddRunShell(root, run, "Battle Node");
+        AdventureActorPlacement[] actors = run.AdventureState!.ActorCells
+            .Select(value => new AdventureActorPlacement(value.ActorId, value.Cell)).ToArray();
+        AdventureBoardObject[] exits = CreateExitObjects(run, nodeId, false);
+        AdventureBoardDefinition definition = CreateNodeBoard(boardId, actors,
+            new[] { new AdventureBoardObject("encounter", AdventureObjectKind.Battle, new GridPoint(7, 5), false, false) }
+                .Concat(exits).ToArray());
+        _adventureBoard = new GodotAdventureBoardView { Name = "AdventureBattleEntryBoard" };
+        root.AddChild(_adventureBoard); _adventureBoard.SetBoard(definition);
+        WireAdventureMovement(run, definition, changed => ShowAdventureBattleEntry(changed, nodeId, beginBattle));
+        _adventureBoard.ObjectPressed += pressed =>
+        {
+            if (pressed.StartsWith("exit:", StringComparison.Ordinal)) { SetStatus("Win the battle before leaving."); return; }
+            if (pressed != "encounter") return;
+            RunAdventureActorCell leader = run.AdventureState.ActorCells.Single(value => value.ActorId == run.AdventureState.LeaderId);
+            if (!RunAdventureTransitionService.IsAdjacent(leader.Cell, definition.Objects.Single(value => value.ObjectId == "encounter").Cell))
+            { SetStatus("Move the leader next to the encounter first."); return; }
+            beginBattle();
+        };
+        root.AddChild(PlaceControl(Button("Map Preview", () => ShowRunMap(run)), new Vector2(1130, 720), new Vector2(360, 58)));
+        _status = LabelAt(root, "Encounter pending", new Vector2(470, 810), 18);
+    }
+
+    private void ShowResolvedAdventureNode(PureRunState run)
+    {
+        string nodeId = RunAdventureTransitionService.CurrentNodeId(run);
+        ContentId boardId = run.AdventureState!.BoardContentId;
+        Control root = NewPage($"{nodeId} — RESOLVED", "Choose one directly reachable exit.");
+        AddRunShell(root, run, "Resolved Node");
+        AdventureActorPlacement[] actors = run.AdventureState.ActorCells
+            .Select(value => new AdventureActorPlacement(value.ActorId, value.Cell)).ToArray();
+        AdventureBoardDefinition definition = CreateNodeBoard(boardId, actors, CreateExitObjects(run, nodeId, true));
+        _adventureBoard = new GodotAdventureBoardView { Name = "ResolvedAdventureNodeBoard" };
+        root.AddChild(_adventureBoard); _adventureBoard.SetBoard(definition);
+        WireAdventureMovement(run, definition, ShowResolvedAdventureNode);
+        _adventureBoard.ObjectPressed += pressed => HandleExitPointer(run, definition, pressed);
+        root.AddChild(PlaceControl(Button("Inventory", () => ShowInventory(run)), new Vector2(1130, 650), new Vector2(360, 58)));
+        root.AddChild(PlaceControl(Button("Map Preview", () => ShowRunMap(run)), new Vector2(1130, 720), new Vector2(360, 58)));
+        _status = LabelAt(root, "Node resolved", new Vector2(470, 810), 18);
+    }
+
+    private static AdventureBoardDefinition CreateNodeBoard(ContentId boardId, IReadOnlyList<AdventureActorPlacement> actors,
+        IReadOnlyList<AdventureBoardObject> objects)
+    {
+        GridPoint[] perimeter = Enumerable.Range(0, 10).SelectMany(value =>
+                new[] { new GridPoint(value, 0), new GridPoint(value, 9) })
+            .Concat(Enumerable.Range(1, 8).SelectMany(value => new[] { new GridPoint(0, value), new GridPoint(9, value) }))
+            .Distinct().ToArray();
+        return new AdventureBoardDefinition(boardId, 10, 10, perimeter, objects, actors,
+            new GridPoint(1, 5), new GridPoint(8, 4));
+    }
+
     private void RouteMap(PureRunState run)
     {
         RouteRunState(new PureRunSaveSnapshot(run.Revision, run, null));
@@ -1687,9 +1727,36 @@ public partial class GodotPlayableRunMain : Control
             return;
         }
         if (run.AdventureState is { Lifecycle: RunAdventureLifecycle.InitialExploration }) ShowInitialAdventure(run);
-        else if (run.AdventureState is { Lifecycle: RunAdventureLifecycle.RouteGroupOne or RunAdventureLifecycle.RouteGroupTwo or RunAdventureLifecycle.RouteReady or RunAdventureLifecycle.RouteCommitted }) ShowRoutePlanning(run);
-        else ShowRunMap(run);
+        else if (run.AdventureState is { Lifecycle: RunAdventureLifecycle.MapActive } adventure &&
+                 !adventure.BoardContentId.Value.EndsWith(".resolved", StringComparison.Ordinal) &&
+                 TryGetAdventureBoardNodeId(adventure.BoardContentId, out string nodeId) &&
+                 MapDefinition.Nodes.Single(node => node.NodeId == nodeId).Kind is PureRunNodeKind.Battle or PureRunNodeKind.Elite or PureRunNodeKind.Boss)
+        {
+            Action begin = nodeId switch
+            {
+                "layer_04_battle" => BeginLayerFourBattle,
+                "layer_05_battle" => BeginLayerFive,
+                "layer_06_battle" => BeginLayerSixBattle,
+                "layer_07_battle" => BeginBoss,
+                _ => BeginReadyEncounter
+            };
+            ShowAdventureBattleEntry(run, nodeId, begin);
+        }
+        else ShowResolvedAdventureNode(run);
     }
+
+    private static bool TryGetAdventureBoardNodeId(ContentId boardId, out string nodeId)
+    {
+        const string marker = ".node.";
+        int index = boardId.Value.IndexOf(marker, StringComparison.Ordinal);
+        nodeId = index < 0 ? string.Empty : boardId.Value[(index + marker.Length)..];
+        if (nodeId.EndsWith(".resolved", StringComparison.Ordinal)) nodeId = nodeId[..^".resolved".Length];
+        nodeId = nodeId.Replace('-', '_');
+        return nodeId.Length > 0;
+    }
+
+    private static ContentId AdventureBoardIdForNode(string nodeId) =>
+        new($"adventure-board.pure-run.node.{nodeId.Replace('_', '-')}");
 
     private void BeginLayerFourBattle()
     {
@@ -1798,25 +1865,14 @@ public partial class GodotPlayableRunMain : Control
 
     private static ContentId? EffectContentId(JsonElement effect){if(!effect.TryGetProperty("itemId",out JsonElement item))return null;string value=item.GetString()!;return value switch{"cleansing_potion"=>new ContentId("item.consumable.cleansing-potion"),"Assets/Tactics/ScriptableObjects/Buffs/EventDamageReduction.asset"=>new ContentId("buff.event-damage-reduction"),"Assets/Tactics/ScriptableObjects/Buffs/EventDamageTakenUp.asset"=>new ContentId("buff.event-damage-taken-up"),_=>new ContentId(value)};}
     private static int AttributeValue(UnitAttributes a,string name)=>name switch{"Strength"=>a.Strength,"Agility"=>a.Agility,"Constitution"=>a.Constitution,"Intelligence"=>a.Intelligence,"Charisma"=>a.Charisma,"Luck"=>a.Luck,"None"=>5,_=>5};
-    private void CommitLayerFour(Func<PureRunState,LayerFourNodeResolution> command){RunSessionResult result=_run!.ApplyLayerFourMutation(state=>{LayerFourNodeResolution r=command(state);return new RunMutationResult(r.Succeeded,r.RejectionCode,r.State);});if(!result.Succeeded){SetStatus(result.ErrorCode);return;}if(result.Snapshot?.TerminalSummary is PureRunSummary summary)ShowSummary(summary);else RouteMap(result.Snapshot!.ActiveRun!);}
-
-    private void ShowReadyForLayerFive(PureRunState run)
-    {
-        string route=run.NodeTransaction?.Kind.ToString()??"Unknown";
-        Control root=NewPage("READY FOR LAYER 5",$"Layer 4 {route} resolved. Continue into the deterministic Elite encounter.");
-        LabelAt(root,$"Run {run.RunId}\nRevision {run.Revision}\nGold {run.Gold} | Battles {run.BattlesCompleted} | Kills {run.EnemiesDefeated}\nParty: {string.Join(" | ",run.Party.Select(c=>$"{c.CharacterId} HP {c.CurrentHealth}/{c.MaxHealth} MP {c.CurrentMana}/{c.MaxMana}"))}\nTransactions: {string.Join(", ",run.AppliedTransactionKeys)}",new Vector2(260,260),22);
-        root.AddChild(PlaceControl(Button("Begin Layer 5 Elite",BeginLayerFive),new Vector2(650,650),new Vector2(300,65)));
-    }
+    private void CommitLayerFour(Func<PureRunState,LayerFourNodeResolution> command){RunSessionResult result=_run!.ApplyLayerFourMutation(state=>{LayerFourNodeResolution r=command(state);return new RunMutationResult(r.Succeeded,r.RejectionCode,r.State);});if(!result.Succeeded){SetStatus(result.ErrorCode);return;}if(result.Snapshot?.TerminalSummary is PureRunSummary summary){ShowSummary(summary);return;}result=ResolveAdventureBoard(result);if(!result.Succeeded){SetStatus(result.ErrorCode);return;}RouteRunState(result.Snapshot!);}
 
     private void BeginLayerFive(){RunSessionResult result=_run!.ApplyFullRunTransition(state=>new PureRunFullRunService(_consumables.Keys).BeginLayerFive(state,MapDefinition));if(!result.Succeeded||result.EncounterRequest is null){SetStatus(result.ErrorCode);return;}StartBattle(result.EncounterRequest);}
-    private void ShowLayerSixChoice(PureRunState run){Control root=NewPage("LAYER 6 ROUTE","Choose one final route before the Special Boss.");var menu=new VBoxContainer{Position=new Vector2(500,220),Size=new Vector2(600,520)};root.AddChild(menu);menu.AddChild(Button("Elite Battle",()=>SelectLayerSixNode("layer_06_battle")));menu.AddChild(Button("Rest",()=>SelectLayerSixNode("layer_06_rest")));menu.AddChild(Button("Store",()=>SelectLayerSixNode("layer_06_store")));menu.AddChild(Button("Mystery",()=>SelectLayerSixNode("layer_06_event")));menu.AddChild(Button("Treasure",()=>SelectLayerSixNode("layer_06_treasure")));}
-    private void SelectLayerSixNode(string nodeId){RunSessionResult result=_run!.ApplyMutation(state=>{LayerFourNodeResolution selected=new PureRunLayerFourNodeService().SelectNode(state,MapDefinition,nodeId);return new RunMutationResult(selected.Succeeded,selected.RejectionCode,selected.State);});if(!result.Succeeded){SetStatus(result.ErrorCode);return;}RouteLayerSixNode(result.Snapshot!.ActiveRun!);}
-    private void RouteLayerSixNode(PureRunState run){switch(run.NodeTransaction?.Kind){case PureRunNodeKind.Battle:BeginLayerSixBattle();break;case PureRunNodeKind.Rest:ShowAdventureNodeEntry(run,PureRunNodeKind.Rest);break;case PureRunNodeKind.Store:ShowAdventureNodeEntry(run,PureRunNodeKind.Store);break;case PureRunNodeKind.Mystery:ShowAdventureEventEntry(run,"FallenAltarGuardian");break;case PureRunNodeKind.Treasure:ShowAdventureNodeEntry(run,PureRunNodeKind.Treasure);break;default:SetStatus("layer6.route_missing");break;}}
+    private void RouteLayerSixNode(PureRunState run){switch(run.NodeTransaction?.Kind){case PureRunNodeKind.Battle:ShowAdventureBattleEntry(run,run.NodeTransaction.NodeId,BeginLayerSixBattle);break;case PureRunNodeKind.Rest:ShowAdventureNodeEntry(run,PureRunNodeKind.Rest);break;case PureRunNodeKind.Store:ShowAdventureNodeEntry(run,PureRunNodeKind.Store);break;case PureRunNodeKind.Mystery:ShowAdventureEventEntry(run,"FallenAltarGuardian");break;case PureRunNodeKind.Treasure:ShowAdventureNodeEntry(run,PureRunNodeKind.Treasure);break;default:SetStatus("layer6.route_missing");break;}}
     private void BeginLayerSixBattle(){RunSessionResult result=_run!.ApplyMutation(state=>{ContentId id=new PureRunMapService(MapDefinition).SelectLateEncounter(state.Seed,"layer_06_battle");LayerFourNodeResolution begun=new PureRunLayerFourNodeService().BeginN4(state,id);return new RunMutationResult(begun.Succeeded,begun.RejectionCode,begun.State);});if(!result.Succeeded||result.Snapshot?.ActiveRun?.Checkpoint is null){SetStatus(result.ErrorCode);return;}PureRunState pending=result.Snapshot.ActiveRun;StartBattle(AdventureEncounterRequest(pending, pending.EncounterContentId));}
 
     private static EncounterRequest AdventureEncounterRequest(PureRunState run, ContentId encounterId) => new(
         run.RunId, run.Checkpoint!.Revision, encounterId, run.Checkpoint.Party, run.AdventureState?.Revision ?? 0);
-    private void ShowReadyForBoss(PureRunState run){Control root=NewPage("READY FOR LAYER 7","Layer 6 committed. The Special Boss is the terminal encounter.");root.AddChild(PlaceControl(Button("Begin Special Boss",BeginBoss),new Vector2(650,560),new Vector2(300,70)));}
     private void BeginBoss(){RunSessionResult result=_run!.ApplyFullRunTransition(state=>new PureRunFullRunService(_consumables.Keys).BeginBoss(state,MapDefinition));if(!result.Succeeded||result.EncounterRequest is null){SetStatus(result.ErrorCode);return;}StartBattle(result.EncounterRequest);}
 
     private void ShowInventory(PureRunState run) => ShowInventory(run, InventoryReturnTarget.RunRoute);

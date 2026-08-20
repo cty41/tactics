@@ -377,8 +377,8 @@ try {
         'AdventureBoard.StartCampPartyOrder' = $null
         'AdventureBoard.StartingSkillsEnterAdventureBoard' = $null
         'AdventureBoard.LeaderSwitchAndFreePath' = $null
-        'AdventureBoard.TwoGroupRouteCommit' = $null
-        'AdventureBoard.PartialRouteAndCommitSurviveReload' = $null
+        'AdventureBoard.ImmediateSuccessorExitSelection' = 'layer4-choice-ready-v1'
+        'AdventureBoard.ImmediateExitReload' = 'layer4-choice-ready-v1'
         'AdventureBoard.RestCampfireResolution' = 'layer4-choice-ready-v1'
         'AdventureBoard.StoreMerchantPurchase' = 'layer4-choice-ready-v1'
         'AdventureBoard.StandardTreasureChest' = 'layer4-choice-ready-v1'

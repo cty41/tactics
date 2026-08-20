@@ -138,7 +138,7 @@ const assertionKindToAdapter: Record<string, Adapter> = {
   adventureActorCellEquals: "Map",
   activeAdventureLeaderEquals: "Map",
   runNodeLifecycleEquals: "Map",
-  routeCandidateNodeIdsEqual: "Map",
+  immediateSuccessorNodeIdsEqual: "Map",
   adventureObjectStateEquals: "Map",
   storeOfferCountEquals: "Map",
   storeSoldOfferCountEquals: "Map",
@@ -333,7 +333,7 @@ function compileSpecToPlan(spec: ScenarioSpec, diagnostics: ExpectationDiagnosti
         assertion.kind === "demonboundCorruptionEquals" ||
         assertion.kind === "demonboundPossessedEquals" || assertion.kind.startsWith("adventure") ||
         assertion.kind === "activeAdventureLeaderEquals" || assertion.kind === "runNodeLifecycleEquals" ||
-        assertion.kind === "routeCandidateNodeIdsEqual" || assertion.kind === "storeOfferCountEquals" ||
+        assertion.kind === "immediateSuccessorNodeIdsEqual" || assertion.kind === "storeOfferCountEquals" ||
         assertion.kind === "storeSoldOfferCountEquals" || assertion.kind === "backpackContainsContentId" ||
         assertion.kind === "eventResolutionEquals" || assertion.kind === "pendingBattleContextKindEquals" ||
         assertion.kind === "escortStateEquals" || assertion.kind === "protectedNpcAliveEquals" ||
@@ -351,7 +351,12 @@ function compileSpecToPlan(spec: ScenarioSpec, diagnostics: ExpectationDiagnosti
       probeRequests,
       checkpoint,
       saveIsolation: { root: "user://qa-runner", protectProductionSave: true as const },
-      watchdog: { stepTimeoutMs: 30000, battleRoundLimit: 80, scenarioTimeoutMs: 300000, noProgressLimit: 2 }
+      watchdog: {
+        stepTimeoutMs: Math.min(120000, Math.max(30000, Math.ceil(spec.timeoutMs / 10))),
+        battleRoundLimit: 80,
+        scenarioTimeoutMs: Math.max(300000, spec.timeoutMs),
+        noProgressLimit: 2
+      }
     };
     const parsed = GodotExecutableScenarioPlanSchema.safeParse(plan);
     if (!parsed.success) return { valid: false, diagnostics: parsed.error.issues.map(issue => ({

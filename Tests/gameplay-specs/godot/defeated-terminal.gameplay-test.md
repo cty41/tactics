@@ -6,7 +6,7 @@ requiredAdapters: [Map, PlayerInput, Battle, UI]
 setup:
   - kind: loadValidatedCheckpoint
     adapter: Map
-    parameters: { id: defeat-no-summon-v1, path: "validated://defeat-no-summon-v1", semanticHash: c4dfaf31b13248f6b151810e187ee5601f902abbc9e0402c5d2dc8757a78189f }
+    parameters: { id: defeat-no-summon-v1, path: "validated://defeat-no-summon-v1", semanticHash: ca88be359b96f0e3a2b193d9052618ddb6b086c8c63065175ac36acfe5a6ea0c }
   - kind: initializePlayerInput
     adapter: PlayerInput
     parameters: {}

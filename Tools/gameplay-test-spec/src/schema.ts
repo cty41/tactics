@@ -141,7 +141,7 @@ const godotPlanAdapterByKind: Record<string, z.infer<typeof AdapterSchema>> = {
   adventureActorCellEquals: "Map",
   activeAdventureLeaderEquals: "Map",
   runNodeLifecycleEquals: "Map",
-  routeCandidateNodeIdsEqual: "Map",
+  immediateSuccessorNodeIdsEqual: "Map",
   adventureObjectStateEquals: "Map",
   storeOfferCountEquals: "Map",
   storeSoldOfferCountEquals: "Map",

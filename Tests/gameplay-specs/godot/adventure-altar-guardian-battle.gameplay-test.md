@@ -6,18 +6,22 @@ requiredAdapters: [Map, PlayerInput, UI]
 setup:
   - kind: loadValidatedCheckpoint
     adapter: Map
-    parameters: { id: layer6-event-ready-v1, path: "validated://layer6-event-ready-v1", semanticHash: 81fdf128c8db01120597f18749fec38ce63032bc5f5152b305164cfaa81082ca }
+    parameters: { id: layer6-event-ready-v1, path: "validated://layer6-event-ready-v1", semanticHash: 27961cf36a0c8d73c22bfb367d5005dfeedfc009229ba22f120b1821d3c01198 }
   - kind: initializePlayerInput
     adapter: PlayerInput
     parameters: {}
 actions:
   - kind: waitForPlayerObservable
     adapter: PlayerInput
-    parameters: { observable: mapReady, maximumFrames: 180 }
+    parameters: { observable: adventureBoardReady, maximumFrames: 180 }
   - kind: clickPointerTarget
     adapter: PlayerInput
-    target: layer_06_event
-    parameters: { targetKind: MapNode }
+    target: 7,7
+    parameters: { targetKind: AdventureCell }
+  - kind: clickPointerTarget
+    adapter: PlayerInput
+    target: "exit:layer_06_event"
+    parameters: { targetKind: AdventureObject }
   - kind: waitForPlayerObservable
     adapter: PlayerInput
     parameters: { observable: adventureBoardReady, maximumFrames: 180 }
