@@ -4,7 +4,7 @@ resource: https://github.com/cty41/tactics/tree/main/Tools/artworks
 title: Pure Run Artwork Pipeline
 description: Pure Run 角色美术的生成、去幕、尺寸校准、Review 与提交入口。
 tags: [operations, pure-run, artwork, sprite, godot]
-timestamp: "2026-08-21T00:14:12+08:00"
+timestamp: "2026-08-21T00:38:31+08:00"
 status: active
 catalog_scope: pure-run-artwork
 repo_paths:
@@ -14,7 +14,7 @@ repo_paths:
   - godot/assets
   - Tools/public-release/asset-provenance.json
 verified_revision: c68dbebe
-source_fingerprint: sha256:c0db09430bb840570cfb374670ed890d78d8511c8d88685387429610778fff54
+source_fingerprint: sha256:2c8c87d49baf400f393ca226ff2dc3069b0d992ba084c876ba6dc2ccf1f2749c
 ---
 
 # Pure Run 角色美术流水线
@@ -38,6 +38,7 @@ source_fingerprint: sha256:c0db09430bb840570cfb374670ed890d78d8511c8d88685387429
 - 方向变体以同角色已确认的 `down-right` 为唯一体量锚点；纯核心主体蒙版排除耳朵、口鼻、手脚、装备与特效，只用于测量和 QA，不参与成品合成。验收同时比较上下缘、中心、最大宽度与上中下三个截面，避免窄柱体或梨形下段。采用无手臂策略时，手掌必须以多像素接触面直接嵌入主体边缘，不能浮空或用细线连接。
 - 死亡状态必须先按核心拓扑分类。参考几何只提供完整姿态生成后的角度、压扁度与尺寸验收目标；身体、耳朵和相连四爪必须保持连续生成轮廓，禁止分层旋转、非等比压缩或重投影。只有真正脱手的装备和限定眼区 X 眼可独立合成。旧 `render-death-recipe` 因导致轮廓碎裂已从公开 CLI 退役，历史 recipe 仍可读取。对已逐轮人工确认但缺少生成前 invocation 的精确成图，只能以 `render-size-comparison` 冻结四栏证据，再用受限 `reviewed_import` 诚实收编，禁止倒填调用记录；详细复盘见 `.agents/docs/2026-08-20-death-pose-deterministic-shaping-design.md`。
 - 魔剑士死亡图 Round v04 已绑定身份源、256 候选、128 预览和四栏尺寸对比，由 `cty41` receipt 批准并以 `reviewed_import` 晋升为 `Tools/artworks/doge/calibrated/doge_capsule_demonbound_death_v01.png`；该事实不等于 Godot 运行时接入授权。
+- 魔剑士 Cast UL v08、Hit DR v02 与 Hit UL v03 已在既有人工通过基础上完成透明 RGB 规范化、尺寸证据、`reviewed_import` approval 与正式晋升。Idle、Melee、Cast、Hit 的 DR/UL 和 Death 九张正式纹理已按字节一致副本接入 `godot/assets/units`，`DemonboundAssetFactory` 通过 ResourceSaver 将其绑定到 `PureRunDemonbound.tres`，并清除了 Amazon 模板遗留的 Ranged 占位引用；运行时动作切换与尸体观感仍由 `MQA-GODOT-DEMONBOUND-ACTION-ART` 人工复验。
 - 赤柴 `doge_capsule_hunter_death_color_v04`、死灵 `doge_capsule_necromancer_death_color_v05`、法师 `doge_capsule_mage_death_color_v04` 与羊魔 `splitjaw_goat_charger_death_color_v03` 已获人工授权并复制为运行时死亡纹理。它们使用 `256×256`、`128 PPU`、中心 Pivot 与 Tight Mesh，由单位视觉配置传给通用 `Corpse`；尸体通过 `Sprite.bounds.center` 抵消透明画布偏移，不按生前朝向镜像，羊魔尸体继承生前材质以保留六种职责换色。
 - 骷髅战士、骷髅法师和火魔属于召唤物，死亡后不生成尸体，因而没有配置死亡纹理；蝙蝠仍无运行时 Prefab。
 - 蝙蝠死亡图 `tomb_maw_bat_ranged_death_color_v02` 当前位于 `Tools/artworks/pure_run/enemies/candidates`：保持近圆球核并缩小到活体球核之下，耳朵与脸部线索朝画面右上，双翼随朝向旋转后贴地瘫软；赤柴只提供屏幕朝向，不能提供胶囊体轮廓或细长身体轴。`v01` 保留为球核过大的历史候选；两版均未接入 Unity。

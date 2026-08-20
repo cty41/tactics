@@ -98,7 +98,17 @@ public static class DemonboundAssetFactory
         unit.Strength = 5; unit.Agility = 5; unit.Constitution = 5; unit.Intelligence = 5; unit.Charisma = 6; unit.Luck = 5;
         unit.Speed = 4; unit.MaxHealth = 20; unit.MaxMana = 18; unit.StartingMana = 6; unit.MoveRange = 4; unit.Initiative = 8;
         unit.DerivedStatModeValue = "explicit";
+        unit.DownRightTexture = Texture("res://assets/units/doge_demonbound.png");
+        unit.UpLeftTexture = Texture("res://assets/units/doge_demonbound_ul.png");
+        unit.DeathTexture = Texture("res://assets/units/doge_demonbound_death.png");
+        unit.MeleeDownRightTexture = Texture("res://assets/units/actions/doge_demonbound_melee_attack_dr.png");
+        unit.MeleeUpLeftTexture = Texture("res://assets/units/actions/doge_demonbound_melee_attack_ul.png");
+        unit.CastDownRightTexture = Texture("res://assets/units/actions/doge_demonbound_cast_dr.png");
+        unit.CastUpLeftTexture = Texture("res://assets/units/actions/doge_demonbound_cast_ul.png");
+        unit.HitDownRightTexture = Texture("res://assets/units/actions/doge_demonbound_hit_dr.png");
+        unit.HitUpLeftTexture = Texture("res://assets/units/actions/doge_demonbound_hit_ul.png");
         unit.UnarmedDownRightTexture = null; unit.UnarmedUpLeftTexture = null;
+        unit.RangedDownRightTexture = null; unit.RangedUpLeftTexture = null;
         unit.BodyTint = new Color(.72f, .58f, .86f); unit.BaseBodyColor = new Color(.72f, .58f, .86f);
         unit.ToCoreDefinition(); Save(unit, unitPath);
         generated.Add(Entry(unit.ContentIdValue, "unit", unitPath, new[] { "packed-scene.unit-actor" }));
@@ -180,6 +190,8 @@ public static class DemonboundAssetFactory
         SchemaVersion=value.SchemaVersion, ReferenceContentIds=value.ReferenceContentIds.ToArray()
     };
     private static long Uid(string path) { string text=ResourceUid.PathToUid(path); long uid=text.StartsWith("uid://")?ResourceUid.TextToId(text):ResourceUid.CreateIdForPath(path); if(!ResourceUid.HasId(uid))ResourceUid.AddId(uid,path); return uid; }
+    private static Texture2D Texture(string path) => ResourceLoader.Load<Texture2D>(path,
+        string.Empty, ResourceLoader.CacheMode.Ignore) ?? throw new InvalidOperationException($"Demonbound texture is missing: {path}");
     private static void Save(Resource resource,string path)=>DeterministicResourceSaver.Save(resource,path,Uid(path));
 }
 #endif

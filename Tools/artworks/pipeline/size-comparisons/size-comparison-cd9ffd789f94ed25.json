@@ -1,0 +1,92 @@
+{
+  "schemaVersion": 1,
+  "sizeComparisonId": "size-comparison-cd9ffd789f94ed25",
+  "inputs": [
+    {
+      "label": "Identity",
+      "artifact": {
+        "path": "Tools/artworks/doge/calibrated/doge_capsule_demonbound_idle_ul_v01.png",
+        "sha256": "ef9fd7521afafc4f46ef8fd355fc90337b493e268de61eaebfcd8d2ea3e529f4"
+      }
+    },
+    {
+      "label": "Previous",
+      "artifact": {
+        "path": "Tools/artworks/doge/reviews/doge_capsule_demonbound_cast_ul_reused_clean_sword_behind_body_wip_v07.png",
+        "sha256": "018e5e9b22a760e2caae2ff35b25bd784438ea183ff7156e556cc6f4b69094ff"
+      }
+    },
+    {
+      "label": "Pose reference",
+      "artifact": {
+        "path": "Tools/artworks/doge/calibrated/doge_capsule_demonbound_cast_dr_v01.png",
+        "sha256": "d7e6e6a2dc3503d0c0c61965c4e688e4cfcd912b72d4ea8e13b1115080dbb550"
+      }
+    },
+    {
+      "label": "Candidate",
+      "artifact": {
+        "path": "Tools/artworks/doge/candidates/doge_capsule_demonbound_cast_ul_reviewed_v08.png",
+        "sha256": "a35b33ed6e013b3b873c6351c6d12284dd88f4bc7f1a4155ac99bb262aedbb7f"
+      }
+    }
+  ],
+  "measurements": [
+    {
+      "label": "Identity",
+      "bbox": [
+        43,
+        48,
+        88,
+        119
+      ],
+      "bboxSize": [
+        45,
+        71
+      ]
+    },
+    {
+      "label": "Previous",
+      "bbox": [
+        46,
+        50,
+        84,
+        118
+      ],
+      "bboxSize": [
+        38,
+        68
+      ]
+    },
+    {
+      "label": "Pose reference",
+      "bbox": [
+        46,
+        52,
+        82,
+        119
+      ],
+      "bboxSize": [
+        36,
+        67
+      ]
+    },
+    {
+      "label": "Candidate",
+      "bbox": [
+        46,
+        48,
+        84,
+        118
+      ],
+      "bboxSize": [
+        38,
+        70
+      ]
+    }
+  ],
+  "artifact": {
+    "path": "Tools/artworks/doge/reviews/doge_capsule_demonbound_cast_ul_size_compare_v09.png",
+    "sha256": "407ee74184f9d76ebd34a3fb02c0bd3add05c81e07bb23236ae8f4bad0f75f1c"
+  }
+}

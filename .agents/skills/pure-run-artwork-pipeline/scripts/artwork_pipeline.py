@@ -1999,9 +1999,42 @@ def _sprite_import_geometry(image: Image.Image, expected_size: tuple[int, int], 
         raise PipelineError(f"{label} is empty")
     center = [(bbox[0] + bbox[2] - 1) / 2, (bbox[1] + bbox[3] - 1) / 2]
     expected_center = [(image.width - 1) / 2, (image.height - 1) / 2]
-    if any(abs(center[index] - expected_center[index]) > 0.5 for index in range(2)):
-        raise PipelineError(f"{label} visible AABB must be centered")
+    centered = all(abs(center[index] - expected_center[index]) <= 0.5 for index in range(2))
+    expected_baseline = 236 if expected_size == (256, 256) else 118
+    baseline_tolerance = 2 if expected_size == (256, 256) else 1
+    if not centered and abs((bbox[3] - 1) - expected_baseline) > baseline_tolerance:
+        raise PipelineError(f"{label} must be centered or use the artwork baseline")
     return {"bbox": list(bbox), "bboxSize": [bbox[2] - bbox[0], bbox[3] - bbox[1]], "center": center}
+
+
+def normalize_reviewed_sprite(store: Store, args: argparse.Namespace) -> dict[str, Any]:
+    source = _bound_artifact(store, args.source)
+    with Image.open(store.absolute(source["path"])) as opened:
+        if opened.mode != "RGBA" or opened.size != (256, 256):
+            raise PipelineError("reviewed source must be 256x256 RGBA")
+        normalized = normalize_transparent_rgb(opened.copy())
+    output_rel = store.relative(args.output)
+    preview_rel = store.relative(args.preview)
+    output = store.absolute(output_rel); preview = store.absolute(preview_rel)
+    output.parent.mkdir(parents=True, exist_ok=True); preview.parent.mkdir(parents=True, exist_ok=True)
+    normalized.save(output, format="PNG", optimize=False, compress_level=9)
+    make_preview(normalized).save(preview, format="PNG", optimize=False, compress_level=9)
+    artifacts = {"candidate": _bound_artifact(store, output_rel), "preview": _bound_artifact(store, preview_rel)}
+    register_public_artifacts(store, list(artifacts.values()), "project-owned-supporting-derived")
+    return {"schemaVersion": 1, "source": source, "artifacts": artifacts}
+
+
+def register_runtime_copy(store: Store, args: argparse.Namespace) -> dict[str, Any]:
+    source = _bound_artifact(store, args.source)
+    target = _bound_artifact(store, args.target)
+    if source["sha256"] != target["sha256"]:
+        raise PipelineError("runtime copy must be byte-identical to its approved source")
+    manifest = load_json(store.root / "Tools/public-release/asset-provenance.json")
+    source_entry = next((entry for entry in manifest["entries"] if entry.get("path") == source["path"]), None)
+    if not source_entry or source_entry.get("status") != "approved":
+        raise PipelineError("runtime copy source must have approved public provenance")
+    register_public_artifacts(store, [target], "project-owned-migrated-runtime-art")
+    return {"schemaVersion": 1, "source": source, "target": target}
 
 
 def render_size_comparison(store: Store, args: argparse.Namespace) -> dict[str, Any]:
@@ -3185,6 +3218,11 @@ def build_parser() -> argparse.ArgumentParser:
     comparison_p.add_argument("--identity", required=True); comparison_p.add_argument("--previous", required=True)
     comparison_p.add_argument("--reference", required=True); comparison_p.add_argument("--candidate", required=True)
     comparison_p.add_argument("--output", required=True)
+    normalize_import_p = commands.add_parser("normalize-reviewed-sprite")
+    normalize_import_p.add_argument("--source", required=True); normalize_import_p.add_argument("--output", required=True)
+    normalize_import_p.add_argument("--preview", required=True)
+    runtime_copy_p = commands.add_parser("register-runtime-copy")
+    runtime_copy_p.add_argument("--source", required=True); runtime_copy_p.add_argument("--target", required=True)
     adopt_p = commands.add_parser("adopt-reviewed-sprite")
     adopt_p.add_argument("--contract-id", required=True); adopt_p.add_argument("--source", required=True)
     adopt_p.add_argument("--candidate", required=True); adopt_p.add_argument("--preview", required=True)
@@ -3230,6 +3268,8 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
         "attach-annotations": attach_annotations, "record-advisory-review": record_advisory_review,
         "register-supporting-artifact": register_supporting_artifact,
         "render-size-comparison": render_size_comparison,
+        "normalize-reviewed-sprite": normalize_reviewed_sprite,
+        "register-runtime-copy": register_runtime_copy,
         "adopt-reviewed-sprite": adopt_reviewed_sprite,
         "migrate-component": migrate_component, "derive-component": derive_component,
         "create-assembly": create_assembly, "render-assembly": render_assembly,

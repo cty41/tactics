@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 2,
+  "approvalId": "approval-5fd4096f63af73dd",
+  "attemptId": "job-2593d75eec17966b-a001",
+  "candidateSha256": "31fbb5d72cd69d1cf63cafade653463406537062deb327200daf9e3e3571330f",
+  "maskSha256": null,
+  "reviewer": "cty41",
+  "reviewSha256": {
+    "sizeComparison": "4eb5cbca77b47cd02f3786e220fc7ffe0e45c11970f67b351b88a8921f21daad"
+  },
+  "decision": "approved",
+  "reason": "Previously explicit visual acceptance; deterministic normalization preserved visible pixels.",
+  "decidedAt": "2026-08-21T12:00:00+08:00",
+  "annotation": null,
+  "reportSha256": "092187b2eb7a6bd2e5a00726949ee6b5fa9184ac80264de8bfb0d37080d2e225"
+}
