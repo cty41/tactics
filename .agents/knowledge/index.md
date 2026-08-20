@@ -5,7 +5,7 @@ tactics_profile: "0.1"
 
 # Tactics Knowledge Bundle
 
-Tactics 的跨系统知识目录。详细设计、计划、代码、Unity 资产和测试仍是各自领域的真相源；本 bundle 提供渐进导航、当前状态综合和关系链接。
+Tactics 的跨系统知识目录。详细设计、计划、代码、Godot Resource 和测试仍是各自领域的真相源；本 bundle 提供渐进导航、当前状态综合和关系链接。
 
 # Subdirectories
 

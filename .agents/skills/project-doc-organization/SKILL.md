@@ -15,7 +15,7 @@ description: "Use when creating, moving, or organizing project documentation fil
 | 临时灵感收集箱 | `.agents/docs/brainstorm.md` | 未验证；成熟后迁移并删除原条目 |
 | 活跃可执行计划 | `.agents/plans/` | 实施完成并迁移长期知识后删除 |
 | 跨系统综合与导航 | `.agents/knowledge/` | 按 OKF 规则维护 |
-| 实现事实 | 代码、Unity 资产、测试 | 当前行为的最终事实源 |
+| 实现事实 | 代码、Godot Resource、测试 | 当前行为的最终事实源 |
 
 ## When to use
 

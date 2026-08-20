@@ -2,7 +2,7 @@
 
 ## 目标
 
-`.agents/knowledge/` 是 Tactics 的独立 Open Knowledge Format v0.1 bundle。它负责跨系统导航、当前状态综合和关系表达，不复制或替代设计、计划、代码、Unity 资产和测试。
+`.agents/knowledge/` 是 Tactics 的独立 Open Knowledge Format v0.1 bundle。它负责跨系统导航、当前状态综合和关系表达，不复制或替代设计、计划、代码、Godot Resource 和测试。
 
 ## 权威顺序
 
@@ -10,7 +10,7 @@
 |----------|------------|------------|
 | 设计意图 | `.agents/docs/` 的主题权威文档 | 汇总结论并连接相关系统 |
 | 活跃执行计划 | `.agents/plans/` | 展示状态、依赖和替代关系 |
-| 当前实现 | 代码、Unity 资产、测试 | 提供入口和最后验证 revision |
+| 当前实现 | 代码、Godot Resource、测试 | 提供入口和最后验证 revision |
 | Agent 工作流 | `AGENTS.md`、rules、skills | 提供渐进导航，不自动改写规则 |
 
 发生冲突时，OKF 页面必须回到相应真相源复核并更新，不能用综合页覆盖源事实。
@@ -34,7 +34,7 @@ timestamp: 2026-07-14T00:00:00+08:00
 status: active
 catalog_scope: example-system
 repo_paths:
-  - Assets/Tactics/Scripts/Example
+  - godot/src/Tactics.Godot.Adapter/Example
 verified_revision: d5f1730d3527
 source_fingerprint: sha256:0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef
 ---
@@ -77,7 +77,7 @@ source_fingerprint: sha256:0123456789abcdef0123456789abcdef0123456789abcdef01234
 
 ### Source Change Sync
 
-Agent 修改代码、Unity 资产、设计、计划、规则或工具后：
+Agent 修改代码、Godot Resource、设计、计划、规则或工具后：
 
 1. 运行 `python Tools/okf/catalog_impact.py report --worktree`。
 2. 只处理本任务实际引入的变更；工作区中已有的无关修改不得吸收到本次同步。

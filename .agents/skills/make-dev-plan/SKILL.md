@@ -52,7 +52,7 @@ description: "Use when user requests a development plan, task breakdown, milesto
   - In Scope / Out of Scope 是否有明确边界？最不希望触碰的模块是哪些？
 - **P1 设计方法、编程工具**
   - 希望采用的设计方法或模式是什么（例如垂直切片、事件驱动、数据驱动、分层等）？
-  - 技术栈与工具约束是什么（Unity 版本、C# 版本、是否允许 Editor 扩展等）？
+  - 技术栈与工具约束是什么（Godot/.NET 版本、是否允许 Editor 扩展等）？
 - **P2 核心设计思路**
   - 期望的核心抽象与模块边界是什么？关键数据流或生命周期如何走？
 - **P3 是否允许修改**（逐项需用户明确 yes/no，未答则不得当作默认可改）

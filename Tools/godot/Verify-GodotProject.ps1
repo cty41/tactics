@@ -1091,9 +1091,7 @@ try {
                 --allow-missing-repo-prefix Assets `
                 --allow-missing-repo-prefix Packages `
                 --allow-missing-repo-prefix ProjectSettings `
-                --allow-missing-repo-prefix UIElementsSchema `
-                --allow-missing-repo-prefix Tools/unity-mcp `
-                --allow-missing-repo-prefix .agents/skills/skill-graph-creation
+                --allow-missing-repo-prefix UIElementsSchema
         }
         else {
             python 'Tools/okf/validate_bundle.py'

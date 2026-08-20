@@ -34,7 +34,7 @@ def validate_manual_qa_handoff(root: Path) -> list[str]:
         if token not in skill:
             errors.append(f"Skill trigger/workflow is missing required token: {token}")
 
-    for token in ("本轮重点", "累计待验收", "无需重复人工验证", "环境与收尾", "Unity", "Godot"):
+    for token in ("本轮重点", "累计待验收", "无需重复人工验证", "环境与收尾", "Godot"):
         if token not in reference:
             errors.append(f"Output contract is missing required coverage: {token}")
     for status in sorted(ALLOWED_STATUSES):

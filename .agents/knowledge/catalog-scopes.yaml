@@ -9,7 +9,6 @@ tracked_roots:
   - .agents/rules
   - .agents/skills
   - .agents/incidents
-  - Assets/Tactics
   - src
   - godot
   - Tests/golden
@@ -18,8 +17,6 @@ tracked_roots:
   - global.json
   - Tactics.Godot.slnx
   - Tactics.Godot.runsettings
-  - Packages
-  - ProjectSettings
   - Tools/okf
   - Tools/reverse-engineering
 
@@ -44,6 +41,7 @@ scopes:
     paths:
       - .agents/docs
       - .agents/plans
+      - .agents/skills
       - .agents/skills/project-doc-organization
       - .agents/skills/plan-mode-plan-writer
       - .agents/skills/make-dev-plan
@@ -59,43 +57,6 @@ scopes:
       - Tools/artworks/amazon
       - Tools/artworks/doge
       - Tools/artworks/pure_run
-      - Assets/Tactics/Arts/PureRun
-      - Assets/Tactics/Scripts/Common/Units/FourDirectionSpriteVisual.cs
-      - Assets/Tactics/Scripts/Common/Units/TilemapUnit.cs
-      - Assets/Tactics/Arts/Prefabs/Units/Fighter.prefab
-      - Assets/Tactics/Tests/Editor/FourDirectionSpriteVisualEditorTests.cs
-      - Assets/Tactics/Tests/Editor/PureRunUnitShadowEditorTests.cs
-      - Assets/Tactics/Tests/Editor/PureRunUnitShadowEditorTests.cs.meta
-      - Assets/Tactics/Tests/PlayMode/FourDirectionSpriteVisualPlayModeTests.cs
-
-  unity-agent-workflow:
-    concept: operations/unity-agent-workflow.md
-    paths:
-      - AGENTS.md
-      - .agents/rules
-      - .agents/skills/unity-mcp-core
-      - .agents/skills/unity-mcp-advanced
-      - .agents/skills/mcp-connection-troubleshooting
-      - .agents/skills/unity-auto-compile-guard
-      - .agents/skills/project-doc-organization
-      - Assets/Tactics/Scripts/Editor/Tactics.Editor.asmdef
-      - Assets/Tactics/Scripts/Editor/Tactics.Editor.asmdef.meta
-      - Assets/Tactics/Scripts/Common/Editor/Tactics.Editor.asmref
-      - Assets/Tactics/Scripts/Common/Editor/Tactics.Editor.asmref.meta
-      - Assets/Tactics/Scripts/Common/RuleTiles/Editor/Tactics.Editor.asmref
-      - Assets/Tactics/Scripts/Common/RuleTiles/Editor/Tactics.Editor.asmref.meta
-      - Assets/Tactics/Scripts/Common/Units/abilities/Editor/Tactics.Editor.asmref
-      - Assets/Tactics/Scripts/Common/Units/abilities/Editor/Tactics.Editor.asmref.meta
-      - Assets/Tactics/Scripts/UI/RadialFillElement.cs
-      - Assets/Tactics/Scripts/Editor/MCP
-      - Assets/Tactics/Tests/Editor/UnityMcpProjectBootstrapTests.cs
-      - Assets/Tactics/Tests/Editor/Tactics.Tests.Editor.asmdef
-      - Packages/manifest.json
-      - Packages/packages-lock.json
-      - Tools/unity-mcp
-      - .mimocode/mimocode.template.json
-      - .gitignore
-      - Tools/agent-policy
 
   okf-maintenance:
     concept: operations/okf-maintenance.md
@@ -110,21 +71,12 @@ scopes:
     concept: plans/project-known-gaps.md
     paths:
       - .agents/docs/project-known-gaps.md
-      - Assets/Tactics/Scripts/Editor/MCP/UnityMcpProjectBootstrap.cs
-      - Assets/Tactics/Tests/Editor/UnityMcpProjectBootstrapTests.cs
-      - Packages/manifest.json
-      - Packages/packages-lock.json
-      - Tools/unity-mcp/README.md
 
   battle-system:
     concept: systems/battle.md
     paths:
       - .agents/docs/battle-line-of-sight-rules.md
-      - .agents/docs/battle-facing-rules.md
-      - .agents/docs/attribute-system-design.md
-      - .agents/docs/buff-system-rules.md
       - .agents/docs/three-class-skill-design.md
-      - .agents/docs/isometric-grid-anchor-contract.md
       - src/Tactics.Core/Battle
       - src/Tactics.Core/Board
       - src/Tactics.Core/Combat
@@ -144,51 +96,32 @@ scopes:
   monster-ai:
     concept: systems/monster-ai.md
     paths:
-      - .agents/skills/monster-ai-mcp-workflow
-      - Assets/Tactics/Scripts/Common/ai/MonsterAI
+      - src/Tactics.Core/AI
+      - src/Tactics.Application/Authoring/Ai
+      - godot/src/Tactics.Godot.Adapter/Authoring
 
   godot-migration:
     concept: plans/godot-migration.md
     paths:
       - global.json
-      - Assets/Tactics/Shared/Core
-      - Assets/Tactics/UnityAdapter
-      - Assets/Tactics/Scripts/Editor/Migration
       - src/Tactics.Core
       - src/Tactics.Core.Tests
       - src/Tactics.Application
       - src/Tactics.Application.Tests
-      - src/Tactics.UnityOracle.Tests
+      - src/Tactics.FrozenOracle.Tests
       - godot
       - Tests/golden
       - Tools/migration
-      - .agents/docs/2026-08-07-godot-tactics-migration-design.md
-      - .agents/docs/2026-08-07-godot-tactics-tooling-boundary-design.md
-      - .agents/plans/2026-08-09-godot-migration-parity-and-agent-enablement.md
-      - Assets/Tactics/Scripts/Editor/MonsterAIEditor
-      - Assets/Tactics/AI/BasicMeleeBrain.asset
-      - Assets/Tactics/AI/BasicMeleeGraph.asset
-      - Assets/Tactics/AI/BasicMeleeProfile.asset
-      - Assets/Tactics/AI/Encounters
-      - Assets/Tactics/Tests/PlayMode/AiDecisionComponentTests.cs
-      - Assets/Tactics/Tests/PlayMode/AiBasicAttackTargetingPlayModeTests.cs
-      - Assets/Tactics/Tests/PlayMode/AiBasicAttackTargetingPlayModeTests.cs.meta
-      - Assets/Tactics/Tests/PlayMode/IntentExecutorTests.cs
-      - Assets/Tactics/Tests/PlayMode/IntentExecutorTests.cs.meta
-      - Assets/Tactics/Tests/PlayMode/GameplayRuntimeAiVsAiBattle.cs
-      - Assets/Tactics/Tests/PlayMode/PureRunAiVsAiBenchmarkTests.cs
-      - Assets/Tactics/Tests/PlayMode/PureRunAiVsAiBenchmarkTests.cs.meta
       - Tools/balance/pure-run-playtest-template.csv
-      - Assets/Tactics/Scripts/Common/Units/abilities/IAiExecutableAbility.cs
-      - Assets/Tactics/Scripts/Common/players/AIPlayer.cs
-      - Assets/Tactics/Scripts/Common/Units/Unit.cs
 
   godot-agent-workflow:
     concept: operations/godot-agent-workflow.md
     paths:
       - AGENTS.md
+      - .agents/rules
       - .agents/rules/godot-agent-workflow.md
       - .agents/rules/godot-migration.md
+      - .agents/rules/foreground-interaction.md
       - .agents/skills/godot-workflow
       - .agents/skills/godot-csharp-development
       - .agents/skills/godot-content-migration
@@ -214,6 +147,8 @@ scopes:
       - Tools/migration/tests/test_godot_ai_codex_config.py
       - Tools/migration/tests/test_godot_editor_lifecycle.py
       - Tools/agent-policy/validate_godot_incidents.py
+      - Tools/agent-policy/validate_foreground_interaction_policy.py
+      - Tools/agent-policy/test_validate_foreground_interaction_policy.py
       - .agents/scripts/validate-skills.ps1
 
   mewgenics-reference-analysis:
@@ -227,108 +162,21 @@ scopes:
     concept: systems/roguelike-run.md
     paths:
       - .agents/docs/2026-06-24-pure-run-squad-prototype-design.md
-      - .agents/docs/roguelike-event-editor-design.md
-      - .agents/docs/roguelike-map-editor-manual-test.md
-      - Assets/Tactics/Scripts/Common/RoguelikeMapGenerator.cs
-      - Assets/Tactics/Scripts/Common/RoguelikeMap.cs
-      - Assets/Tactics/Scripts/Common/RoguelikeMapNode.cs
-      - Assets/Tactics/Scripts/Common/Roster
-      - Assets/Tactics/Scripts/Roguelike
-      - Assets/Tactics/Scripts/RoguelikeMap
-      - Assets/Tactics/Scripts/UI/RoguelikeMapUIController.cs
-      - Assets/Tactics/Scripts/UI/LevelUpPanelController.cs
-      - Assets/Tactics/Scripts/UI/HomeUIController.cs
-      - Assets/Tactics/Scenes/Home.unity
-      - Assets/Tactics/Scripts/UI/InventoryUIController.cs
-      - Assets/Tactics/Arts/UI/Home.uxml
-      - Assets/Tactics/Arts/UI/Home.uss
-      - Assets/Tactics/Arts/UI/Inventory.uxml
-      - Assets/Tactics/Arts/UI/Inventory.uss
-      - Assets/Tactics/Arts/UI/RoguelikeMap.uxml
-      - Assets/Tactics/Arts/UI/RoguelikeMap.uss
-      - Assets/Tactics/Scripts/Common/Consumables
-      - Assets/Tactics/Scripts/Common/SerializableMapData.cs
-      - Assets/Tactics/GameData/Consumables.json
-      - Assets/Tactics/GameData/Events/DarkForest
-      - Assets/Tactics/Scripts/Editor/RoguelikeMapEditor
-      - Assets/Tactics/Scripts/Editor/RoguelikeEventEditor
-      - Assets/Tactics/RoguelikeMap
-      - Assets/Tactics/Tests/Editor/RoguelikeMapEditorTests.cs
-      - Assets/Tactics/Tests/Editor/CharacterLoadoutServiceTests.cs
-      - Assets/Tactics/Tests/Editor/ConsumableAcquisitionTests.cs
-      - Assets/Tactics/Tests/Editor/HomeSceneCompositionEditorTests.cs
-      - Assets/Tactics/Tests/Editor/HomeSceneCompositionEditorTests.cs.meta
-      - Assets/Tactics/Tests/PlayMode/ConsumableUiInteractionTests.cs
-      - Assets/Tactics/Tests/PlayMode/HomeSceneInputSmokeTests.cs
-      - Assets/Tactics/Tests/PlayMode/HomeSceneInputSmokeTests.cs.meta
+      - godot/src/Tactics.Godot.Adapter/Runtime
+      - godot/src/Tactics.Godot.Adapter/Authoring
       - Tests/gameplay-specs/ui/home-options-player-input-smoke.gameplay-test.md
 
   skill-graph:
     concept: systems/skill-graph.md
     paths:
-      - .agents/docs/skill-graph-system.md
-      - .agents/skills/skill-graph-creation
-      - Assets/Tactics/Scripts/Common/Skills/Graph
-      - Assets/Tactics/Scripts/Common/Units/abilities/AbilityConfig.cs
-      - Assets/Tactics/Scripts/Common/Units/abilities/AbilityConfig.cs.meta
-      - Assets/Tactics/Scripts/Common/Units/abilities/SkillGraphAbilityImpl.cs
-      - Assets/Tactics/Scripts/Common/Units/abilities/SkillGraphAbilityConfig.cs
-      - Assets/Tactics/Scripts/Editor/SkillGraphEditor
-      - Assets/Tactics/Scripts/Editor/PresentationWorkbench
-      - Assets/Tactics/Tests/Editor/SkillGraphAssetMenuEditorTests.cs
-      - Assets/Tactics/Tests/Editor/SkillGraphAssetMenuEditorTests.cs.meta
-      - Assets/Tactics/Scripts/Editor/PureRunSkillVfxPreviewWindow.cs
-      - Assets/Tactics/Scripts/Editor/PureRunSkillVfxPreviewWindow.cs.meta
-      - Assets/Tactics/Scripts/Editor/PureRunTweenPreviewWindow.cs
-      - Assets/Tactics/Scripts/Editor/PureRunTweenPreviewWindow.cs.meta
-      - Assets/Tactics/Scripts/Editor/PresentationWorkbench/PresentationPreviewStage.cs
-      - Assets/Tactics/Scripts/Editor/PresentationWorkbench/PresentationPreviewStage.cs.meta
-      - Assets/Tactics/Scripts/Editor/ProjectileVisualPreviewAdapter.cs
-      - Assets/Tactics/Scripts/Editor/ProjectileVisualPreviewAdapter.cs.meta
-      - Assets/Tactics/Scripts/Editor/MCP/SkillGraphMcpTools.cs
-      - Assets/Tactics/Battle/Abilities/SkillGraphAbilityConfigs
-      - Assets/Tactics/Battle/Abilities/SkillGraphs
-      - Assets/Tactics/Tests/PlayMode/SkillGraphRuntimeTests.cs
-      - Assets/Tactics/Tests/PlayMode/FacingBehaviorPlayModeTests.cs
-      - Assets/Tactics/Tests/PlayMode/SkillGraphValidationTests.cs
-      - Assets/Tactics/Tests/PlayMode/FirstSliceSkillAssetTests.cs
-      - Assets/Tactics/Tests/Editor/PureRunTweenPreviewEditorTests.cs
-      - Assets/Tactics/Tests/Editor/PureRunTweenPreviewEditorTests.cs.meta
-      - Assets/Tactics/Tests/Editor/PresentationExecutionPlanEditorTests.cs
-      - Assets/Tactics/Tests/Editor/PresentationExecutionPlanEditorTests.cs.meta
-      - Assets/Tactics/Tests/Editor/PresentationAuthoringFacadeEditorTests.cs
-      - Assets/Tactics/Tests/Editor/PresentationAuthoringFacadeEditorTests.cs.meta
-      - Assets/Tactics/Tests/Editor/Tactics.Tests.Editor.asmdef
-      - Assets/Tactics/Tests/PlayMode/SkillAbilityUsesPerTurnTests.cs
-      - Assets/Tactics/Tests/PlayMode/SkillAbilityUsesPerTurnTests.cs.meta
-      - Assets/Tactics/Tests/PlayMode/TransientVfxLifecyclePlayModeTests.cs
-      - Assets/Tactics/Tests/PlayMode/TransientVfxLifecyclePlayModeTests.cs.meta
-      - Assets/Tactics/Tests/PlayMode/PilotoVfxPerformancePlayModeTests.cs
-      - Assets/Tactics/Tests/PlayMode/PilotoVfxPerformancePlayModeTests.cs.meta
-      - Assets/Tactics/Tests/Editor/PilotoVfxSampleAssetTests.cs
-      - Assets/Tactics/Tests/Editor/PilotoVfxSampleAssetTests.cs.meta
-      - Assets/Tactics/Tests/Editor/EditorAssemblyBoundaryTests.cs
-      - Assets/Tactics/Tests/Editor/EditorAssemblyBoundaryTests.cs.meta
-      - Assets/Tactics/Scripts/Editor/Tactics.Editor.asmdef
-      - Assets/Tactics/Scripts/Editor/Tactics.Editor.asmdef.meta
-      - Assets/Tactics/Tests/Editor/Tactics.Tests.Editor.asmdef
-      - Assets/Tactics/Tests/PlayMode/Tactics.Tests.PlayMode.asmdef
-      - Assets/Tactics/Tests/PlayMode/MageSkillLevelTests.cs
-      - Assets/Tactics/Tests/PlayMode/NecromancerPlayModeTests.cs
-      - Assets/Tactics/Tests/PlayMode/NecromancerSkillLevelTests.cs
+      - src/Tactics.Core/Skills
+      - src/Tactics.Application/Authoring
+      - godot/src/Tactics.Godot.Adapter/Authoring
 
   gameplay-test-framework:
     concept: systems/gameplay-test-framework.md
     paths:
       - .agents/docs/gameplay-test-framework.md
       - .agents/skills/gameplay-test-framework
-      - Assets/Tactics/Scripts/Common/Testing/Gameplay
-      - Assets/Tactics/Tests/PlayMode/GameplayRuntimePlanTests.cs
-      - Assets/Tactics/Tests/PlayMode/GameplayRuntimeBattlePlanTests.cs
-      - Assets/Tactics/Tests/PlayMode/GameplayRuntimeMapPlanTests.cs
-      - Assets/Tactics/Tests/PlayMode/GameplayRuntimeUiPlanTests.cs
-      - Assets/Tactics/Tests/PlayMode/PlayerInputGameplayPlanTests.cs
-      - Assets/Tactics/Tests/PlayMode/HomeSceneInputSmokeTests.cs
-      - Assets/Tactics/Tests/PlayMode/HomeSceneInputSmokeTests.cs.meta
       - Tools/gameplay-test-spec
       - Tests/gameplay-specs

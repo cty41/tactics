@@ -11,10 +11,8 @@ from validate_foreground_interaction_policy import (  # noqa: E402
     AGENTS_PATH,
     CATALOG_PATH,
     GODOT_LIFECYCLE_SKILL_PATH,
-    MCP_TROUBLESHOOTING_SKILL_PATH,
     POLICY_PATH,
     PURE_RUN_ARTWORK_SKILL_PATH,
-    UNITY_CORE_SKILL_PATH,
     validate_policy,
 )
 
@@ -35,13 +33,8 @@ scopes:
     concept: operations/godot-agent-workflow.md
     paths:
       - .agents/skills/godot-editor-lifecycle
-  unity-agent-workflow:
-    concept: operations/unity-agent-workflow.md
-    paths:
       - AGENTS.md
-      - .agents/rules
-      - .agents/skills/unity-mcp-core/SKILL.md
-      - .agents/skills/mcp-connection-troubleshooting/SKILL.md
+      - .agents/rules/foreground-interaction.md
       - Tools/agent-policy
   pure-run-artwork:
     concept: operations/pure-run-artwork.md
@@ -61,8 +54,6 @@ class ForegroundInteractionPolicyTests(unittest.TestCase):
             AGENTS_PATH,
             ".agents/rules/foreground-interaction.md\nmanual_visual_qa_pending\n",
         )
-        self.write(root, UNITY_CORE_SKILL_PATH, VALID_CONSUMER)
-        self.write(root, MCP_TROUBLESHOOTING_SKILL_PATH, VALID_CONSUMER)
         self.write(root, GODOT_LIFECYCLE_SKILL_PATH, VALID_CONSUMER)
         self.write(
             root,
@@ -97,13 +88,6 @@ class ForegroundInteractionPolicyTests(unittest.TestCase):
             (root / AGENTS_PATH).write_text("manual_visual_qa_pending\n", encoding="utf-8")
             errors = validate_policy(root)
             self.assertTrue(any(AGENTS_PATH in error and "未引用" in error for error in errors))
-
-    def test_unity_skill_without_authority_reference_fails(self) -> None:
-        temporary, root = self.create_repository()
-        with temporary:
-            (root / UNITY_CORE_SKILL_PATH).write_text("missing link\n", encoding="utf-8")
-            errors = validate_policy(root)
-            self.assertTrue(any(UNITY_CORE_SKILL_PATH in error and "未引用" in error for error in errors))
 
     def test_pure_run_skill_without_manual_gate_fails(self) -> None:
         temporary, root = self.create_repository()

@@ -5,7 +5,7 @@ description: "Use when querying, ingesting, superseding, or linting cross-system
 
 # Tactics OKF Knowledge Maintenance
 
-维护 `.agents/knowledge/` 的 OKF v0.1 bundle，使其能导航到当前设计、活跃计划、代码、Unity 资产和测试。
+维护 `.agents/knowledge/` 的 OKF v0.1 bundle，使其能导航到当前设计、活跃计划、代码、Godot Resource 和测试。
 
 ## Quick Reference
 
@@ -28,7 +28,7 @@ description: "Use when querying, ingesting, superseding, or linting cross-system
 
 - 当前设计：`.agents/docs/` 中的主题权威文档；`brainstorm.md` 只是临时灵感，不是事实源。
 - 当前任务：仅指 `.agents/plans/` 中仍需执行的活跃计划。
-- 当前行为：代码、Unity 资产和测试。
+- 当前行为：代码、Godot Resource 和测试。
 - OKF：摘要、关系、验证 revision 和导航。
 
 计划完成后，结果必须从实现与权威 docs 推导；不要继续引用已删除计划作为当前事实。OKF 自身的历史概念不要物理删除，应使用 `superseded` 或 `archived` 状态保留关系。

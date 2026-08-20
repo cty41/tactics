@@ -46,7 +46,7 @@ Each numbered human step must say:
 
 - **操作**: exact user action.
 - **预期**: visible or experiential result.
-- **观察**: HUD, CheatConsole, Godot Output, Unity Console, Inspector, or another named location.
+- **观察**: HUD、Godot Output、Inspector 或其他明确命名的位置。
 - **失败保留**: screenshot, exact log, current scene/Run, seed, or save copy.
 - **存档边界**: production save, isolated Run, read-only scene, or destructive consequence.
 
@@ -64,7 +64,7 @@ Output：无异常
 | Scenario | Required behavior |
 |---|---|
 | Godot fix is reviewed and verified | Emit changed/reopened items plus older Inventory pending. |
-| Unity and Godot both have pending items | Keep both, name the correct Editor and observation surface. |
+| Multiple Godot surfaces have pending items | Keep them separate and name the exact Editor/runtime observation surface. |
 | Required automated gate fails | Report the gate and do not say acceptance can start. |
 | User reports partial numbered results | Resolve numbers through `Last Emitted Order`, then update stable IDs. |
 | A related presentation change follows a pass | Reopen only the affected visual/input item with a reason. |

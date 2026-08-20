@@ -10,7 +10,7 @@ description: Use when a task changes, diagnoses, tests, researches, or migrates 
 | Need | Load |
 |---|---|
 | C# Node/Resource/runtime code | `godot-csharp-development` |
-| Unity asset export or Godot generation | `godot-content-migration` |
+| Frozen content DTO or Godot generation | `godot-content-migration` |
 | EditorPlugin/GraphEdit/Undo/preview | `godot-editor-tooling` |
 | Build, NUnit, GdUnit or engine error | `godot-testing-diagnostics` |
 | godot-ai editor operation | `godot-ai-workflow` |
