@@ -1,0 +1,92 @@
+{
+  "schemaVersion": 1,
+  "sizeComparisonId": "size-comparison-f863680b60c0833c",
+  "inputs": [
+    {
+      "label": "Identity",
+      "artifact": {
+        "path": "Tools/artworks/doge/calibrated/doge_capsule_demonbound_idle_ul_v01.png",
+        "sha256": "ef9fd7521afafc4f46ef8fd355fc90337b493e268de61eaebfcd8d2ea3e529f4"
+      }
+    },
+    {
+      "label": "Previous",
+      "artifact": {
+        "path": "Tools/artworks/doge/candidates/doge_capsule_demonbound_hit_ul_wip_v02.png",
+        "sha256": "710e2a655ff8905ba3bdfc3d02289a02e49b726e9dd2e18c8ee244b70bebcfc1"
+      }
+    },
+    {
+      "label": "Pose reference",
+      "artifact": {
+        "path": "Tools/artworks/doge/candidates/doge_hunter_hit_spear_hidden_ul_v02.png",
+        "sha256": "0eb88380ebee80e99d1208b0adf5dca6b91ed368c94039ae298b9c4bb0c297af"
+      }
+    },
+    {
+      "label": "Candidate",
+      "artifact": {
+        "path": "Tools/artworks/doge/candidates/doge_capsule_demonbound_hit_ul_reviewed_v03.png",
+        "sha256": "31fbb5d72cd69d1cf63cafade653463406537062deb327200daf9e3e3571330f"
+      }
+    }
+  ],
+  "measurements": [
+    {
+      "label": "Identity",
+      "bbox": [
+        43,
+        48,
+        88,
+        119
+      ],
+      "bboxSize": [
+        45,
+        71
+      ]
+    },
+    {
+      "label": "Previous",
+      "bbox": [
+        42,
+        50,
+        86,
+        119
+      ],
+      "bboxSize": [
+        44,
+        69
+      ]
+    },
+    {
+      "label": "Pose reference",
+      "bbox": [
+        38,
+        57,
+        90,
+        119
+      ],
+      "bboxSize": [
+        52,
+        62
+      ]
+    },
+    {
+      "label": "Candidate",
+      "bbox": [
+        30,
+        50,
+        86,
+        118
+      ],
+      "bboxSize": [
+        56,
+        68
+      ]
+    }
+  ],
+  "artifact": {
+    "path": "Tools/artworks/doge/reviews/doge_capsule_demonbound_hit_ul_size_compare_v04.png",
+    "sha256": "4eb5cbca77b47cd02f3786e220fc7ffe0e45c11970f67b351b88a8921f21daad"
+  }
+}

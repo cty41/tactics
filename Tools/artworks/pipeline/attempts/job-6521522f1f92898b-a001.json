@@ -1,0 +1,49 @@
+{
+  "schemaVersion": 2,
+  "attemptId": "job-6521522f1f92898b-a001",
+  "jobId": "job-6521522f1f92898b",
+  "ordinal": 1,
+  "parentAttemptId": null,
+  "retryFeedbackId": null,
+  "promptDelta": null,
+  "technicalRemediation": false,
+  "state": "promoted",
+  "sourceMode": "reviewed_import",
+  "reviewedImportId": "reviewed-import-63c0d4e65ce541bf",
+  "artifacts": {
+    "source": {
+      "path": "Tools/artworks/doge/reviews/doge_capsule_demonbound_cast_ul_reused_clean_sword_behind_body_wip_v08.png",
+      "sha256": "564650d6e788840f909389295a8b6c5f4e62fa16621230cd45cbd8e01e34c70a"
+    },
+    "prepared": {
+      "path": "Tools/artworks/doge/candidates/doge_capsule_demonbound_cast_ul_reviewed_v08.png",
+      "sha256": "a35b33ed6e013b3b873c6351c6d12284dd88f4bc7f1a4155ac99bb262aedbb7f"
+    },
+    "importedPreview": {
+      "path": "Tools/artworks/doge/candidates/doge_capsule_demonbound_cast_ul_reviewed_v08_128.png",
+      "sha256": "1dc151758be4efae931a8032967e6d41d85eac799e92477457eb749478962030"
+    },
+    "review": {
+      "sizeComparison": {
+        "path": "Tools/artworks/doge/reviews/doge_capsule_demonbound_cast_ul_size_compare_v09.png",
+        "sha256": "407ee74184f9d76ebd34a3fb02c0bd3add05c81e07bb23236ae8f4bad0f75f1c"
+      }
+    },
+    "promoted": {
+      "master": {
+        "path": "Tools/artworks/doge/calibrated/doge_capsule_demonbound_cast_ul_v01.png",
+        "sha256": "a35b33ed6e013b3b873c6351c6d12284dd88f4bc7f1a4155ac99bb262aedbb7f"
+      },
+      "preview": {
+        "path": "Tools/artworks/doge/calibrated/doge_capsule_demonbound_cast_ul_v01_128.png",
+        "sha256": "1dc151758be4efae931a8032967e6d41d85eac799e92477457eb749478962030"
+      }
+    }
+  },
+  "report": {
+    "path": "Tools/artworks/pipeline/reports/report-6fe2cc7eae991288.json",
+    "sha256": "a18fab8b6ba9513dbc764105f25bae1f2f0532dc0717ffb64e7e0b2ded4a86b5"
+  },
+  "approvalId": "approval-6192216b40a7de98",
+  "feedbackId": null
+}

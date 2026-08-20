@@ -8977,6 +8977,198 @@
       "rightsHolder": "cty41",
       "license": "CC-BY-4.0",
       "provenance": "project-owned-artwork-review"
+    },
+    {
+      "path": "Tools/artworks/doge/candidates/doge_capsule_demonbound_cast_ul_reviewed_v08.png",
+      "sha256": "a35b33ed6e013b3b873c6351c6d12284dd88f4bc7f1a4155ac99bb262aedbb7f",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-supporting-derived"
+    },
+    {
+      "path": "Tools/artworks/doge/candidates/doge_capsule_demonbound_cast_ul_reviewed_v08_128.png",
+      "sha256": "1dc151758be4efae931a8032967e6d41d85eac799e92477457eb749478962030",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-supporting-derived"
+    },
+    {
+      "path": "Tools/artworks/doge/candidates/doge_capsule_demonbound_hit_dr_reviewed_v02.png",
+      "sha256": "4c46b6ba069e4a4dabf9c7391d8359ff8c4a2bce12fb26f9a08836f2bb9522c2",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-supporting-derived"
+    },
+    {
+      "path": "Tools/artworks/doge/candidates/doge_capsule_demonbound_hit_dr_reviewed_v02_128.png",
+      "sha256": "0fb45ada4e0a17ab94a0e3c8a18aad0daf8a645a16643d8cf7ff202ba42abf62",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-supporting-derived"
+    },
+    {
+      "path": "Tools/artworks/doge/candidates/doge_capsule_demonbound_hit_ul_reviewed_v03.png",
+      "sha256": "31fbb5d72cd69d1cf63cafade653463406537062deb327200daf9e3e3571330f",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-supporting-derived"
+    },
+    {
+      "path": "Tools/artworks/doge/candidates/doge_capsule_demonbound_hit_ul_reviewed_v03_128.png",
+      "sha256": "0bfc5103eb379b96b2f5cc5d70dcf73655372cf29645827dea958814cde1dfe4",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-supporting-derived"
+    },
+    {
+      "path": "Tools/artworks/doge/reviews/doge_capsule_demonbound_cast_ul_size_compare_v09.png",
+      "sha256": "407ee74184f9d76ebd34a3fb02c0bd3add05c81e07bb23236ae8f4bad0f75f1c",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-artwork-review"
+    },
+    {
+      "path": "Tools/artworks/doge/reviews/doge_capsule_demonbound_hit_dr_size_compare_v03.png",
+      "sha256": "7d3f4488da437da8e0d9a6b9926d7fb318a96d08a0cf8b52f7217cf3af0f13f7",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-artwork-review"
+    },
+    {
+      "path": "Tools/artworks/doge/reviews/doge_capsule_demonbound_hit_ul_size_compare_v04.png",
+      "sha256": "4eb5cbca77b47cd02f3786e220fc7ffe0e45c11970f67b351b88a8921f21daad",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-artwork-review"
+    },
+    {
+      "path": "Tools/artworks/doge/calibrated/doge_capsule_demonbound_cast_ul_v01.png",
+      "sha256": "a35b33ed6e013b3b873c6351c6d12284dd88f4bc7f1a4155ac99bb262aedbb7f",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-gpt-generated"
+    },
+    {
+      "path": "Tools/artworks/doge/calibrated/doge_capsule_demonbound_cast_ul_v01_128.png",
+      "sha256": "1dc151758be4efae931a8032967e6d41d85eac799e92477457eb749478962030",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-gpt-generated"
+    },
+    {
+      "path": "Tools/artworks/doge/calibrated/doge_capsule_demonbound_hit_dr_v01.png",
+      "sha256": "4c46b6ba069e4a4dabf9c7391d8359ff8c4a2bce12fb26f9a08836f2bb9522c2",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-gpt-generated"
+    },
+    {
+      "path": "Tools/artworks/doge/calibrated/doge_capsule_demonbound_hit_dr_v01_128.png",
+      "sha256": "0fb45ada4e0a17ab94a0e3c8a18aad0daf8a645a16643d8cf7ff202ba42abf62",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-gpt-generated"
+    },
+    {
+      "path": "Tools/artworks/doge/calibrated/doge_capsule_demonbound_hit_ul_v03.png",
+      "sha256": "31fbb5d72cd69d1cf63cafade653463406537062deb327200daf9e3e3571330f",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-gpt-generated"
+    },
+    {
+      "path": "Tools/artworks/doge/calibrated/doge_capsule_demonbound_hit_ul_v03_128.png",
+      "sha256": "0bfc5103eb379b96b2f5cc5d70dcf73655372cf29645827dea958814cde1dfe4",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-gpt-generated"
+    },
+    {
+      "path": "godot/assets/units/doge_demonbound.png",
+      "sha256": "21559ca7aedd3e146feb2b93c5a6633affc6ce544122628c960972a982b0b5e7",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-migrated-runtime-art"
+    },
+    {
+      "path": "godot/assets/units/doge_demonbound_ul.png",
+      "sha256": "ef9fd7521afafc4f46ef8fd355fc90337b493e268de61eaebfcd8d2ea3e529f4",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-migrated-runtime-art"
+    },
+    {
+      "path": "godot/assets/units/doge_demonbound_death.png",
+      "sha256": "90218c756be1a4e3a40d8221667536f53d665447c24cca597f5f01eef0b462a0",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-migrated-runtime-art"
+    },
+    {
+      "path": "godot/assets/units/actions/doge_demonbound_melee_attack_dr.png",
+      "sha256": "a0fee8512cf8578f57b8b3d3c5e2b74a1f68ac3afdcbefd15a87c82f5a85eaf5",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-migrated-runtime-art"
+    },
+    {
+      "path": "godot/assets/units/actions/doge_demonbound_melee_attack_ul.png",
+      "sha256": "4519d643cecce40130d92f00e4bbef9c3cd628f6b34953763a7cbbdda4d0e82b",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-migrated-runtime-art"
+    },
+    {
+      "path": "godot/assets/units/actions/doge_demonbound_cast_dr.png",
+      "sha256": "d7e6e6a2dc3503d0c0c61965c4e688e4cfcd912b72d4ea8e13b1115080dbb550",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-migrated-runtime-art"
+    },
+    {
+      "path": "godot/assets/units/actions/doge_demonbound_cast_ul.png",
+      "sha256": "a35b33ed6e013b3b873c6351c6d12284dd88f4bc7f1a4155ac99bb262aedbb7f",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-migrated-runtime-art"
+    },
+    {
+      "path": "godot/assets/units/actions/doge_demonbound_hit_dr.png",
+      "sha256": "4c46b6ba069e4a4dabf9c7391d8359ff8c4a2bce12fb26f9a08836f2bb9522c2",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-migrated-runtime-art"
+    },
+    {
+      "path": "godot/assets/units/actions/doge_demonbound_hit_ul.png",
+      "sha256": "31fbb5d72cd69d1cf63cafade653463406537062deb327200daf9e3e3571330f",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-migrated-runtime-art"
     }
   ]
 }

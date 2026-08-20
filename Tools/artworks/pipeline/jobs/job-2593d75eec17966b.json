@@ -1,0 +1,36 @@
+{
+  "schemaVersion": 2,
+  "jobId": "job-2593d75eec17966b",
+  "state": "ready",
+  "contractId": "contract-4bb4a53213d34ba9",
+  "contractSha256": "6520ab1eed55b9f9ccea22c6e5a3dff132c5a4578a2241831bb3b4241c58eb15",
+  "prompt": null,
+  "inputs": [
+    {
+      "path": "Tools/artworks/doge/concepts/doge_capsule_demonbound_hit_ul_sword_chroma_source_v03.png",
+      "sha256": "5187b0b8ff2dbabe2eed4ec4975e6731bfaea4d191dfbaba89099e23fcde3500"
+    },
+    {
+      "path": "Tools/artworks/doge/candidates/doge_capsule_demonbound_hit_ul_reviewed_v03.png",
+      "sha256": "31fbb5d72cd69d1cf63cafade653463406537062deb327200daf9e3e3571330f"
+    },
+    {
+      "path": "Tools/artworks/doge/candidates/doge_capsule_demonbound_hit_ul_reviewed_v03_128.png",
+      "sha256": "0bfc5103eb379b96b2f5cc5d70dcf73655372cf29645827dea958814cde1dfe4"
+    },
+    {
+      "path": "Tools/artworks/doge/reviews/doge_capsule_demonbound_hit_ul_size_compare_v04.png",
+      "sha256": "4eb5cbca77b47cd02f3786e220fc7ffe0e45c11970f67b351b88a8921f21daad"
+    }
+  ],
+  "target": {
+    "direction": "up-left",
+    "pose": "hit"
+  },
+  "series": null,
+  "conceptOnly": false,
+  "contractRequirements": null,
+  "requiresInvocation": false,
+  "sourceMode": "reviewed_import",
+  "reviewedImportId": "reviewed-import-aa855b9f7c0ddbfc"
+}

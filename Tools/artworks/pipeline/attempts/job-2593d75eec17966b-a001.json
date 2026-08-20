@@ -1,0 +1,49 @@
+{
+  "schemaVersion": 2,
+  "attemptId": "job-2593d75eec17966b-a001",
+  "jobId": "job-2593d75eec17966b",
+  "ordinal": 1,
+  "parentAttemptId": null,
+  "retryFeedbackId": null,
+  "promptDelta": null,
+  "technicalRemediation": false,
+  "state": "promoted",
+  "sourceMode": "reviewed_import",
+  "reviewedImportId": "reviewed-import-aa855b9f7c0ddbfc",
+  "artifacts": {
+    "source": {
+      "path": "Tools/artworks/doge/concepts/doge_capsule_demonbound_hit_ul_sword_chroma_source_v03.png",
+      "sha256": "5187b0b8ff2dbabe2eed4ec4975e6731bfaea4d191dfbaba89099e23fcde3500"
+    },
+    "prepared": {
+      "path": "Tools/artworks/doge/candidates/doge_capsule_demonbound_hit_ul_reviewed_v03.png",
+      "sha256": "31fbb5d72cd69d1cf63cafade653463406537062deb327200daf9e3e3571330f"
+    },
+    "importedPreview": {
+      "path": "Tools/artworks/doge/candidates/doge_capsule_demonbound_hit_ul_reviewed_v03_128.png",
+      "sha256": "0bfc5103eb379b96b2f5cc5d70dcf73655372cf29645827dea958814cde1dfe4"
+    },
+    "review": {
+      "sizeComparison": {
+        "path": "Tools/artworks/doge/reviews/doge_capsule_demonbound_hit_ul_size_compare_v04.png",
+        "sha256": "4eb5cbca77b47cd02f3786e220fc7ffe0e45c11970f67b351b88a8921f21daad"
+      }
+    },
+    "promoted": {
+      "master": {
+        "path": "Tools/artworks/doge/calibrated/doge_capsule_demonbound_hit_ul_v03.png",
+        "sha256": "31fbb5d72cd69d1cf63cafade653463406537062deb327200daf9e3e3571330f"
+      },
+      "preview": {
+        "path": "Tools/artworks/doge/calibrated/doge_capsule_demonbound_hit_ul_v03_128.png",
+        "sha256": "0bfc5103eb379b96b2f5cc5d70dcf73655372cf29645827dea958814cde1dfe4"
+      }
+    }
+  },
+  "report": {
+    "path": "Tools/artworks/pipeline/reports/report-e14af8d991c9ee28.json",
+    "sha256": "092187b2eb7a6bd2e5a00726949ee6b5fa9184ac80264de8bfb0d37080d2e225"
+  },
+  "approvalId": "approval-5fd4096f63af73dd",
+  "feedbackId": null
+}

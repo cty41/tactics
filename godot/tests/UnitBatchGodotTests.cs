@@ -35,6 +35,37 @@ public class UnitBatchGodotTests
 
     [TestCase]
     [RequireGodotRuntime]
+    public void DemonboundUsesItsApprovedIdleActionAndDeathTextures()
+    {
+        var resource = ResourceLoader.Load<UnitDefinitionResource>(
+            "res://content/demonbound/PureRunDemonbound.tres", string.Empty, ResourceLoader.CacheMode.Ignore);
+        AssertThat(resource).IsNotNull();
+        if (resource is null) return;
+
+        (Texture2D? Texture, string Path)[] expected =
+        {
+            (resource.DownRightTexture, "res://assets/units/doge_demonbound.png"),
+            (resource.UpLeftTexture, "res://assets/units/doge_demonbound_ul.png"),
+            (resource.DeathTexture, "res://assets/units/doge_demonbound_death.png"),
+            (resource.MeleeDownRightTexture, "res://assets/units/actions/doge_demonbound_melee_attack_dr.png"),
+            (resource.MeleeUpLeftTexture, "res://assets/units/actions/doge_demonbound_melee_attack_ul.png"),
+            (resource.CastDownRightTexture, "res://assets/units/actions/doge_demonbound_cast_dr.png"),
+            (resource.CastUpLeftTexture, "res://assets/units/actions/doge_demonbound_cast_ul.png"),
+            (resource.HitDownRightTexture, "res://assets/units/actions/doge_demonbound_hit_dr.png"),
+            (resource.HitUpLeftTexture, "res://assets/units/actions/doge_demonbound_hit_ul.png")
+        };
+        AssertThat(expected.Length).IsEqual(9);
+        foreach ((Texture2D? texture, string path) in expected)
+        {
+            AssertThat(texture).IsNotNull();
+            AssertThat(texture?.ResourcePath).IsEqual(path);
+        }
+        AssertThat(resource.RangedDownRightTexture).IsNull();
+        AssertThat(resource.RangedUpLeftTexture).IsNull();
+    }
+
+    [TestCase]
+    [RequireGodotRuntime]
     public void DemonboundPlayableBalanceUsesFourPointBareMeleeDamage()
     {
         var resource = ResourceLoader.Load<PlayableLv1BalanceProfileResource>(

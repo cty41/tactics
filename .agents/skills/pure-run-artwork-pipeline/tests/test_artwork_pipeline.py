@@ -1031,8 +1031,31 @@ class ArtworkPipelineTests(unittest.TestCase):
             identity=str(source), previous=str(candidate_path), reference=str(candidate_path), candidate=str(candidate_path),
             output="Tools/artworks/reviews/review.png"))
         args.size_comparison = comparison["artifact"]["path"]
-        with self.assertRaisesRegex(pipeline.PipelineError, "visible AABB must be centered"):
+        with self.assertRaisesRegex(pipeline.PipelineError, "centered or use the artwork baseline"):
             pipeline.adopt_reviewed_sprite(self.store, args)
+
+    def test_normalize_reviewed_sprite_preserves_visible_pixels_and_clears_transparent_rgb(self):
+        source = self.root / "Tools/artworks/candidates/source.png"; source.parent.mkdir(parents=True)
+        image = Image.new("RGBA", (256, 256), (12, 34, 56, 0)); ImageDraw.Draw(image).ellipse((73, 81, 182, 174), fill=(80, 70, 65, 255)); image.save(source)
+        result = pipeline.normalize_reviewed_sprite(self.store, self.ns(
+            source=str(source), output="Tools/artworks/candidates/normalized.png",
+            preview="Tools/artworks/candidates/normalized_128.png"))
+        normalized = Image.open(self.store.absolute(result["artifacts"]["candidate"]["path"])).convert("RGBA")
+        self.assertEqual((0, 0, 0, 0), normalized.getpixel((0, 0)))
+        self.assertEqual(image.getpixel((128, 128)), normalized.getpixel((128, 128)))
+        with Image.open(self.store.absolute(result["artifacts"]["preview"]["path"])) as preview:
+            self.assertEqual((128, 128), preview.size)
+
+    def test_register_runtime_copy_requires_identical_approved_source(self):
+        contract, _job, _job_args = self.contract_and_job()
+        source = self.store.absolute(contract["anchor"]["path"])
+        pipeline.register_public_artifacts(self.store, [contract["anchor"]], "project-owned-gpt-generated")
+        target = self.root / "godot/assets/units/hero.png"; target.parent.mkdir(parents=True); target.write_bytes(source.read_bytes())
+        result = pipeline.register_runtime_copy(self.store, self.ns(source=str(source), target=str(target)))
+        self.assertEqual(result["source"]["sha256"], result["target"]["sha256"])
+        Image.new("RGBA", (256, 256), (1, 2, 3, 255)).save(target)
+        with self.assertRaisesRegex(pipeline.PipelineError, "byte-identical"):
+            pipeline.register_runtime_copy(self.store, self.ns(source=str(source), target=str(target)))
 
     def test_reviewed_import_requires_native_rgba_and_matching_comparison_candidate(self):
         contract, _job, _job_args = self.contract_and_job()
