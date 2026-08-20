@@ -23,7 +23,7 @@
       "parameters": {
         "id": "layer4-choice-ready-v1",
         "path": "validated://layer4-choice-ready-v1",
-        "semanticHash": "26d40a899332e71a34f8cf3016082b6cc899c0071c453f094cc58a527c9156ab"
+        "semanticHash": "2d0ab502e474b2c61c413be755279126fa509dcf9cfb5afdb9ce3f66b20f9ac2"
       }
     },
     {
@@ -37,16 +37,24 @@
       "adapter": "PlayerInput",
       "kind": "waitForPlayerObservable",
       "parameters": {
-        "observable": "mapReady",
+        "observable": "adventureBoardReady",
         "maximumFrames": 180
       }
     },
     {
       "adapter": "PlayerInput",
       "kind": "clickPointerTarget",
-      "target": "layer_04_rest",
+      "target": "3,7",
       "parameters": {
-        "targetKind": "MapNode"
+        "targetKind": "AdventureCell"
+      }
+    },
+    {
+      "adapter": "PlayerInput",
+      "kind": "clickPointerTarget",
+      "target": "exit:layer_04_rest",
+      "parameters": {
+        "targetKind": "AdventureObject"
       }
     },
     {
@@ -94,10 +102,8 @@
     {
       "adapter": "PlayerInput",
       "kind": "waitForPlayerObservable",
-      "target": "PURE RUN MAP",
       "parameters": {
-        "observable": "uiElement",
-        "elementName": "PURE RUN MAP",
+        "observable": "adventureBoardReady",
         "maximumFrames": 180
       }
     }
@@ -147,7 +153,7 @@
   "checkpoint": {
     "id": "layer4-choice-ready-v1",
     "source": "validated_checkpoint",
-    "semanticHash": "26d40a899332e71a34f8cf3016082b6cc899c0071c453f094cc58a527c9156ab",
+    "semanticHash": "2d0ab502e474b2c61c413be755279126fa509dcf9cfb5afdb9ce3f66b20f9ac2",
     "path": "validated://layer4-choice-ready-v1"
   },
   "saveIsolation": {

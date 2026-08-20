@@ -9,15 +9,11 @@ namespace Tactics.Application.Tests;
 public sealed class RunSaveDocumentV9Tests
 {
     [Test]
-    public void RoundTripPreservesAdventureRouteAndEventContext()
+    public void RoundTripPreservesAdventureBoardAndEventContext()
     {
         PureRunState run = Run() with { };
         var service = new RunAdventureTransitionService();
-        run = service.BeginRouteSelection(run, new ContentId("adventure-board.route"));
-        run = service.SelectRoute(run, 1, "route-a-store");
-        run = service.SelectRoute(run, 2, "route-b-event");
-        run = service.CommitRoute(run);
-        run = service.ActivateMap(run, new ContentId("map.main"));
+        run = service.EnterBoard(run, new ContentId("adventure-board.node.layer-04-event"));
         run = service.BeginEventBattle(run, RunAdventureEventContextKind.FallenAltarGuardian, "node", "altar");
 
         RunSaveDecodeResultV9 decoded = RunSaveDocumentV9.Decode(RunSaveDocumentV9.Encode(new(run.Revision, run, null)));
@@ -29,8 +25,6 @@ public sealed class RunSaveDocumentV9Tests
             Assert.That(actual.BoardContentId, Is.EqualTo(run.AdventureState.BoardContentId));
             Assert.That(actual.LeaderId, Is.EqualTo(run.AdventureState.LeaderId));
             Assert.That(actual.ActorCells, Is.EquivalentTo(run.AdventureState.ActorCells));
-            Assert.That(actual.RouteGroupOneSelection, Is.EqualTo("route-a-store"));
-            Assert.That(actual.RouteGroupTwoSelection, Is.EqualTo("route-b-event"));
             Assert.That(actual.PendingEventContext, Is.EqualTo(RunAdventureEventContextKind.FallenAltarGuardian));
             Assert.That(actual.PendingEventNodeId, Is.EqualTo("node"));
             Assert.That(actual.PendingEventObjectId, Is.EqualTo("altar"));

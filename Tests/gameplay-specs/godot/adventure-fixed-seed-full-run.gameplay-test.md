@@ -52,32 +52,16 @@ actions:
     parameters: { targetKind: AdventureCell }
   - kind: clickPointerTarget
     adapter: PlayerInput
-    target: route-overview
+    target: "exit:layer_01_battle"
     parameters: { targetKind: AdventureObject }
   - kind: clickPointerTarget
     adapter: PlayerInput
-    target: route-a-store
-    parameters: { targetKind: RouteNode }
+    target: 6,5
+    parameters: { targetKind: AdventureCell }
   - kind: clickPointerTarget
     adapter: PlayerInput
-    target: route-b-event
-    parameters: { targetKind: RouteNode }
-  - kind: clickPointerTarget
-    adapter: PlayerInput
-    target: route-submit
+    target: encounter
     parameters: { targetKind: AdventureObject }
-  - kind: clickPointerTarget
-    adapter: PlayerInput
-    target: route-depart
-    parameters: { targetKind: AdventureObject }
-  - kind: waitForPlayerObservable
-    adapter: PlayerInput
-    parameters: { observable: mapReady, maximumFrames: 180 }
-
-  - kind: clickPointerTarget
-    adapter: PlayerInput
-    target: layer_01_battle
-    parameters: { targetKind: MapNode }
   - kind: playBattleThroughInput
     adapter: PlayerInput
     parameters: { maximumActions: 100 }
@@ -100,8 +84,20 @@ actions:
 
   - kind: clickPointerTarget
     adapter: PlayerInput
-    target: layer_02_battle
-    parameters: { targetKind: MapNode }
+    target: 8,7
+    parameters: { targetKind: AdventureCell }
+  - kind: clickPointerTarget
+    adapter: PlayerInput
+    target: "exit:layer_02_battle"
+    parameters: { targetKind: AdventureObject }
+  - kind: clickPointerTarget
+    adapter: PlayerInput
+    target: 6,5
+    parameters: { targetKind: AdventureCell }
+  - kind: clickPointerTarget
+    adapter: PlayerInput
+    target: encounter
+    parameters: { targetKind: AdventureObject }
   - kind: playBattleThroughInput
     adapter: PlayerInput
     parameters: { maximumActions: 100 }
@@ -124,8 +120,20 @@ actions:
 
   - kind: clickPointerTarget
     adapter: PlayerInput
-    target: layer_03_battle
-    parameters: { targetKind: MapNode }
+    target: 8,7
+    parameters: { targetKind: AdventureCell }
+  - kind: clickPointerTarget
+    adapter: PlayerInput
+    target: "exit:layer_03_battle"
+    parameters: { targetKind: AdventureObject }
+  - kind: clickPointerTarget
+    adapter: PlayerInput
+    target: 6,5
+    parameters: { targetKind: AdventureCell }
+  - kind: clickPointerTarget
+    adapter: PlayerInput
+    target: encounter
+    parameters: { targetKind: AdventureObject }
   - kind: playBattleThroughInput
     adapter: PlayerInput
     parameters: { maximumActions: 100 }
@@ -144,8 +152,12 @@ actions:
 
   - kind: clickPointerTarget
     adapter: PlayerInput
-    target: layer_04_rest
-    parameters: { targetKind: MapNode }
+    target: 3,7
+    parameters: { targetKind: AdventureCell }
+  - kind: clickPointerTarget
+    adapter: PlayerInput
+    target: "exit:layer_04_rest"
+    parameters: { targetKind: AdventureObject }
   - kind: clickPointerTarget
     adapter: PlayerInput
     target: 6,5
@@ -161,8 +173,20 @@ actions:
 
   - kind: clickPointerTarget
     adapter: PlayerInput
-    target: layer_05_battle
-    parameters: { targetKind: MapNode }
+    target: 8,7
+    parameters: { targetKind: AdventureCell }
+  - kind: clickPointerTarget
+    adapter: PlayerInput
+    target: "exit:layer_05_battle"
+    parameters: { targetKind: AdventureObject }
+  - kind: clickPointerTarget
+    adapter: PlayerInput
+    target: 6,5
+    parameters: { targetKind: AdventureCell }
+  - kind: clickPointerTarget
+    adapter: PlayerInput
+    target: encounter
+    parameters: { targetKind: AdventureObject }
   - kind: playBattleThroughInput
     adapter: PlayerInput
     parameters: { maximumActions: 100 }
@@ -181,8 +205,12 @@ actions:
 
   - kind: clickPointerTarget
     adapter: PlayerInput
-    target: layer_06_treasure
-    parameters: { targetKind: MapNode }
+    target: 8,8
+    parameters: { targetKind: AdventureCell }
+  - kind: clickPointerTarget
+    adapter: PlayerInput
+    target: "exit:layer_06_treasure"
+    parameters: { targetKind: AdventureObject }
   - kind: clickPointerTarget
     adapter: PlayerInput
     target: 6,5
@@ -198,8 +226,20 @@ actions:
 
   - kind: clickPointerTarget
     adapter: PlayerInput
-    target: layer_07_battle
-    parameters: { targetKind: MapNode }
+    target: 8,7
+    parameters: { targetKind: AdventureCell }
+  - kind: clickPointerTarget
+    adapter: PlayerInput
+    target: "exit:layer_07_battle"
+    parameters: { targetKind: AdventureObject }
+  - kind: clickPointerTarget
+    adapter: PlayerInput
+    target: 6,5
+    parameters: { targetKind: AdventureCell }
+  - kind: clickPointerTarget
+    adapter: PlayerInput
+    target: encounter
+    parameters: { targetKind: AdventureObject }
   - kind: playBattleThroughInput
     adapter: PlayerInput
     parameters: { maximumActions: 100 }
@@ -210,7 +250,7 @@ assertions:
     parameters: {}
   - kind: runSaveSchemaVersionEquals
     adapter: Map
-    expected: 9
+    expected: 10
     parameters: {}
   - kind: runtimeHasNoErrors
     adapter: UI
@@ -225,4 +265,4 @@ timeoutMs: 600000
 
 # Fixed-seed complete Tile Adventure run
 
-以固定种子从正式 Start Camp 开局，经路线总览、前三层战斗、第四层休息、第五层战斗、第六层宝箱和最终 Boss，所有操作均通过正式 Main.tscn 的生产输入链完成，并断言 V8 终局存档为 BossVictory。
+以固定种子从正式 Start Camp 开局，经每个节点场景中的即时后继出口、前三层战斗、第四层休息、第五层战斗、第六层宝箱和最终 Boss，所有操作均通过正式 Main.tscn 的生产输入链完成，并断言 V10 终局存档为 BossVictory。

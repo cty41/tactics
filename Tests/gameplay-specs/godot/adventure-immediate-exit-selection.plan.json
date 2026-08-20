@@ -1,7 +1,7 @@
 {
   "schemaVersion": 3,
   "runtime": "Godot",
-  "scenarioName": "AdventureBoard.EventBattleContextSurvivesReload",
+  "scenarioName": "AdventureBoard.ImmediateSuccessorExitSelection",
   "requiredAdapters": [
     "Map",
     "PlayerInput",
@@ -9,10 +9,11 @@
   ],
   "requiredCapabilities": [
     "action:clickPointerTarget",
-    "action:restartGodotMain",
     "action:waitForPlayerObservable",
-    "assertion:pendingBattleContextKindEquals",
+    "assertion:adventureObjectStateEquals",
+    "assertion:immediateSuccessorNodeIdsEqual",
     "assertion:productionSaveUnchanged",
+    "assertion:runNodeLifecycleEquals",
     "assertion:runtimeHasNoErrors",
     "setup:initializePlayerInput",
     "setup:loadValidatedCheckpoint"
@@ -22,9 +23,9 @@
       "adapter": "Map",
       "kind": "loadValidatedCheckpoint",
       "parameters": {
-        "id": "layer4-event-ready-v1",
-        "path": "validated://layer4-event-ready-v1",
-        "semanticHash": "c6ed0dc0ff3f12ffaeb2459ea37aba19be6647b42e5620b095bc9ee1970dfb8d"
+        "id": "layer4-choice-ready-v1",
+        "path": "validated://layer4-choice-ready-v1",
+        "semanticHash": "2d0ab502e474b2c61c413be755279126fa509dcf9cfb5afdb9ce3f66b20f9ac2"
       }
     },
     {
@@ -36,8 +37,16 @@
   "runtimeActions": [
     {
       "adapter": "PlayerInput",
+      "kind": "waitForPlayerObservable",
+      "parameters": {
+        "observable": "adventureBoardReady",
+        "maximumFrames": 180
+      }
+    },
+    {
+      "adapter": "PlayerInput",
       "kind": "clickPointerTarget",
-      "target": "7,7",
+      "target": "3,7",
       "parameters": {
         "targetKind": "AdventureCell"
       }
@@ -45,23 +54,7 @@
     {
       "adapter": "PlayerInput",
       "kind": "clickPointerTarget",
-      "target": "exit:layer_04_event",
-      "parameters": {
-        "targetKind": "AdventureObject"
-      }
-    },
-    {
-      "adapter": "PlayerInput",
-      "kind": "clickPointerTarget",
-      "target": "6,5",
-      "parameters": {
-        "targetKind": "AdventureCell"
-      }
-    },
-    {
-      "adapter": "PlayerInput",
-      "kind": "clickPointerTarget",
-      "target": "cursed-chest",
+      "target": "exit:layer_04_rest",
       "parameters": {
         "targetKind": "AdventureObject"
       }
@@ -70,29 +63,31 @@
       "adapter": "PlayerInput",
       "kind": "waitForPlayerObservable",
       "parameters": {
-        "observable": "eventBattleReady",
-        "maximumFrames": 300
-      }
-    },
-    {
-      "adapter": "UI",
-      "kind": "restartGodotMain",
-      "parameters": {}
-    },
-    {
-      "adapter": "PlayerInput",
-      "kind": "waitForPlayerObservable",
-      "parameters": {
-        "observable": "eventBattleReady",
-        "maximumFrames": 300
+        "observable": "exitCommitted",
+        "maximumFrames": 180
       }
     }
   ],
   "assertionPlans": [
     {
       "adapter": "Map",
-      "kind": "pendingBattleContextKindEquals",
-      "expected": "CursedChestMimic",
+      "kind": "runNodeLifecycleEquals",
+      "expected": "MapActive",
+      "parameters": {}
+    },
+    {
+      "adapter": "Map",
+      "kind": "immediateSuccessorNodeIdsEqual",
+      "expected": [
+        "layer_05_battle"
+      ],
+      "parameters": {}
+    },
+    {
+      "adapter": "Map",
+      "kind": "adventureObjectStateEquals",
+      "target": "rest-campfire",
+      "expected": "Ready",
       "parameters": {}
     },
     {
@@ -108,11 +103,22 @@
       "parameters": {}
     }
   ],
-  "timeoutMs": 60000,
+  "timeoutMs": 30000,
   "probeRequests": [
     {
       "adapter": "Map",
-      "kind": "pendingBattleContextKindEquals",
+      "kind": "runNodeLifecycleEquals",
+      "parameters": {}
+    },
+    {
+      "adapter": "Map",
+      "kind": "immediateSuccessorNodeIdsEqual",
+      "parameters": {}
+    },
+    {
+      "adapter": "Map",
+      "kind": "adventureObjectStateEquals",
+      "target": "rest-campfire",
       "parameters": {}
     },
     {
@@ -127,10 +133,10 @@
     }
   ],
   "checkpoint": {
-    "id": "layer4-event-ready-v1",
+    "id": "layer4-choice-ready-v1",
     "source": "validated_checkpoint",
-    "semanticHash": "c6ed0dc0ff3f12ffaeb2459ea37aba19be6647b42e5620b095bc9ee1970dfb8d",
-    "path": "validated://layer4-event-ready-v1"
+    "semanticHash": "2d0ab502e474b2c61c413be755279126fa509dcf9cfb5afdb9ce3f66b20f9ac2",
+    "path": "validated://layer4-choice-ready-v1"
   },
   "saveIsolation": {
     "root": "user://qa-runner",

@@ -1,6 +1,6 @@
 ---
 feature: AdventureBoard
-scenario: RestCampfireResolution
+scenario: ImmediateSuccessorExitSelection
 tags: [godot, adventure-board, isolated-save, validated-checkpoint]
 requiredAdapters: [Map, PlayerInput, UI]
 setup:
@@ -27,30 +27,20 @@ actions:
     parameters: { targetKind: AdventureObject }
   - kind: waitForPlayerObservable
     adapter: PlayerInput
-    parameters: { observable: adventureBoardReady, maximumFrames: 180 }
-  - kind: clickPointerTarget
-    adapter: PlayerInput
-    target: 6,5
-    parameters: { targetKind: AdventureCell }
-  - kind: clickPointerTarget
-    adapter: PlayerInput
-    target: rest-campfire
-    parameters: { targetKind: AdventureObject }
-  - kind: waitForPlayerObservable
-    adapter: PlayerInput
-    target: Confirm Rest
-    parameters: { observable: uiElement, elementName: Confirm Rest, maximumFrames: 180 }
-  - kind: clickPointerTarget
-    adapter: PlayerInput
-    target: Confirm Rest
-    parameters: { targetKind: UiElement }
-  - kind: waitForPlayerObservable
-    adapter: PlayerInput
-    parameters: { observable: adventureBoardReady, maximumFrames: 180 }
+    parameters: { observable: exitCommitted, maximumFrames: 180 }
 assertions:
-  - kind: partyResourceSummaryEquals
+  - kind: runNodeLifecycleEquals
     adapter: Map
-    expected: ["pure_run_mage:12/20:5/15", "pure_run_necromancer:12/20:6/18", "pure_run_amazon:12/20:5/15"]
+    expected: MapActive
+    parameters: {}
+  - kind: immediateSuccessorNodeIdsEqual
+    adapter: Map
+    expected: [layer_05_battle]
+    parameters: {}
+  - kind: adventureObjectStateEquals
+    adapter: Map
+    target: rest-campfire
+    expected: Ready
     parameters: {}
   - kind: runtimeHasNoErrors
     adapter: UI
@@ -63,6 +53,6 @@ assertions:
 timeoutMs: 30000
 ---
 
-# Rest campfire resolution
+# Immediate successor exit selection
 
-从经过哈希验证的 Layer 3 已结算场景点击直接后继 Rest 出口，进入 Tile 场景，点击火堆打开正式结算界面并确认恢复。
+从 Layer 3 已结算的 Tile 场景只显示五个直接后继出口。领队移动到 Rest 出口相邻格并点击后，立即进入该节点场景，不存在全局路线预提交或额外确认。

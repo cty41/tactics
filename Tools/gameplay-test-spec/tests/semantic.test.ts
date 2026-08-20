@@ -339,7 +339,7 @@ test("allows Godot adventure pointer targets, lifecycle observables, and typed a
       { kind: "adventureActorCellEquals", adapter: "Map", target: "party-mage", expected: "4,4", parameters: {} },
       { kind: "activeAdventureLeaderEquals", adapter: "Map", expected: "party-mage", parameters: {} },
       { kind: "runNodeLifecycleEquals", adapter: "Map", target: "layer04-rest", expected: "Resolved", parameters: {} },
-      { kind: "routeCandidateNodeIdsEqual", adapter: "Map", expected: ["layer04-rest", "layer04-store", "layer04-event"], parameters: {} },
+      { kind: "immediateSuccessorNodeIdsEqual", adapter: "Map", expected: ["layer04-rest", "layer04-store", "layer04-event"], parameters: {} },
       { kind: "adventureObjectStateEquals", adapter: "Map", target: "campfire", expected: "Resolved", parameters: {} },
       { kind: "storeOfferCountEquals", adapter: "Map", expected: 3, parameters: {} },
       { kind: "storeSoldOfferCountEquals", adapter: "Map", expected: 0, parameters: {} },

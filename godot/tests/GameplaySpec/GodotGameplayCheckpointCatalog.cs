@@ -220,7 +220,7 @@ public static class GodotGameplayCheckpointCatalog
         party ?? value.Party, backpackConsumables ?? value.BackpackConsumables,
         backpackEquipment ?? value.BackpackEquipment, value.PendingProgression, value.AppliedTransactionKeys,
         value.Gold, value.BattlesCompleted, value.EnemiesDefeated, value.AcquiredItems, checkpoint ?? value.Checkpoint,
-        value.MapState, value.NodeTransaction);
+        value.MapState, value.NodeTransaction, value.EscortState, value.AdventureState);
 
     private sealed class MemoryRunStore : IRunSaveStore
     {

@@ -392,3 +392,4 @@
 * **Update (2026-08-18)**: Pure Run Artwork schema v1 增加有序 series、每姿态最多五个不同 ImageGen 输出、逐版不可变 feedback 与 provisional concept-only 门禁；Demonbound 九姿态作为首个持续验证 Goal，Hunter bootstrap 蒙版等待人工 receipt。
 * **Update (2026-08-18)**: Artwork 状态机增加 behind-core 遮挡合同、可见面积上限、核心行连续性、确定性 `calibrate-core` 与 `depthReview`；Demonbound Idle UL v1/v2 保留为已反馈失败稿，v3 前先补齐机器门禁。
 * **Update (2026-08-18)**: Pure Run Artwork series 的五版硬上限改为可选预算：`maxUniqueOutputs: null` 表示不限版，正整数才启用有限预算；预算变更必须通过 `set-series-output-limit` 生成不可变审计记录。Demonbound 九姿态 series 已由 5 版改为不限版，仍保留逐版反馈与人工审核门禁。
+* **Update (2026-08-20)**: Pure Run 移除开局两组路线预提交，所有节点 Tile 场景只开放当前直接后继出口；战斗胜利返回同一 resolved 场景，Rogue Map 只读，存档升级 V10，20 个正式 Main.tscn journeys 全量通过且人工体验项保持 pending。

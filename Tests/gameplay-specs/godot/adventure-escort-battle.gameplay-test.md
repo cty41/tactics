@@ -6,7 +6,7 @@ requiredAdapters: [Map, PlayerInput, UI]
 setup:
   - kind: loadValidatedCheckpoint
     adapter: Map
-    parameters: { id: layer6-escort-ready-v1, path: "validated://layer6-escort-ready-v1", semanticHash: be224262f4ab5fa41a48b27bcec5ccf1684d6d199c00f17abc992e57c27a467c }
+    parameters: { id: layer6-escort-ready-v1, path: "validated://layer6-escort-ready-v1", semanticHash: 08f4a87c3e25a3008af4a5441567ad0fa88985a66b8b3a2e42aed5d1993a86e2 }
   - kind: initializePlayerInput
     adapter: PlayerInput
     parameters: {}
@@ -16,11 +16,15 @@ actions:
     parameters: {}
   - kind: waitForPlayerObservable
     adapter: PlayerInput
-    parameters: { observable: mapReady, maximumFrames: 180 }
+    parameters: { observable: adventureBoardReady, maximumFrames: 180 }
   - kind: clickPointerTarget
     adapter: PlayerInput
-    target: layer_06_event
-    parameters: { targetKind: MapNode }
+    target: 7,7
+    parameters: { targetKind: AdventureCell }
+  - kind: clickPointerTarget
+    adapter: PlayerInput
+    target: "exit:layer_06_event"
+    parameters: { targetKind: AdventureObject }
   - kind: waitForPlayerObservable
     adapter: PlayerInput
     parameters: { observable: adventureBoardReady, maximumFrames: 180 }
@@ -61,7 +65,7 @@ assertions:
     parameters: {}
   - kind: runSaveSchemaVersionEquals
     adapter: Map
-    expected: 9
+    expected: 10
     parameters: {}
   - kind: runtimeHasNoErrors
     adapter: UI

@@ -6,7 +6,7 @@ requiredAdapters: [Map, PlayerInput, Battle, UI]
 setup:
   - kind: loadValidatedCheckpoint
     adapter: Map
-    parameters: { id: inventory-store-ready-v1, path: "validated://inventory-store-ready-v1", semanticHash: 871fdd3d6a37e66b3b072fd0cb5add3bf54d9ae4985e4b03d80bae3dd7c8e625 }
+    parameters: { id: inventory-store-ready-v1, path: "validated://inventory-store-ready-v1", semanticHash: f0178ece6249cfa8e978550fa36e3871ea2ecc2b7b05f138d1d76598e659d8b9 }
   - kind: initializePlayerInput
     adapter: PlayerInput
     parameters: {}
@@ -29,8 +29,20 @@ actions:
     parameters: { targetKind: UiElement }
   - kind: clickPointerTarget
     adapter: PlayerInput
-    target: layer_01_battle
-    parameters: { targetKind: MapNode }
+    target: 7,5
+    parameters: { targetKind: AdventureCell }
+  - kind: clickPointerTarget
+    adapter: PlayerInput
+    target: "exit:layer_01_battle"
+    parameters: { targetKind: AdventureObject }
+  - kind: clickPointerTarget
+    adapter: PlayerInput
+    target: 6,5
+    parameters: { targetKind: AdventureCell }
+  - kind: clickPointerTarget
+    adapter: PlayerInput
+    target: encounter
+    parameters: { targetKind: AdventureObject }
   - kind: waitForPlayerObservable
     adapter: PlayerInput
     parameters: { observable: battleReady, maximumFrames: 300 }

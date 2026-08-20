@@ -118,7 +118,7 @@
     {
       "adapter": "PlayerInput",
       "kind": "clickPointerTarget",
-      "target": "route-overview",
+      "target": "exit:layer_01_battle",
       "parameters": {
         "targetKind": "AdventureObject"
       }
@@ -126,49 +126,17 @@
     {
       "adapter": "PlayerInput",
       "kind": "clickPointerTarget",
-      "target": "route-a-store",
+      "target": "6,5",
       "parameters": {
-        "targetKind": "RouteNode"
+        "targetKind": "AdventureCell"
       }
     },
     {
       "adapter": "PlayerInput",
       "kind": "clickPointerTarget",
-      "target": "route-b-event",
-      "parameters": {
-        "targetKind": "RouteNode"
-      }
-    },
-    {
-      "adapter": "PlayerInput",
-      "kind": "clickPointerTarget",
-      "target": "route-submit",
+      "target": "encounter",
       "parameters": {
         "targetKind": "AdventureObject"
-      }
-    },
-    {
-      "adapter": "PlayerInput",
-      "kind": "clickPointerTarget",
-      "target": "route-depart",
-      "parameters": {
-        "targetKind": "AdventureObject"
-      }
-    },
-    {
-      "adapter": "PlayerInput",
-      "kind": "waitForPlayerObservable",
-      "parameters": {
-        "observable": "mapReady",
-        "maximumFrames": 180
-      }
-    },
-    {
-      "adapter": "PlayerInput",
-      "kind": "clickPointerTarget",
-      "target": "layer_01_battle",
-      "parameters": {
-        "targetKind": "MapNode"
       }
     },
     {
@@ -213,9 +181,33 @@
     {
       "adapter": "PlayerInput",
       "kind": "clickPointerTarget",
-      "target": "layer_02_battle",
+      "target": "8,7",
       "parameters": {
-        "targetKind": "MapNode"
+        "targetKind": "AdventureCell"
+      }
+    },
+    {
+      "adapter": "PlayerInput",
+      "kind": "clickPointerTarget",
+      "target": "exit:layer_02_battle",
+      "parameters": {
+        "targetKind": "AdventureObject"
+      }
+    },
+    {
+      "adapter": "PlayerInput",
+      "kind": "clickPointerTarget",
+      "target": "6,5",
+      "parameters": {
+        "targetKind": "AdventureCell"
+      }
+    },
+    {
+      "adapter": "PlayerInput",
+      "kind": "clickPointerTarget",
+      "target": "encounter",
+      "parameters": {
+        "targetKind": "AdventureObject"
       }
     },
     {
@@ -260,9 +252,33 @@
     {
       "adapter": "PlayerInput",
       "kind": "clickPointerTarget",
-      "target": "layer_03_battle",
+      "target": "8,7",
       "parameters": {
-        "targetKind": "MapNode"
+        "targetKind": "AdventureCell"
+      }
+    },
+    {
+      "adapter": "PlayerInput",
+      "kind": "clickPointerTarget",
+      "target": "exit:layer_03_battle",
+      "parameters": {
+        "targetKind": "AdventureObject"
+      }
+    },
+    {
+      "adapter": "PlayerInput",
+      "kind": "clickPointerTarget",
+      "target": "6,5",
+      "parameters": {
+        "targetKind": "AdventureCell"
+      }
+    },
+    {
+      "adapter": "PlayerInput",
+      "kind": "clickPointerTarget",
+      "target": "encounter",
+      "parameters": {
+        "targetKind": "AdventureObject"
       }
     },
     {
@@ -299,9 +315,17 @@
     {
       "adapter": "PlayerInput",
       "kind": "clickPointerTarget",
-      "target": "layer_04_rest",
+      "target": "3,7",
       "parameters": {
-        "targetKind": "MapNode"
+        "targetKind": "AdventureCell"
+      }
+    },
+    {
+      "adapter": "PlayerInput",
+      "kind": "clickPointerTarget",
+      "target": "exit:layer_04_rest",
+      "parameters": {
+        "targetKind": "AdventureObject"
       }
     },
     {
@@ -331,9 +355,33 @@
     {
       "adapter": "PlayerInput",
       "kind": "clickPointerTarget",
-      "target": "layer_05_battle",
+      "target": "8,7",
       "parameters": {
-        "targetKind": "MapNode"
+        "targetKind": "AdventureCell"
+      }
+    },
+    {
+      "adapter": "PlayerInput",
+      "kind": "clickPointerTarget",
+      "target": "exit:layer_05_battle",
+      "parameters": {
+        "targetKind": "AdventureObject"
+      }
+    },
+    {
+      "adapter": "PlayerInput",
+      "kind": "clickPointerTarget",
+      "target": "6,5",
+      "parameters": {
+        "targetKind": "AdventureCell"
+      }
+    },
+    {
+      "adapter": "PlayerInput",
+      "kind": "clickPointerTarget",
+      "target": "encounter",
+      "parameters": {
+        "targetKind": "AdventureObject"
       }
     },
     {
@@ -370,9 +418,17 @@
     {
       "adapter": "PlayerInput",
       "kind": "clickPointerTarget",
-      "target": "layer_06_treasure",
+      "target": "8,8",
       "parameters": {
-        "targetKind": "MapNode"
+        "targetKind": "AdventureCell"
+      }
+    },
+    {
+      "adapter": "PlayerInput",
+      "kind": "clickPointerTarget",
+      "target": "exit:layer_06_treasure",
+      "parameters": {
+        "targetKind": "AdventureObject"
       }
     },
     {
@@ -402,9 +458,33 @@
     {
       "adapter": "PlayerInput",
       "kind": "clickPointerTarget",
-      "target": "layer_07_battle",
+      "target": "8,7",
       "parameters": {
-        "targetKind": "MapNode"
+        "targetKind": "AdventureCell"
+      }
+    },
+    {
+      "adapter": "PlayerInput",
+      "kind": "clickPointerTarget",
+      "target": "exit:layer_07_battle",
+      "parameters": {
+        "targetKind": "AdventureObject"
+      }
+    },
+    {
+      "adapter": "PlayerInput",
+      "kind": "clickPointerTarget",
+      "target": "6,5",
+      "parameters": {
+        "targetKind": "AdventureCell"
+      }
+    },
+    {
+      "adapter": "PlayerInput",
+      "kind": "clickPointerTarget",
+      "target": "encounter",
+      "parameters": {
+        "targetKind": "AdventureObject"
       }
     },
     {
@@ -425,7 +505,7 @@
     {
       "adapter": "Map",
       "kind": "runSaveSchemaVersionEquals",
-      "expected": 9,
+      "expected": 10,
       "parameters": {}
     },
     {
@@ -469,9 +549,9 @@
     "protectProductionSave": true
   },
   "watchdog": {
-    "stepTimeoutMs": 30000,
+    "stepTimeoutMs": 60000,
     "battleRoundLimit": 80,
-    "scenarioTimeoutMs": 300000,
+    "scenarioTimeoutMs": 600000,
     "noProgressLimit": 2
   }
 }

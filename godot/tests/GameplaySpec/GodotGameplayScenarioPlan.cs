@@ -102,7 +102,7 @@ public sealed record GodotGameplayScenarioPlan(
             case "waitForPlayerObservable":
                 if (!HasString("observable") || step.Parameters["observable"].GetString() is not
                     ("uiElement" or "uiVisible" or "uiHidden" or "mapReady" or "battleReady" or "humanTurn" or "battleEnded" or
-                     "adventureBoardReady" or "adventureLeaderChanged" or "adventureInteractionResolved" or "routeCommitted" or
+                     "adventureBoardReady" or "adventureLeaderChanged" or "adventureInteractionResolved" or "exitCommitted" or
                      "eventBattleReady" or "adventureSceneChanged"))
                     throw new InvalidDataException("waitForPlayerObservable has an invalid observable.");
                 string observable = step.Parameters["observable"].GetString()!;
@@ -156,7 +156,7 @@ public sealed record GodotGameplayScenarioPlan(
                 "adventureActorCellEquals" or "activeAdventureLeaderEquals" or "runNodeLifecycleEquals" or
                 "adventureObjectStateEquals" or "eventResolutionEquals" or "pendingBattleContextKindEquals" or
                 "escortStateEquals" => kind == JsonValueKind.String,
-            "routeCandidateNodeIdsEqual" or "pendingPartyOrderEquals" or "activePartyStartingSkillIdsEqual" or "partyResourceSummaryEquals" => kind == JsonValueKind.Array &&
+            "immediateSuccessorNodeIdsEqual" or "pendingPartyOrderEquals" or "activePartyStartingSkillIdsEqual" or "partyResourceSummaryEquals" => kind == JsonValueKind.Array &&
                 assertion.Expected.EnumerateArray().All(value => value.ValueKind == JsonValueKind.String),
             "backpackContainsContentId" or "protectedNpcAliveEquals" or "partyAllLivingAtFullResourcesEquals" => kind is JsonValueKind.True or JsonValueKind.False,
             _ => false
@@ -191,7 +191,7 @@ internal static class GodotGameplayCapabilities
         ["assertion:demonboundCorruptionEquals"] = "Battle", ["assertion:demonboundPossessedEquals"] = "Battle",
         ["assertion:battleSkillReceiptEquals"] = "Battle",
         ["assertion:adventureActorCellEquals"] = "Map", ["assertion:activeAdventureLeaderEquals"] = "Map",
-        ["assertion:runNodeLifecycleEquals"] = "Map", ["assertion:routeCandidateNodeIdsEqual"] = "Map",
+        ["assertion:runNodeLifecycleEquals"] = "Map", ["assertion:immediateSuccessorNodeIdsEqual"] = "Map",
         ["assertion:adventureObjectStateEquals"] = "Map", ["assertion:storeOfferCountEquals"] = "Map",
         ["assertion:storeSoldOfferCountEquals"] = "Map", ["assertion:backpackContainsContentId"] = "Map",
         ["assertion:eventResolutionEquals"] = "Map", ["assertion:pendingBattleContextKindEquals"] = "Map",

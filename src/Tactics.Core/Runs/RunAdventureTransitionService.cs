@@ -15,7 +15,7 @@ public sealed class RunAdventureTransitionService
         GridPoint[] cells = [new(2, 5), new(1, 4), new(1, 6)];
         return new RunAdventureState(RunAdventureLifecycle.InitialExploration, InitialBoardContentId,
             party[0].CharacterId, party.Select((member, index) => new RunAdventureActorCell(member.CharacterId, cells[index])).ToArray(),
-            null, null, RunAdventureEventContextKind.None, null, null, 0, 0, 0, 0, 0);
+            RunAdventureEventContextKind.None, null, null, 0, 0, 0, 0, 0);
     }
 
     public PureRunState SelectLeader(PureRunState run, string actorId)
@@ -40,49 +40,88 @@ public sealed class RunAdventureTransitionService
         });
     }
 
-    public PureRunState BeginRouteSelection(PureRunState run, ContentId boardId) => Copy(run, Require(run) with
-    {
-        Lifecycle = RunAdventureLifecycle.RouteGroupOne,
-        BoardContentId = boardId,
-        InteractionRevision = Require(run).InteractionRevision + 1,
-        SceneRevision = Require(run).SceneRevision + 1
-    });
-
-    public PureRunState SelectRoute(PureRunState run, int group, string nodeId)
-    {
-        RunAdventureState state = Require(run);
-        if (group == 1 && state.Lifecycle == RunAdventureLifecycle.RouteGroupOne)
-            return Copy(run, state with { RouteGroupOneSelection = Required(nodeId), Lifecycle = RunAdventureLifecycle.RouteGroupTwo, RouteRevision = state.RouteRevision + 1 });
-        if (group == 2 && state.Lifecycle == RunAdventureLifecycle.RouteGroupTwo)
-            return Copy(run, state with { RouteGroupTwoSelection = Required(nodeId), Lifecycle = RunAdventureLifecycle.RouteReady, RouteRevision = state.RouteRevision + 1 });
-        throw new InvalidOperationException("adventure.route_selection_invalid");
-    }
-
-    public PureRunState CommitRoute(PureRunState run)
-    {
-        RunAdventureState state = Require(run);
-        if (state.Lifecycle != RunAdventureLifecycle.RouteReady) throw new InvalidOperationException("adventure.route_not_ready");
-        return Copy(run, state with { Lifecycle = RunAdventureLifecycle.RouteCommitted, RouteRevision = state.RouteRevision + 1 });
-    }
-
-    public PureRunState ActivateMap(PureRunState run, ContentId boardId)
-    {
-        RunAdventureState state = Require(run);
-        if (state.Lifecycle != RunAdventureLifecycle.RouteCommitted) throw new InvalidOperationException("adventure.route_not_committed");
-        return Copy(run, state with { Lifecycle = RunAdventureLifecycle.MapActive, BoardContentId = boardId, SceneRevision = state.SceneRevision + 1 });
-    }
-
     public PureRunState EnterBoard(PureRunState run, ContentId boardId)
     {
         RunAdventureState state = Require(run);
         GridPoint[] cells = [new(2, 5), new(1, 4), new(1, 6)];
         return Copy(run, state with
         {
+            Lifecycle = RunAdventureLifecycle.MapActive,
             BoardContentId = boardId,
             LeaderId = run.Party[0].CharacterId,
             ActorCells = run.Party.Select((member, index) => new RunAdventureActorCell(member.CharacterId, cells[index])).ToArray(),
             SceneRevision = state.SceneRevision + 1
         });
+    }
+
+    public PureRunState ResolveBoard(PureRunState run)
+    {
+        RunAdventureState state = Require(run);
+        if (state.BoardContentId.Value.EndsWith(".resolved", StringComparison.Ordinal)) return run;
+        return Copy(run, state with
+        {
+            BoardContentId = new ContentId(state.BoardContentId.Value + ".resolved"),
+            SceneRevision = state.SceneRevision + 1
+        });
+    }
+
+    public PureRunState CommitExit(PureRunState run, PureRunMapDefinition map, string targetNodeId)
+    {
+        ArgumentNullException.ThrowIfNull(map);
+        RunAdventureState state = Require(run);
+        string currentNodeId = CurrentNodeId(run);
+        bool direct = map.Connections.Any(edge => edge.FromNodeId == currentNodeId && edge.ToNodeId == targetNodeId);
+        if (!direct) throw new InvalidOperationException("adventure.exit_not_immediate_successor");
+        if (!IsExitUnlocked(run)) throw new InvalidOperationException("adventure.exit_locked");
+        return Copy(run, state with { ExitRevision = state.ExitRevision + 1 });
+    }
+
+    public static IReadOnlyList<PureRunMapNodeDefinition> ImmediateSuccessors(PureRunState run, PureRunMapDefinition map)
+    {
+        ArgumentNullException.ThrowIfNull(map);
+        string current = CurrentNodeId(run);
+        HashSet<string> allowed = run.MapState?.ReachableNodeIds.ToHashSet(StringComparer.Ordinal) ?? new HashSet<string>(StringComparer.Ordinal);
+        return map.Connections.Where(edge => edge.FromNodeId == current)
+            .Select(edge => map.Nodes.Single(node => node.NodeId == edge.ToNodeId))
+            .Where(node => allowed.Count == 0 || allowed.Contains(node.NodeId) || node.Layer is 1 or 2 or 3 or 5 or 7)
+            .OrderBy(node => node.Lane).ThenBy(node => node.NodeId, StringComparer.Ordinal).ToArray();
+    }
+
+    public static bool IsExitUnlocked(PureRunState run)
+    {
+        if (run.AdventureState?.Lifecycle == RunAdventureLifecycle.InitialExploration) return true;
+        if (run.NodeTransaction?.Kind == PureRunNodeKind.Store && run.Phase is PureRunPhase.ResolvingLayerFourNode or PureRunPhase.ResolvingLayerSixNode)
+            return true;
+        return run.AdventureState?.BoardContentId.Value.EndsWith(".resolved", StringComparison.Ordinal) == true ||
+            run.NodeTransaction?.Committed == true ||
+            run.Phase is PureRunPhase.AwaitingLayerFourChoice or PureRunPhase.ReadyForLayerFive or
+                PureRunPhase.AwaitingLayerSixChoice or PureRunPhase.ReadyForBoss;
+    }
+
+    public static string CurrentNodeId(PureRunState run)
+    {
+        if (run.AdventureState?.Lifecycle == RunAdventureLifecycle.InitialExploration) return "start";
+        const string marker = ".node.";
+        string? boardValue = run.AdventureState?.BoardContentId.Value;
+        int markerIndex = boardValue?.IndexOf(marker, StringComparison.Ordinal) ?? -1;
+        if (markerIndex >= 0)
+        {
+            string nodeId = boardValue![(markerIndex + marker.Length)..];
+            nodeId = nodeId.EndsWith(".resolved", StringComparison.Ordinal)
+                ? nodeId[..^".resolved".Length]
+                : nodeId;
+            return nodeId.Replace('-', '_');
+        }
+        if (run.NodeTransaction is { Committed: false } transaction) return transaction.NodeId;
+        if (run.MapState is { } map) return map.CurrentNodeId;
+        if (run.NodeTransaction is { } committedTransaction) return committedTransaction.NodeId;
+        return run.BattlesCompleted switch
+        {
+            <= 0 => "start",
+            1 => "layer_01_battle",
+            2 => "layer_02_battle",
+            _ => "layer_03_battle"
+        };
     }
 
     public PureRunState BeginEventBattle(PureRunState run, RunAdventureEventContextKind context, string nodeId, string objectId)

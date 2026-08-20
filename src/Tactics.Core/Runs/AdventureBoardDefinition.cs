@@ -10,7 +10,9 @@ public sealed record AdventureBoardObject(
     AdventureObjectKind Kind,
     GridPoint Cell,
     bool BlocksMovement,
-    bool BlocksLineOfSight);
+    bool BlocksLineOfSight,
+    string? TargetNodeId = null,
+    bool IsLocked = false);
 
 public sealed record AdventureActorPlacement(string ActorId, GridPoint Cell);
 
