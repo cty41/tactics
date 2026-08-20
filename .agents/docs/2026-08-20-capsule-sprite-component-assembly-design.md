@@ -202,6 +202,16 @@
 ## 完成标准
 
 - 状态机能完整表达混合来源和固定六层 Assembly。
-- 三个魔剑士 UL 姿态分别通过确定性生成、机器验证和完整 Review。
+- 三个魔剑士 UL 姿态分别进入可审计的逐图处理：能从获批姿势拆分的部分确定性生成；缺少正式源的组件停在生成/审批门禁，不伪造完整 Review。
 - 自动测试覆盖来源、层级、语义、哈希、变换与批准边界。
 - 用户逐姿态确认后才允许晋升；未确认姿态保持候选或 WIP。
+
+## 2026-08-20 实施状态
+
+- 状态机要求六个组件 role 各出现一次，不再创建旧四层 Assembly；实际绘制顺序由姿态深度计划声明。Cast UL 的人工验证证明 near/far 不能机械等同于身体前/后层。
+- `derived`、`generated`、`pre_v3_import` 已采用不同证据门禁；完整姿势的正式语义蒙版可确定性派生 body、equipment、手爪和脚爪，其中 body 同时保留 `core` 与 `head_appendage`。
+- Assembly 创建会拒绝 role/kind 不匹配、语义污染、未标注主体像素、缺失来源 receipt、生成组件缺少 `cty41` approval，以及不完整或错误层序；Review 同时输出六张单层和六步累积合成。
+- 状态机自动测试为 38 项通过；公开资产 strict check 通过。Tilemap 对比图已登记为 supporting review，不是 Sprite approval。
+- Idle UL 与 Melee UL 有可追溯的已晋升姿势和正式语义蒙版，可作为后续确定性拆分源，但本轮不自动替换已晋升 Sprite。
+- Cast UL 当前只有 body、远脚和近脚三个 supporting/WIP 文件，缺少正式远手、近手与装备组件；现有文件也没有组件 contract/validation/approval。因此不能建立合法完整六层 Assembly，必须先补齐并逐组件审核。
+- Cast UL v08 已由用户确认视觉通过：双手允许作为必需组件存在但被身体完全遮挡；两脚内缘由身体遮挡；装备复用正式 Cast DR 剑并置于身体后层，只露双耳之间的短剑尖。该结论仅批准离线视觉排列，不代表运行时接入。

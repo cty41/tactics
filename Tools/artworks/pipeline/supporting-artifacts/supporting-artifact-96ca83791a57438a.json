@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 2,
+  "supportingArtifactId": "supporting-artifact-96ca83791a57438a",
+  "artifact": {
+    "path": "Tools/artworks/doge/reviews/doge_capsule_demonbound_cast_dr_ul_reused_sword_compare_wip_v05.png",
+    "sha256": "ccb0b6667cc5bcf3ea7e3316318dea79f018bf7bd46a6eacc5110eeb350bc3a4"
+  },
+  "role": "assembly-review-wip",
+  "note": "DR versus two UL transforms using the approved DR sword component."
+}

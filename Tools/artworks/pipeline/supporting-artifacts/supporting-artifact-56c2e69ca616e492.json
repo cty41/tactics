@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 2,
+  "supportingArtifactId": "supporting-artifact-56c2e69ca616e492",
+  "artifact": {
+    "path": "Tools/artworks/doge/reviews/doge_capsule_demonbound_hit_dr_identity_pose_review_v02.png",
+    "sha256": "2f9481878965cb0817fc1f6ac91806c199eacda68389c14e5c87d78668ec88c8"
+  },
+  "role": "action-review-wip",
+  "note": "Idle identity, Hunter pose language, failed v1 and swordless Hit DR v2 comparison."
+}

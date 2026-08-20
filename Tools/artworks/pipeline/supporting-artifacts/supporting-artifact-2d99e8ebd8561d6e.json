@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 2,
+  "supportingArtifactId": "supporting-artifact-2d99e8ebd8561d6e",
+  "artifact": {
+    "path": "Tools/artworks/doge/reviews/doge_capsule_demonbound_cast_ul_reused_sword_centered_wip_v05.png",
+    "sha256": "aa7e5fe4d3092f845e1d85ebccaf75fa28abbb37e05a56ad99cd53bc3abeddad"
+  },
+  "role": "assembly-review-wip",
+  "note": "Reused approved DR sword at 70 percent scale, centered for UL; paws fully occluded."
+}

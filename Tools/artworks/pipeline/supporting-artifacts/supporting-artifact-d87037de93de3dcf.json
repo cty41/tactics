@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 2,
+  "supportingArtifactId": "supporting-artifact-d87037de93de3dcf",
+  "artifact": {
+    "path": "Tools/artworks/doge/concepts/doge_capsule_demonbound_death_chroma_source_v03.png",
+    "sha256": "07f75e0c2a7911c59bdd3740fbab3245236ac493e822efd5e727a70d50dc78a0"
+  },
+  "role": "death-round-chroma-source",
+  "note": "ImageGen source for the rounded Demonbound death preview; not approved or promotable."
+}

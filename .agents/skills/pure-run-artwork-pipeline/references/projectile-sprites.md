@@ -57,7 +57,7 @@
 
 ## 运行时交接门禁
 
-- 已确认骨矛 `doge_capsule_necromancer_bone_spear_projectile_color_v01` 使用朝右中心锚点；母版可见 AABB 约 `66×14 px`，`_128` 约 `34×8 px`。运行时副本为 `Assets/Tactics/Arts/PureRun/Textures/Projectiles/pure_run_bone_spear_projectile.png`，使用中心 Pivot、`128 PPU` 与原生 `Scale=1`，不再复用死灵飞行能量球。
+- 已确认骨矛 `doge_capsule_necromancer_bone_spear_projectile_color_v01` 使用朝右中心锚点；母版可见 AABB 约 `66×14 px`，`_128` 约 `34×8 px`。Godot 当前使用程序化骨矛表现；该位图在获得独立运行时接入授权前仍只作为美术候选。
 - 程序化飞行/命中效果不能替代素材 Review。Sprite 只负责实体骨矛轮廓；运行时残影、交叉闪光和骨屑由 Skill VFX Recipe 表达，禁止把这些效果烘进 PNG。
 - 运行时配置器必须幂等：只在批准源、目标运行时 PNG 或 Profile 字段实际变化时写盘。给 Profile 增加序列化字段后，不得批量重存全部无关 Profile/AbilityConfig；提交前要恢复由配置器造成的纯序列化噪音。
 - 骨矛沿飞行切线旋转；残影采样 `0.055s`、最多两个、寿命 `0.12s`、Alpha `0.28→0`、Scale `0.92`。这些参数属于运行时 Profile，不改变 PNG 的中心锚点和 AABB；取消或退出战斗时必须同时清理投射物、残影和 Tween。
@@ -82,7 +82,7 @@
 | 中心素材套用脚底基线 | 飞行路径发生垂直偏移 | 使用画布中心与未来中心 Pivot |
 | 缩小后不再清理 alpha RGB | 旋转、采样或压缩时出现色边 | 预览重采样后再次透明黑底合成 |
 | 在 Tilemap 中不旋转方向素材 | 无法判断真实攻击方向和占用 | 按等距攻击轴旋转后 Review |
-| 候选图生成后立即接入 Profile | 未确认轮廓污染运行时和后续配方 | 先展示 Tile Review，获得明确确认后再复制到 Unity |
+| 候选图生成后立即接入 Profile | 未确认轮廓污染运行时和后续配方 | 先展示 Tile Review，获得明确确认后再接入 Godot Resource |
 | 配置器遍历并重存所有资产 | LFS 指针和工作区出现大量无语义变化 | 只在目标字段实际改变时 SetDirty/Save |
 
 ## Checklist
@@ -93,4 +93,4 @@
 - [ ] 母版和预览中心偏差不超过 `1 px`。
 - [ ] Tile Review 使用 `_128` 并按真实攻击方向旋转。
 - [ ] RGBA、透明四角、精确幕色与透明像素 RGB 检查通过。
-- [ ] 未确认版本没有推进到下一投射物或 Unity 运行时。
+- [ ] 未确认版本没有推进到下一投射物或 Godot 运行时。

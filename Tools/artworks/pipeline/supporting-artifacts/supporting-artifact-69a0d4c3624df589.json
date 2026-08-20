@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 2,
+  "supportingArtifactId": "supporting-artifact-69a0d4c3624df589",
+  "artifact": {
+    "path": "Tools/artworks/doge/concepts/doge_capsule_demonbound_cast_ul_sword_chroma_source_v01.png",
+    "sha256": "dae12a253b05a2cdd0caee8921f5c49199ba68493ff703fb585c4fa76d0d4e97"
+  },
+  "role": "component-chroma-source-wip",
+  "note": "ImageGen sword chroma source; supporting evidence only."
+}

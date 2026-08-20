@@ -12,13 +12,13 @@
 
 完整轮廓高度按 alpha 非透明像素的包围盒计算，主要用于画布安全、裁切和技术校验；它不是跨犬种比较主体体量的唯一依据。跨角色校对优先比较核心胶囊主体的上缘、下缘、宽度和中心，排除耳朵、脚掌、武器、盾牌、法杖、翅膀和特效。角色保持右下 `45°` 等距方向；两脚可以沿等距对角线错开，但不能悬空或下沉。
 
-## Unity 运行时映射
+## Godot 运行时映射
 
-标准角色导入到 `Assets/Tactics/Arts/PureRun/Textures` 时，`256×256` 角色纹理必须使用 `128 Pixels Per Unit`，并保留底部 pivot `(0.5, 0.078125)`。这使 `122 px` 的可见轮廓约为 `0.95` 世界单位，约等于两格 Tile 高。
+标准角色导入到 `godot/assets/units` 时，`256×256` 角色纹理保持项目统一尺寸，并通过 Unit Resource 的脚底锚点对齐；`122 px` 可见轮廓约等于两格 Tile 高。
 
-地面 Tile 保持 `64×32` 与 `64 Pixels Per Unit`，对应 `(1, 0.5, 1)` Grid Cell Size。不要修改 Tile PPU、Grid、相机或角色 Prefab 的 `localScale` 来补偿角色导入比例；先校正角色纹理 PPU，再检查脚底基线。
+地面 Tile 保持 `64×32` 契约。不要修改 Tile、Grid、相机或角色节点缩放来补偿角色导入比例；先校正纹理和脚底基线。
 
-单位 Prefab 的根节点和 `Sprite` 子节点均为 `(1, 1, 1)`。状态反馈绘制在 `CurrentCell` 的程序化等距 Tile 高亮层，不使用方形角色 Marker；阴影以 `Sprite` 的底部 pivot 作为脚底锚点，仅允许极小下偏移。
+单位 actor 根节点和 `Sprite2D` 子节点保持单位缩放。状态反馈绘制在程序化等距 Tile 高亮层，不使用方形角色 Marker；阴影以 Unit Resource 的脚底锚点为准，仅允许极小下偏移。
 
 ## Tile Review 落点
 

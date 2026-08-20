@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 2,
+  "supportingArtifactId": "supporting-artifact-7d224545ed65f076",
+  "artifact": {
+    "path": "Tools/artworks/doge/reviews/doge_capsule_demonbound_hit_ul_amazon_compare_v01.png",
+    "sha256": "cbaebae1c0533e971c6698d622950b2744cf2bfc6c22341e4754f0a51796c5dc"
+  },
+  "role": "action-review-wip",
+  "note": "Idle UL, selected Demonbound Hit DR, approved Amazon Hit UL and failed Demonbound Hit UL v1 comparison."
+}

@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 2,
+  "supportingArtifactId": "supporting-artifact-03dc1aff6b1c7777",
+  "artifact": {
+    "path": "Tools/artworks/doge/reviews/doge_capsule_demonbound_death_amazon_compare_v03.png",
+    "sha256": "a3cebcc2b60ad8dc2c024dde4487ec78e6a6eb60d1b6446d85c6ab84a79cde44"
+  },
+  "role": "death-recipe-review",
+  "note": "Deterministic source/reference/result review for death-recipe-07f0fb6b0542b627."
+}

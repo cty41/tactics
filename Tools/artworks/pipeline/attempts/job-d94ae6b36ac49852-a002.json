@@ -1,0 +1,34 @@
+{
+  "schemaVersion": 2,
+  "attemptId": "job-d94ae6b36ac49852-a002",
+  "jobId": "job-d94ae6b36ac49852",
+  "ordinal": 2,
+  "parentAttemptId": "job-d94ae6b36ac49852-a001",
+  "retryFeedbackId": "feedback-5f3e99c226ef5c06",
+  "promptDelta": null,
+  "technicalRemediation": false,
+  "state": "prepared",
+  "artifacts": {
+    "source": {
+      "path": "Tools/artworks/doge/concepts/doge_capsule_demonbound_death_chroma_source_v02.png",
+      "sha256": "de7984de623e12eac20398ca6c0edc6b68e475d62a48d1ccad96f082560a01c8"
+    },
+    "raw": {
+      "path": "Tools/artworks/pipeline/artifacts/job-d94ae6b36ac49852/job-d94ae6b36ac49852-a002/raw.png",
+      "sha256": "de7984de623e12eac20398ca6c0edc6b68e475d62a48d1ccad96f082560a01c8"
+    },
+    "prepared": {
+      "path": "Tools/artworks/pipeline/artifacts/job-d94ae6b36ac49852/job-d94ae6b36ac49852-a002/prepared.png",
+      "sha256": "c47e1d153eb7ad3da27e474c38028ba9ab37594b05ebcda2ea21fc702094f926"
+    }
+  },
+  "report": null,
+  "approvalId": null,
+  "feedbackId": null,
+  "generationInvocationId": "generation-invocation-74ef912082414cde",
+  "generationDeliveryId": "generation-delivery-e5b847850746e428",
+  "preparation": {
+    "chroma": "00ff00",
+    "chromaTolerance": 160
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 2,
+  "supportingArtifactId": "supporting-artifact-d2b13209c9f8a5a4",
+  "artifact": {
+    "path": "Tools/artworks/doge/reviews/doge_capsule_demonbound_hit_dr_identity_pose_review_v01.png",
+    "sha256": "bcfe7ccb6760a08fa851eea2c857e1d111669474c84344b949b3d93092bcae1f"
+  },
+  "role": "action-review-wip",
+  "note": "Identity, Hunter hit-language reference, and Demonbound Hit DR v1 comparison; retry required."
+}

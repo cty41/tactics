@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 2,
+  "supportingArtifactId": "supporting-artifact-a267cbcb1d0e4267",
+  "artifact": {
+    "path": "Tools/artworks/doge/concepts/doge_capsule_demonbound_cast_ul_far_paw_chroma_source_v01.png",
+    "sha256": "9aedc9cdc09b04770bd19f3317a19ebd1bdd965466b5d24643dd283ee812db64"
+  },
+  "role": "component-chroma-source-wip",
+  "note": "ImageGen far paw chroma source; supporting evidence only."
+}

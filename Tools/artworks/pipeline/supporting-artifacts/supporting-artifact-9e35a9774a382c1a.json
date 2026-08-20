@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 2,
+  "supportingArtifactId": "supporting-artifact-9e35a9774a382c1a",
+  "artifact": {
+    "path": "Tools/artworks/doge/reviews/doge_capsule_demonbound_cast_dr_ul_sword_depth_compare_wip_v06.png",
+    "sha256": "119d76cfc9cd5b709a0ba05128d5d6ff03f2e202139846bb7eef7893b9b6ffd0"
+  },
+  "role": "assembly-review-wip",
+  "note": "Initial sword depth comparison using legacy crop; diagnostic only."
+}

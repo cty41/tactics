@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 2,
+  "supportingArtifactId": "supporting-artifact-64123c1633bf9d07",
+  "artifact": {
+    "path": "Tools/artworks/doge/reviews/doge_capsule_demonbound_death_hunter_compare_v03.png",
+    "sha256": "d88665395dc54571b8afc5812d7dbb3edb4804dbf8b7bdb2a359a101e39d087b"
+  },
+  "role": "death-reference-comparison",
+  "note": "Four-way visual comparison for manual review of the Demonbound death v03 candidate."
+}

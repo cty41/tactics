@@ -1,0 +1,77 @@
+{
+  "schemaVersion": 2,
+  "compositionId": "composition-d3c9088f74d8a526",
+  "assetId": "demonbound-death-v1",
+  "spec": {
+    "canvas": [
+      256,
+      256
+    ],
+    "bodyLayer": true,
+    "coreAxis": {
+      "bottom": [
+        88,
+        172
+      ],
+      "top": [
+        166,
+        104
+      ],
+      "tiltDegrees": [
+        38.0,
+        48.0
+      ]
+    },
+    "footCenter": [
+      127,
+      150
+    ],
+    "weapon": {
+      "hiddenGrip": [
+        103,
+        193
+      ],
+      "exitWindow": [
+        94,
+        180,
+        122,
+        207
+      ],
+      "tipRegion": [
+        171,
+        201,
+        193,
+        224
+      ],
+      "guardWindow": [
+        96,
+        181,
+        121,
+        205
+      ],
+      "bladeCenterline": [
+        111,
+        187,
+        184,
+        216
+      ],
+      "maxBladeWidthPx": 9,
+      "maxGemAreaPx": 24
+    },
+    "forbiddenRegions": [],
+    "requiredHiddenLabels": [],
+    "visibleAreaCaps": {},
+    "equipmentState": {
+      "scabbard": "absent",
+      "staticEffects": "absent"
+    }
+  },
+  "source": {
+    "path": "Tools/artworks/doge/demonbound/death_composition_v1.json",
+    "sha256": "86c4dda3bc76f853f117f74747777337ff841d9ba0e6ef97138909ce043d1a11"
+  },
+  "anchor": {
+    "path": "Tools/artworks/doge/calibrated/doge_capsule_demonbound_idle_dr_v01.png",
+    "sha256": "21559ca7aedd3e146feb2b93c5a6633affc6ce544122628c960972a982b0b5e7"
+  }
+}

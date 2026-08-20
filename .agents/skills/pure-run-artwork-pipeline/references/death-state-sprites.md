@@ -1,5 +1,7 @@
 # 死亡状态 Sprite
 
+> 2026-08-20 修正：参考几何只提供生成与 Review 目标，不授权把连续尸体切成语义碎片。身体、耳朵和相连四爪必须保持一条完整生成轮廓；逐层非等比变换会制造接缝和浮空碎片，禁止使用。只有真正脱手的装备和限定眼区 expression overlay 可以独立处理。
+
 死亡图是独立的静态状态素材，不是将站立图旋转、压扁或镜像后的结果。生成前必须先判断角色的核心拓扑，再选择对应的体量和朝向约束。
 
 ## Quick Reference
@@ -7,12 +9,12 @@
 | 问题 | 规则 |
 | --- | --- |
 | 先看什么 | 先分类核心拓扑，再锁定角色母图 |
-| 胶囊地面单位 | 仰面平躺、头朝画面右上、身体轴约 `60°`、短厚且不弓曲 |
+| 胶囊地面单位 | 仰面平躺、头朝画面右上；具体屏幕轴与压扁比例由批准参考核心蒙版测量，短厚且不弓曲 |
 | 球形飞行单位 | 保持近圆球核，只让耳朵、脸等头部线索朝右上；双翼瘫软贴地 |
 | 如何比较大小 | 只比较胶囊核心或球核，不包含耳、四肢、武器、盾牌、法杖、翅膀和特效 |
 | 死亡道具 | 必须脱手；最多保留任务明确批准的单件识别道具 |
 | Tile 锚点 | 使用完整死亡尸体 AABB 中心，不使用站立脚底锚点或活体悬浮锚点 |
-| 输出状态 | 未经人工确认只进入 `concepts` 或 `candidates`，不接入 Unity |
+| 输出状态 | 未经人工确认只进入 `concepts` 或 `candidates`，不接入 Godot 运行时 |
 
 ## 先分类核心拓扑
 
@@ -42,8 +44,10 @@
 4. **先验收核心，再处理道具。** 核心不合格时回到正确母图重生，不在错误候选上连续旋转、拉伸或修补。
 5. **处理脱手道具和特效。** 只保留明确批准的单件道具，移除常驻法术、火焰、鬼火、粒子和光晕。
 6. **去幕并缩小。** 清零全透明像素的 RGB，再生成 Mitchell `_128` 预览；缩小后再次清理精确色幕残色。
-7. **Tile Review。** 使用 `_128` 预览，以完整尸体 AABB 中心对准 `64×32` Tile 几何中心，并与已确认死亡图并排比较。
+7. **先生成成功，再做 Tile Review。** 角度和压扁程度在完整姿态生成时解决；状态机不得通过拆分核心、耳朵或四爪来追赶参考几何。生成完整的 `_128` 预览，以尸体 AABB 中心对准 `64×32` Tile 几何中心，并与已确认死亡图并排比较。
 8. **归档。** 未确认版本进入 `concepts` 或 `candidates`；保留旧版本，不提前进入 `calibrated`、`approved` 或 Unity。
+
+已经逐轮人工确认但缺少生成前 invocation 的历史成图，不得倒填调用证据。使用状态机的 `render-size-comparison` 固定四栏尺寸证据，再通过受限 `adopt-reviewed-sprite` 记录 `reviewed_import`，随后走正常 `approve` 与 `promote`。该入口只收编精确确认字节，不参与再生成或确定性整形。
 
 ## 胶囊地面单位
 
@@ -74,6 +78,7 @@
 - 母版保持 `256×256 RGBA`，预览为 `128×128 RGBA`；地面接触线继续以母版 `y=236` 为技术参考。
 - 核心体量与完整 alpha AABB 是两套指标：核心决定角色胖瘦与尺度，完整 AABB 只检查裁切、安全边距和 Tile 占用。
 - 不允许单轴拉伸。需要缩放时必须对角色、外部轮廓和道具整体等比缩放。
+- 参考核心蒙版只用于生成后测量与对比，不授权任何分层非等比整形。若完整轮廓不符合参考，应回到身份母图重新生成，而不是让确定性步骤修补造型。
 - 没有站立脚底的尸体使用完整可见尸体 AABB 中心对准 Tile 中心；球形飞行单位落地后也不再使用活体悬浮锚点。
 - Tile QA 必须使用 `_128` 预览。需要放大检查时，Tile 与 Sprite 必须按相同比例同时缩放，禁止只放大角色。
 - 每次 Review 同时展示已确认参考与当前候选，防止方向、核心体量或道具层级在连续迭代中漂移。
@@ -94,6 +99,14 @@
 | 用 256 母版直接做 Tile QA | 占用被错误放大两倍 | 只用 `_128` 预览 |
 | 缩小后不再清理色幕 | `_128` 出现精确绿/洋红残色 | 预览重采样后再次清理并运行校验器 |
 | 未确认候选进入发布目录 | 后续被误当作正式母图 | 保持在 `concepts/candidates` 并保留版本历史 |
+| 成图前先抽象通用整形策略 | 数值接近参考但角色轮廓碎裂或身份漂移 | 先按既有成功流程完成并人工确认单图，再从成功证据中提炼最小规则 |
+
+## 死亡表情覆盖层
+
+- X 眼等死亡表情作为独立生成覆盖层，不重新生成已确认尸体。
+- 覆盖层必须绑定最终尸体、明确的可见眼区矩形与 ImageGen invocation；所有非透明像素必须落在眼区内。
+- 覆盖层只包含表情笔画，不得携带毛色、脸皮、耳朵、装备、血迹或特效。
+- 状态机验证几何和语义纯度；X 的造型与读感仍需逐图人工确认。
 
 ## 当前参考锚点
 
@@ -101,10 +114,11 @@
 - 死灵法师：`Tools/artworks/doge/calibrated/doge_capsule_necromancer_death_color_v05.png`；Alpha AABB 居中并已接入运行时。
 - 法师：`Tools/artworks/doge/calibrated/doge_capsule_mage_death_color_v04.png`；Alpha AABB 居中并已接入运行时。
 - 羊魔：`Tools/artworks/pure_run/enemies/approved/splitjaw_goat_charger_death_color_v03.png`；Alpha AABB 居中、已接入运行时并由六个职责共享。
+- 魔剑士：`Tools/artworks/doge/calibrated/doge_capsule_demonbound_death_v01.png`；Round v04 经四栏尺寸对比与人工确认后，以 `reviewed_import` 正式晋升，尚未据此授权运行时接入。
 - 蝙蝠过大反例：`Tools/artworks/pure_run/enemies/candidates/tomb_maw_bat_ranged_death_color_v01.png`
 - 蝙蝠当前候选：`Tools/artworks/pure_run/enemies/candidates/tomb_maw_bat_ranged_death_color_v02.png`
 
-正式活体母图必须从 `../examples/cases.json` 的 `approved_assets` 取得。死亡图仍以设计层原图作为外观真相源；只有获得明确运行时接入授权的版本才能复制到 `Assets/Tactics/Arts/PureRun/Textures`。运行时死亡纹理使用中心 Pivot，不沿用活体底部 Pivot。
+正式活体母图必须从 `../examples/cases.json` 的 `approved_assets` 取得。死亡图仍以设计层原图作为外观真相源；只有获得明确运行时接入授权的版本才能复制到 `godot/assets/units/actions`。运行时死亡纹理使用中心 Pivot，不沿用活体底部 Pivot。
 
 ## Checklist
 

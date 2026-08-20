@@ -1,0 +1,68 @@
+{
+  "schemaVersion": 1,
+  "assetId": "demonbound-death-v3",
+  "spec": {
+    "path": "Tools/artworks/doge/demonbound/death_recipe_v3.json",
+    "sha256": "be6a6c09ddff5d21b420000ce614496f3af1915d0504a22254910de6cb071215"
+  },
+  "source": {
+    "path": "Tools/artworks/doge/candidates/doge_capsule_demonbound_death_wip_v02.png",
+    "sha256": "5ae88b13e64dd2402fd50b40749ece730fe56395ca5d3ec422b1162751e54381"
+  },
+  "sourceMask": {
+    "path": "Tools/artworks/doge/demonbound/death_v2_semantic_mask.png",
+    "sha256": "895cbe53182cb2c57ed7901abfe6ad99762f185d0d1e6c9512cb1fd88c7c8b5a"
+  },
+  "referenceMask": {
+    "path": "Tools/artworks/doge/demonbound/hunter_death_core_reference_mask.png",
+    "sha256": "17c15659669e7d4645230ad5a4b5e8f833fbd40db46780b5d27b88233a92c494"
+  },
+  "expressionOverlay": null,
+  "sourceGeometry": {
+    "centerX": 128.88854760860028,
+    "centerY": 119.46752961825362,
+    "angleRadians": -0.8238937018503785,
+    "angleDegrees": -47.20563188343647,
+    "major": 98.8894342423094,
+    "minor": 60.463767941873435,
+    "ratio": 1.635515575830079
+  },
+  "referenceGeometry": {
+    "centerX": 127.50261780104712,
+    "centerY": 128.4959162303665,
+    "angleRadians": -0.17497698230081343,
+    "angleDegrees": -10.025442597771914,
+    "major": 105.73487021667555,
+    "minor": 51.928122493088836,
+    "ratio": 2.0361774148631677
+  },
+  "resultGeometry": {
+    "centerX": 128.47377660741716,
+    "centerY": 113.68488040377441,
+    "angleRadians": -0.1756585196403187,
+    "angleDegrees": -10.06449181090614,
+    "major": 99.19260828298141,
+    "minor": 60.698950751122645,
+    "ratio": 1.6341733597618542
+  },
+  "shift": [
+    0,
+    -6
+  ],
+  "report": {
+    "angleErrorDegrees": 0.039049213134227045,
+    "ratioError": 0.19743076028977977,
+    "passed": false
+  },
+  "artifacts": {
+    "prepared": {
+      "path": "Tools/artworks/doge/candidates/doge_capsule_demonbound_death_geometry_wip_v03.png",
+      "sha256": "34bae62b2c5e23b888b8ca7bc49b372ae8a22e9af3b6ec42bef1ddc1814b2e5e"
+    },
+    "review": {
+      "path": "Tools/artworks/doge/reviews/doge_capsule_demonbound_death_geometry_review_v03.png",
+      "sha256": "5352591430b8ec1a7691b79527d99f0e6ef06f2a661c80f1773a5f3893d9e93b"
+    }
+  },
+  "deathRecipeId": "death-recipe-b7ead71516b20fdc"
+}

@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 2,
+  "supportingArtifactId": "supporting-artifact-b18326cefc3c1650",
+  "artifact": {
+    "path": "Tools/artworks/doge/candidates/doge_capsule_demonbound_death_round_wip_v04.png",
+    "sha256": "90218c756be1a4e3a40d8221667536f53d665447c24cca597f5f01eef0b462a0"
+  },
+  "role": "death-round-candidate",
+  "note": "Rounded Demonbound death candidate scaled uniformly for manual size review; not approved."
+}

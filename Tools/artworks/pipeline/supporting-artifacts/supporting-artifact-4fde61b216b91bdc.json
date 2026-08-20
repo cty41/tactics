@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 2,
+  "supportingArtifactId": "supporting-artifact-4fde61b216b91bdc",
+  "artifact": {
+    "path": "Tools/artworks/doge/candidates/doge_capsule_demonbound_death_geometry_wip_v04.png",
+    "sha256": "6679c76575de7c340dafed107ce485498dfe6e4cb308a19240cc6fa2aad032c0"
+  },
+  "role": "death-recipe-candidate",
+  "note": "Deterministic death recipe output death-recipe-ae24e0ab27975321; candidate only, not human-approved or promoted."
+}

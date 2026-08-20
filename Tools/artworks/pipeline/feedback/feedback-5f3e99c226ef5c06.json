@@ -1,0 +1,29 @@
+{
+  "schemaVersion": 2,
+  "feedbackId": "feedback-5f3e99c226ef5c06",
+  "attemptId": "job-d94ae6b36ac49852-a001",
+  "candidateSha256": "2b01b6149ff290b015d90ce3d48e43d75b9f906dcb969de115f2bd9c7d9d0664",
+  "reviewer": "codex",
+  "verdict": "retry",
+  "strengths": [
+    "Death v1 clearly reads as a supine Demonbound corpse with head toward screen upper-right and a fully released sword."
+  ],
+  "defects": [
+    "The corpse core is too long and narrow versus the approved Hunter death topology.",
+    "The sword blade and guard are oversized versus the formal Demonbound sword, and the weapon sits too far below the corpse, expanding the complete AABB."
+  ],
+  "nextPromptDelta": "Preserve v1 identity and death direction. Redraw the corpse core about 20 percent shorter and visibly thicker, matching the compact Hunter death silhouette without copying Hunter identity. Replace the oversized sword with the exact compact narrow formal Demonbound blade and restrained guard. Move the fully detached sword close beneath the lower abdomen, leaving only a small transparent gap from every paw, so the complete AABB is compact.",
+  "recordedAt": "2026-08-20T14:05:23.4667842+08:00",
+  "authorType": "agent",
+  "categories": [
+    "core_geometry",
+    "equipment_state"
+  ],
+  "disposition": "retry",
+  "frozenInvariants": [
+    "Demonbound identity, supine face-up posture, head toward screen upper-right, closed eyes, four paws, no arms or legs, and fully released sword."
+  ],
+  "pendingFixes": [
+    "shorter thicker straight corpse core; formal narrow compact sword; detached sword tucked close below lower abdomen with a small clear gap"
+  ]
+}

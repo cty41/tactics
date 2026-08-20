@@ -1,0 +1,27 @@
+{
+  "schemaVersion": 2,
+  "feedbackId": "feedback-c759281bea4c656c",
+  "attemptId": "job-286ebcf8fc9cb532-a001",
+  "candidateSha256": "653bcd5db01831e54e1615ae6a7713d4666ea690a27491dff159090cc33e8cd5",
+  "reviewer": "cty41",
+  "verdict": "selected",
+  "strengths": [
+    "Hit UL v3 preserves the accepted body, ear inertia and foot occlusion while restoring the approved ancestral sword to the anatomical right hand."
+  ],
+  "defects": [
+    "Final asset still requires semantic masking, deterministic calibration, complete review artifacts and bound approval before promotion."
+  ],
+  "nextPromptDelta": "",
+  "recordedAt": "2026-08-20T13:56:34.9121980+08:00",
+  "authorType": "human",
+  "categories": [
+    "equipment_state"
+  ],
+  "disposition": "selected",
+  "frozenInvariants": [
+    "Hit UL v3 visual arrangement: screen-left anatomical right hand grips the compact approved sword; body, ears, face and feet remain as accepted."
+  ],
+  "pendingFixes": [
+    "semantic masking, deterministic calibration, complete review artifacts and bound approval"
+  ]
+}

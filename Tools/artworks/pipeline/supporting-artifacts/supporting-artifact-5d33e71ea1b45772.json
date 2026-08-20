@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 2,
+  "supportingArtifactId": "supporting-artifact-5d33e71ea1b45772",
+  "artifact": {
+    "path": "Tools/artworks/doge/reviews/doge_capsule_demonbound_all_pose_tilemap_review_v01.png",
+    "sha256": "5091763ff874895918b6cc6ca7f6b1bb1f818900859e69760bfbf42675185172"
+  },
+  "role": "demonbound-pose-tilemap-review",
+  "note": "Review-only six-pose Tilemap and UL foot/body layering comparison; not a Sprite or approval artifact."
+}

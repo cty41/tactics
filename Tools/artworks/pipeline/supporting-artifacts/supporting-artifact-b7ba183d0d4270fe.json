@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 2,
+  "supportingArtifactId": "supporting-artifact-b7ba183d0d4270fe",
+  "artifact": {
+    "path": "Tools/artworks/doge/demonbound/death_v2_semantic_mask.png",
+    "sha256": "895cbe53182cb2c57ed7901abfe6ad99762f185d0d1e6c9512cb1fd88c7c8b5a"
+  },
+  "role": "death-semantic-mask",
+  "note": "Semantic layer mask used by the deterministic death shaping recipe."
+}

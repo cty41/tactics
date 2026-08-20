@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 2,
+  "supportingArtifactId": "supporting-artifact-dd3f38bfac6a136f",
+  "artifact": {
+    "path": "Tools/artworks/doge/reviews/doge_capsule_demonbound_hit_ul_sword_compare_v03.png",
+    "sha256": "925b57ad5a36f4a2d38e1869e400c0af0e5c11620270f788ff09aef403447721"
+  },
+  "role": "comparison-review",
+  "note": "Left to right: approved Demonbound Melee UL sword reference, accepted swordless Hit UL v2, Hit UL v3 right-hand sword candidate."
+}

@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 2,
+  "supportingArtifactId": "supporting-artifact-95580c44237cec33",
+  "artifact": {
+    "path": "Tools/artworks/doge/reviews/doge_capsule_demonbound_cast_dr_ul_sword_depth_compare_wip_v07.png",
+    "sha256": "deb4726d5886972844de4bf7185db396c9cf19657e50572fe9f6660c5d546abc"
+  },
+  "role": "assembly-review-wip",
+  "note": "Depth comparison showing accepted position becomes fully occluded."
+}

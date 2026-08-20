@@ -1,0 +1,40 @@
+{
+  "schemaVersion": 2,
+  "jobId": "job-286ebcf8fc9cb532",
+  "state": "ready",
+  "contractId": "contract-4bb4a53213d34ba9",
+  "contractSha256": "6520ab1eed55b9f9ccea22c6e5a3dff132c5a4578a2241831bb3b4241c58eb15",
+  "prompt": {
+    "path": "Tools/artworks/doge/demonbound/hit_up_left_prompt_v3.md",
+    "sha256": "91654770e769a4828d729f117b95a643eac67ccbbf7d7803e06b2707680fd2dc"
+  },
+  "inputs": [
+    {
+      "role": "edit_target",
+      "path": "Tools/artworks/doge/candidates/doge_capsule_demonbound_hit_ul_wip_v02.png",
+      "sha256": "710e2a655ff8905ba3bdfc3d02289a02e49b726e9dd2e18c8ee244b70bebcfc1"
+    },
+    {
+      "role": "equipment",
+      "path": "Tools/artworks/doge/calibrated/doge_capsule_demonbound_melee_ul_v01.png",
+      "sha256": "4519d643cecce40130d92f00e4bbef9c3cd628f6b34953763a7cbbdda4d0e82b"
+    },
+    {
+      "role": "identity",
+      "path": "Tools/artworks/doge/calibrated/doge_capsule_demonbound_idle_ul_v01.png",
+      "sha256": "ef9fd7521afafc4f46ef8fd355fc90337b493e268de61eaebfcd8d2ea3e529f4"
+    }
+  ],
+  "target": {
+    "direction": "up-left",
+    "pose": "hit"
+  },
+  "series": null,
+  "conceptOnly": false,
+  "contractRequirements": null,
+  "requiresInvocation": true,
+  "poseGuide": {
+    "poseGuideId": "pose-guide-5ff5d8579dff5337",
+    "sha256": "1a66216384fdf9e4c6302d3726b610ab77d1f0bb7598fa8a8b8900dba8891960"
+  }
+}

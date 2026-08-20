@@ -1,0 +1,14 @@
+{
+  "schemaVersion": 2,
+  "feedbackAddendumId": "feedback-addendum-338ba1f8e755137f",
+  "attemptId": "job-c7efd19e371e1b8b-a001",
+  "parentFeedbackId": "feedback-b865086790fe8925",
+  "reviewer": "cty41",
+  "defects": [
+    "Both ears have the wrong inertia direction; they must fold toward screen-right while the body top leans screen-left.",
+    "Both feet are drawn fully in front of the body; the body must occlude their upper edges so only grounded lower arcs remain visible."
+  ],
+  "recordedAt": "2026-08-20T12:04:58.2010067+08:00",
+  "authorType": "human",
+  "disposition": "retry"
+}

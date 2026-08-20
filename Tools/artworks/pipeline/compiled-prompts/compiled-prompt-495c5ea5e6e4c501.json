@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 2,
+  "compiledPromptId": "compiled-prompt-495c5ea5e6e4c501",
+  "jobId": "job-18bef1a6a8527bbe",
+  "poseGuideId": "pose-guide-fe48e3f5e66d2e26",
+  "artifact": {
+    "path": "Tools/artworks/doge/demonbound/death_crossed_eye_compiled_prompt_v1.md",
+    "sha256": "5401f6e1c97e1f69426ed761ac5658aede4363f12874f7c38fdefdfef3c2b0a1"
+  }
+}

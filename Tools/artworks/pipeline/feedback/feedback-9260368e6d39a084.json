@@ -1,0 +1,27 @@
+{
+  "schemaVersion": 2,
+  "feedbackId": "feedback-9260368e6d39a084",
+  "attemptId": "job-293b5e094110786d-a002",
+  "candidateSha256": "f91bd46a434461edc3b4c6de90152dd84e28987b565cf0d599a92f9c29f017aa",
+  "reviewer": "cty41",
+  "verdict": "selected",
+  "strengths": [
+    "User accepted the swordless Hit DR v2 body pose, expression, and two-tear hit language."
+  ],
+  "defects": [],
+  "nextPromptDelta": "",
+  "recordedAt": "2026-08-20T11:43:18.2933329+08:00",
+  "authorType": "human",
+  "categories": [
+    "pose_axis",
+    "identity",
+    "equipment_state"
+  ],
+  "disposition": "selected",
+  "frozenInvariants": [
+    "Rigid screen-right body lean, folded-ear inertia, widened eyes, exactly two tear streaks, tense mouth, Demonbound coat and red collar."
+  ],
+  "pendingFixes": [
+    "Clean chroma fringe, attach semantic mask, calibrate through the pipeline, and reuse the approved Demonbound sword as a separate equipment component."
+  ]
+}

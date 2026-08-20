@@ -1,0 +1,49 @@
+{
+  "schemaVersion": 2,
+  "attemptId": "job-c4e3583c3ad96d21-a001",
+  "jobId": "job-c4e3583c3ad96d21",
+  "ordinal": 1,
+  "parentAttemptId": null,
+  "retryFeedbackId": null,
+  "promptDelta": null,
+  "technicalRemediation": false,
+  "state": "promoted",
+  "sourceMode": "reviewed_import",
+  "reviewedImportId": "reviewed-import-8790518f7fee8714",
+  "artifacts": {
+    "source": {
+      "path": "Tools/artworks/doge/concepts/doge_capsule_demonbound_death_chroma_source_v03.png",
+      "sha256": "07f75e0c2a7911c59bdd3740fbab3245236ac493e822efd5e727a70d50dc78a0"
+    },
+    "prepared": {
+      "path": "Tools/artworks/doge/candidates/doge_capsule_demonbound_death_round_wip_v04.png",
+      "sha256": "90218c756be1a4e3a40d8221667536f53d665447c24cca597f5f01eef0b462a0"
+    },
+    "importedPreview": {
+      "path": "Tools/artworks/doge/candidates/doge_capsule_demonbound_death_round_wip_v04_128.png",
+      "sha256": "dd077a665618ef75024bdfb4eed823ac761466dcdede835f3ed3150cc5aed98c"
+    },
+    "review": {
+      "sizeComparison": {
+        "path": "Tools/artworks/doge/reviews/doge_capsule_demonbound_death_round_size_compare_v05.png",
+        "sha256": "8468924ab31547f44e8a264c13014e839f0f8a76887853ed86f4cd64ff0300ab"
+      }
+    },
+    "promoted": {
+      "master": {
+        "path": "Tools/artworks/doge/calibrated/doge_capsule_demonbound_death_v01.png",
+        "sha256": "90218c756be1a4e3a40d8221667536f53d665447c24cca597f5f01eef0b462a0"
+      },
+      "preview": {
+        "path": "Tools/artworks/doge/calibrated/doge_capsule_demonbound_death_v01_128.png",
+        "sha256": "dd077a665618ef75024bdfb4eed823ac761466dcdede835f3ed3150cc5aed98c"
+      }
+    }
+  },
+  "report": {
+    "path": "Tools/artworks/pipeline/reports/report-35209198a5779889.json",
+    "sha256": "ab94496d8846421bf691eed7032cb395d1f52ee8ff48bbfab5b22c8e752c552a"
+  },
+  "approvalId": "approval-0d8b685cfe3dd279",
+  "feedbackId": null
+}

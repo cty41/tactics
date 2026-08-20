@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 2,
+  "supportingArtifactId": "supporting-artifact-f46018f0ddaff1d3",
+  "artifact": {
+    "path": "Tools/artworks/doge/candidates/doge_capsule_demonbound_hit_ul_wip_v02.png",
+    "sha256": "710e2a655ff8905ba3bdfc3d02289a02e49b726e9dd2e18c8ee244b70bebcfc1"
+  },
+  "role": "candidate-preview",
+  "note": "Demonbound Hit UL v2 scaled candidate for human visual review; not approved or promoted."
+}

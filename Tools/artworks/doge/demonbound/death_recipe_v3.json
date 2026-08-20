@@ -1,0 +1,11 @@
+{
+  "schemaVersion": 1,
+  "assetId": "demonbound-death-v3",
+  "sourceImage": "Tools/artworks/doge/candidates/doge_capsule_demonbound_death_wip_v02.png",
+  "sourceMask": "Tools/artworks/doge/demonbound/death_v2_semantic_mask.png",
+  "referenceMask": "Tools/artworks/doge/demonbound/hunter_death_core_reference_mask.png",
+  "output": "Tools/artworks/doge/candidates/doge_capsule_demonbound_death_geometry_wip_v03.png",
+  "reviewOutput": "Tools/artworks/doge/reviews/doge_capsule_demonbound_death_geometry_review_v03.png",
+  "angleToleranceDegrees": 2.0,
+  "ratioTolerance": 0.03
+}

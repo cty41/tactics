@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 2,
+  "supportingArtifactId": "supporting-artifact-301fc564abaa0acf",
+  "artifact": {
+    "path": "Tools/artworks/doge/reviews/doge_capsule_demonbound_cast_ul_pose_depth_wip_v04.png",
+    "sha256": "7065997bc6d3f5bcab0c1fa3cbc56c38fd8fdaf8469a71cb820d6cc4d2a16db5"
+  },
+  "role": "assembly-review-wip",
+  "note": "Pose-depth diagnostic v04 with lower paw placement; no approval."
+}

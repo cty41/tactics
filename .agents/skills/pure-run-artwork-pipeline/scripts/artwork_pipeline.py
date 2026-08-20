@@ -10,6 +10,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import math
 import os
 import shutil
 import sys
@@ -62,16 +63,13 @@ IDENTITY_MASK_COLORS = {
 OCCLUSION_LABELS = {"near_hand", "far_hand", "equipment"}
 WAIVABLE_GATE_ISSUES = {"core_size_out_of_tolerance"}
 ASSET_ROLES = {"component", "assembled_sprite"}
-COMPONENT_KINDS = {"body", "equipment", "paw_overlay", "foot_overlay"}
+COMPONENT_KINDS = {"body", "equipment", "paw_overlay", "foot_overlay", "death_expression_overlay"}
 SOURCE_MODES = {"generated", "derived", "pre_v3_import"}
-ASSEMBLY_LAYER_ORDER = (
-    "far_foot_overlay", "near_foot_overlay", "body", "equipment",
-    "far_paw_overlay", "near_paw_overlay",
+ASSEMBLY_CANONICAL_LAYER_ORDER = (
+    "far_foot_overlay", "far_paw_overlay", "body", "equipment",
+    "near_paw_overlay", "near_foot_overlay",
 )
-ASSEMBLY_LAYER_ROLES = set(ASSEMBLY_LAYER_ORDER)
-LEGACY_ASSEMBLY_LAYER_ORDER = (
-    "body", "equipment", "far_paw_overlay", "near_paw_overlay",
-)
+ASSEMBLY_LAYER_ROLES = set(ASSEMBLY_CANONICAL_LAYER_ORDER)
 
 
 class PipelineError(RuntimeError):
@@ -188,8 +186,9 @@ def approved_mask_pair(store: Store, candidate_hash: str, mask_hash: str) -> boo
     return False
 
 
-def approval_review_hashes(store: Store, attempt: dict[str, Any], contract: dict[str, Any]) -> dict[str, str]:
-    review = attempt.get("artifacts", {}).get("review")
+def required_review_keys(attempt: dict[str, Any], contract: dict[str, Any]) -> set[str]:
+    if attempt.get("sourceMode") == "reviewed_import":
+        return {"sizeComparison"}
     required = {"overlay", "preview128", "tile64x32"}
     if contract.get("identitySpec"):
         required.add("anchorTileCompare")
@@ -197,6 +196,12 @@ def approval_review_hashes(store: Store, attempt: dict[str, Any], contract: dict
         required.add("depthReview")
     if contract.get("assetRole") == "assembled_sprite":
         required.add("assemblyLayerReview")
+    return required
+
+
+def approval_review_hashes(store: Store, attempt: dict[str, Any], contract: dict[str, Any]) -> dict[str, str]:
+    review = attempt.get("artifacts", {}).get("review")
+    required = required_review_keys(attempt, contract)
     if not review or set(review) != required:
         raise PipelineError("approval requires deterministic review outputs")
     hashes: dict[str, str] = {}
@@ -274,7 +279,7 @@ def validate_exception_receipt(store: Store, attempt: dict[str, Any], receipt: d
         "reviewSha256": approval_review_hashes(store, attempt, contract),
         "waivedIssues": expected_evidence,
     }
-    if contract.get("compositionSpec"):
+    if contract.get("compositionSpec") and attempt.get("sourceMode") != "reviewed_import":
         annotation_id = attempt.get("annotationId")
         if not annotation_id:
             raise PipelineError("schema v2 gate exception requires annotations")
@@ -468,7 +473,8 @@ def create_contract(store: Store, args: argparse.Namespace) -> dict[str, Any]:
         "occlusion": occlusion,
         "compositionSpec": composition,
         "identitySpec": identity_spec,
-        "requiresInvocation": writes_v2 and high_risk and source_mode != "derived",
+        "requiresInvocation": ((writes_v2 and high_risk and source_mode != "derived")
+                               or (asset_role == "component" and source_mode == "generated")),
         "tolerances": {"sizePx": args.size_tolerance, "centerPx": args.center_tolerance},
         "outputs": {"master": store.relative(args.output_master), "preview": store.relative(args.output_preview)},
         "rights": {"rightsHolder": args.rights_holder, "license": args.license, "provenance": args.provenance},
@@ -1108,14 +1114,14 @@ def geometry_checks(store: Store, contract: dict[str, Any], attempt: dict[str, A
         if core:
             width = mask.width
             core_points = {i for i, value in enumerate(pixels) if value == MASK_COLORS["core"]}
-            for label in ("near_hand", "far_hand"):
-                hand_points = {i for i, value in enumerate(pixels) if value == MASK_COLORS[label]}
+            for label in ("near_hand", "far_hand", "near_foot", "far_foot"):
+                part_points = {i for i, value in enumerate(pixels) if value == MASK_COLORS[label]}
                 contacts = 0
-                for index in hand_points:
+                for index in part_points:
                     x, y = index % width, index // width
                     if any((ny * width + nx) in core_points for nx, ny in ((x-1,y),(x+1,y),(x,y-1),(x,y+1)) if 0 <= nx < width and 0 <= ny < mask.height):
                         contacts += 1
-                if hand_points and contacts < 3:
+                if part_points and contacts < 3:
                     issues.append(f"{label}_contact_lt_3")
     if contract["kind"] in {"ground_character", "action_pose"}:
         foot_bottoms = [boxes[label][3] for label in ("near_foot", "far_foot") if boxes[label]]
@@ -1287,8 +1293,10 @@ def validate_attempt(store: Store, args: argparse.Namespace) -> dict[str, Any]:
         if contract.get("maskRequired") and not mask_artifact:
             geometry_issues.append("component_mask_missing")
         elif mask_artifact:
-            mask_image = Image.open(store.absolute(mask_artifact["path"], must_exist=True)).convert("RGBA")
-            if mask_image.size != Image.open(prepared).size:
+            with Image.open(store.absolute(mask_artifact["path"], must_exist=True)) as mask_source, Image.open(prepared) as prepared_source:
+                mask_image = mask_source.convert("RGBA")
+                prepared_size = prepared_source.size
+            if mask_image.size != prepared_size:
                 geometry_issues.append("component_mask_size_mismatch")
             if not any(pixel[3] for pixel in pixel_data(mask_image)):
                 geometry_issues.append("component_mask_empty")
@@ -1394,11 +1402,18 @@ def render_review(store: Store, args: argparse.Namespace) -> dict[str, Any]:
             raise PipelineError("assembled sprite review requires assembly binding")
         assembly = load_json(store.record("assemblies", assembly_id))
         layers = assembly["layers"]
-        layer_review = Image.new("RGBA", (256 * len(layers), 256), (36, 36, 42, 255))
+        layer_review = Image.new("RGBA", (256 * len(layers), 512), (36, 36, 42, 255))
+        cumulative = Image.new("RGBA", (256, 256), (0, 0, 0, 0))
+        layer_draw = ImageDraw.Draw(layer_review)
         for index, layer in enumerate(layers):
             component = Image.open(store.absolute(layer["artifact"]["path"], must_exist=True)).convert("RGBA")
-            component = apply_assembly_transform(component, layer["transform"])
-            layer_review.alpha_composite(component, (index * 256 + layer["transform"]["translate"][0], layer["transform"]["translate"][1]))
+            rendered_component = apply_assembly_transform(component, layer["transform"])
+            offset = tuple(layer["transform"]["translate"])
+            layer_review.alpha_composite(rendered_component, (index * 256 + offset[0], offset[1]))
+            cumulative.alpha_composite(rendered_component, offset)
+            layer_review.alpha_composite(cumulative, (index * 256, 256))
+            layer_draw.text((index * 256 + 6, 6), f"layer: {layer['role']}", fill=(235, 235, 240, 255))
+            layer_draw.text((index * 256 + 6, 262), f"cumulative: {index + 1}/{len(layers)}", fill=(235, 235, 240, 255))
         review_images.append(("assemblyLayerReview", layer_review))
     outputs = {}
     for name, image in review_images:
@@ -1443,7 +1458,7 @@ def decide(store: Store, args: argparse.Namespace, decision: str) -> dict[str, A
     if contract.get("schemaVersion") in {2, 3} and args.reviewer != "cty41":
         raise PipelineError("schema v2/v3 formal approval must be issued by cty41")
     annotation = None
-    if contract.get("compositionSpec"):
+    if contract.get("compositionSpec") and attempt.get("sourceMode") != "reviewed_import":
         annotation_id = attempt.get("annotationId")
         if not annotation_id:
             raise PipelineError("high-risk schema v2 approval requires annotations")
@@ -1718,7 +1733,15 @@ def update_provenance(store: Store, paths: list[dict[str, str]], contract: dict[
         entry = {"path": artifact["path"], "sha256": artifact["sha256"], "status": "approved", **contract["rights"]}
         existing = by_path.get(artifact["path"])
         if existing and existing != entry:
-            raise PipelineError(f"conflicting provenance entry: {artifact['path']}")
+            supporting_upgrade = (
+                existing.get("sha256") == entry["sha256"]
+                and existing.get("status") == "approved"
+                and existing.get("provenance") == "project-owned-supporting-derived"
+            )
+            if not supporting_upgrade:
+                raise PipelineError(f"conflicting provenance entry: {artifact['path']}")
+            existing.clear()
+            existing.update(entry)
         if not existing:
             manifest["entries"].append(entry)
             by_path[artifact["path"]] = entry
@@ -1826,8 +1849,8 @@ def render_pose_guide(store: Store, args: argparse.Namespace) -> dict[str, Any]:
 def compile_prompt(store: Store, args: argparse.Namespace) -> dict[str, Any]:
     job = load_json(store.record("jobs", args.job_id))
     contract = load_json(store.record("contracts", job["contractId"]))
-    if contract.get("schemaVersion") != 2:
-        raise PipelineError("compile-prompt requires schema v2 contract")
+    if contract.get("schemaVersion") not in {2, 3}:
+        raise PipelineError("compile-prompt requires schema v2 or v3 contract")
     composition_ref = contract.get("compositionSpec")
     if not composition_ref:
         raise PipelineError("schema v2 high-risk prompt requires composition spec")
@@ -1841,11 +1864,17 @@ def compile_prompt(store: Store, args: argparse.Namespace) -> dict[str, Any]:
         if feedback_id:
             feedback = load_json(store.record("feedback", feedback_id))
             unresolved.extend(feedback.get("pendingFixes", feedback.get("defects", [])))
-    invariants = [
-        "equal-width rigid capsule body", "exactly four paws directly attached to the body",
-        "no arms and no legs between paws and body",
-        "gray-white forehead blaze and heterochromic ear", "half-body alternate coat color",
-    ]
+    if contract.get("componentKind") == "death_expression_overlay":
+        invariants = [
+            "transparent expression overlay only", "exactly two compact crossed-eye marks",
+            "no face, coat, ears, mouth, collar, paws, equipment, effects, text, or watermark",
+        ]
+    else:
+        invariants = [
+            "equal-width rigid capsule body", "exactly four paws directly attached to the body",
+            "no arms and no legs between paws and body",
+            "gray-white forehead blaze and heterochromic ear", "half-body alternate coat color",
+        ]
     if composition["spec"]["equipmentState"].get("scabbard") == "absent":
         invariants.append("no scabbard anywhere")
     sections = [
@@ -1948,6 +1977,128 @@ def register_supporting_artifact(store: Store, args: argparse.Namespace) -> dict
     return record
 
 
+def _bound_artifact(store: Store, path: str) -> dict[str, str]:
+    rel = store.relative(path, must_exist=True)
+    return {"path": rel, "sha256": sha256_file(store.absolute(rel))}
+
+
+def _visible_bbox(image: Image.Image) -> tuple[int, int, int, int] | None:
+    return image.getchannel("A").getbbox()
+
+
+def _sprite_import_geometry(image: Image.Image, expected_size: tuple[int, int], label: str) -> dict[str, Any]:
+    if image.mode != "RGBA" or image.size != expected_size:
+        raise PipelineError(f"{label} must be {expected_size[0]}x{expected_size[1]} RGBA")
+    corners = [image.getpixel(point)[3] for point in ((0, 0), (image.width - 1, 0), (0, image.height - 1), (image.width - 1, image.height - 1))]
+    if any(corners):
+        raise PipelineError(f"{label} corners must be transparent")
+    if any(pixel[3] and pixel[:3] in {(0, 255, 0), (255, 0, 255)} for pixel in pixel_data(image)):
+        raise PipelineError(f"{label} contains exact chroma residue")
+    bbox = _visible_bbox(image)
+    if not bbox:
+        raise PipelineError(f"{label} is empty")
+    center = [(bbox[0] + bbox[2] - 1) / 2, (bbox[1] + bbox[3] - 1) / 2]
+    expected_center = [(image.width - 1) / 2, (image.height - 1) / 2]
+    if any(abs(center[index] - expected_center[index]) > 0.5 for index in range(2)):
+        raise PipelineError(f"{label} visible AABB must be centered")
+    return {"bbox": list(bbox), "bboxSize": [bbox[2] - bbox[0], bbox[3] - bbox[1]], "center": center}
+
+
+def render_size_comparison(store: Store, args: argparse.Namespace) -> dict[str, Any]:
+    inputs = [("Identity", args.identity), ("Previous", args.previous), ("Pose reference", args.reference), ("Candidate", args.candidate)]
+    bound = []
+    panels = []
+    measurements = []
+    for label, value in inputs:
+        artifact = _bound_artifact(store, value)
+        image = Image.open(store.absolute(artifact["path"])).convert("RGBA")
+        preview = make_preview(image) if image.size == (256, 256) else image.resize((128, 128), Image.Resampling.MITCHELL)
+        panel = Image.new("RGBA", (144, 176), (32, 32, 32, 255))
+        panel.alpha_composite(preview, (8, 8))
+        ImageDraw.Draw(panel).text((8, 144), label, fill=(255, 255, 255, 255))
+        panels.append(panel)
+        bbox = _visible_bbox(preview)
+        measurements.append({"label": label, "bbox": list(bbox) if bbox else None,
+                             "bboxSize": [bbox[2] - bbox[0], bbox[3] - bbox[1]] if bbox else None})
+        bound.append({"label": label, "artifact": artifact})
+    review = Image.new("RGBA", (144 * len(panels), 176), (32, 32, 32, 255))
+    for index, panel in enumerate(panels):
+        review.alpha_composite(panel, (144 * index, 0))
+    output_rel = store.relative(args.output)
+    output = store.absolute(output_rel); output.parent.mkdir(parents=True, exist_ok=True)
+    review.save(output, format="PNG", optimize=False, compress_level=9)
+    artifact = {"path": output_rel, "sha256": sha256_file(output)}
+    payload = {"inputs": bound, "measurements": measurements, "artifact": artifact}
+    comparison_id = stable_id("size-comparison", payload)
+    record = {"schemaVersion": 1, "sizeComparisonId": comparison_id, **payload}
+    write_json_idempotent(store.record("size-comparisons", comparison_id), record, immutable=True)
+    register_public_artifacts(store, [artifact], "project-owned-artwork-review")
+    return record
+
+
+def adopt_reviewed_sprite(store: Store, args: argparse.Namespace) -> dict[str, Any]:
+    contract_path = store.record("contracts", args.contract_id)
+    contract = load_json(contract_path)
+    if contract.get("assetRole") == "component" or contract.get("runtimeEligible") is False:
+        raise PipelineError("reviewed imports must be complete Sprite assets")
+    if args.reviewer != "cty41":
+        raise PipelineError("reviewed import reviewer must be cty41")
+    try:
+        accepted_at = datetime.fromisoformat(args.accepted_at)
+    except ValueError as exc:
+        raise PipelineError("--accepted-at must be an ISO-8601 timestamp") from exc
+    if accepted_at.tzinfo is None:
+        raise PipelineError("--accepted-at must include a timezone offset")
+    source = _bound_artifact(store, args.source)
+    candidate = _bound_artifact(store, args.candidate)
+    preview = _bound_artifact(store, args.preview)
+    comparison = _bound_artifact(store, args.size_comparison)
+    comparison_records = [
+        load_json(path) for path in (store.pipeline / "size-comparisons").glob("*.json")
+        if load_json(path).get("artifact") == comparison
+    ]
+    if len(comparison_records) != 1:
+        raise PipelineError("reviewed import requires one matching immutable size-comparison record")
+    comparison_candidate = next(
+        (item.get("artifact") for item in comparison_records[0].get("inputs", []) if item.get("label") == "Candidate"), None)
+    if comparison_candidate != candidate:
+        raise PipelineError("size comparison Candidate does not match the reviewed import candidate")
+    with Image.open(store.absolute(candidate["path"])) as candidate_source:
+        candidate_geometry = _sprite_import_geometry(candidate_source.copy(), (256, 256), "candidate")
+    with Image.open(store.absolute(preview["path"])) as preview_source:
+        preview_geometry = _sprite_import_geometry(preview_source.copy(), (128, 128), "preview")
+    payload = {"contractId": args.contract_id, "source": source, "candidate": candidate, "preview": preview,
+               "sizeComparison": comparison, "reviewer": args.reviewer, "reason": args.reason,
+               "acceptedAt": args.accepted_at, "sourceMode": "reviewed_import"}
+    adoption_id = stable_id("reviewed-import", payload)
+    adoption = {"schemaVersion": 2, "reviewedImportId": adoption_id, **payload}
+    write_json_idempotent(store.record("reviewed-imports", adoption_id), adoption, immutable=True)
+    job_payload = {"contractId": args.contract_id, "reviewedImportId": adoption_id, "sourceMode": "reviewed_import"}
+    job_id = stable_id("job", job_payload)
+    job = {"schemaVersion": 2, "jobId": job_id, "state": "ready", "contractId": args.contract_id,
+           "contractSha256": sha256_file(contract_path), "prompt": None,
+           "inputs": [source, candidate, preview, comparison], "target": {"direction": contract["direction"], "pose": contract["pose"]},
+           "series": None, "conceptOnly": False, "contractRequirements": None,
+           "requiresInvocation": False, "sourceMode": "reviewed_import", "reviewedImportId": adoption_id}
+    write_json_idempotent(store.record("jobs", job_id), job, immutable=True)
+    report_payload = {"passed": True, "issues": [], "candidateGeometry": candidate_geometry,
+                      "previewGeometry": preview_geometry, "reviewedImportId": adoption_id}
+    report_id = stable_id("report", report_payload)
+    report_path = store.record("reports", report_id)
+    write_json_idempotent(report_path, {"schemaVersion": 2, "reportId": report_id, **report_payload}, immutable=True)
+    attempt_id = f"{job_id}-a001"
+    attempt = {"schemaVersion": 2, "attemptId": attempt_id, "jobId": job_id, "ordinal": 1,
+               "parentAttemptId": None, "retryFeedbackId": None, "promptDelta": None,
+               "technicalRemediation": False, "state": "review_pending", "sourceMode": "reviewed_import",
+               "reviewedImportId": adoption_id,
+               "artifacts": {"source": source, "prepared": candidate, "importedPreview": preview,
+                             "review": {"sizeComparison": comparison}},
+               "report": {"path": store.relative(report_path), "sha256": sha256_file(report_path)},
+               "approvalId": None, "feedbackId": None}
+    write_json_idempotent(store.record("attempts", attempt_id), attempt)
+    return {"schemaVersion": 2, "adoption": adoption, "job": job, "attempt": attempt}
+
+
 def _component_contract(store: Store, contract_id_value: str, kind: str | None = None) -> dict[str, Any]:
     contract = load_json(store.record("contracts", contract_id_value))
     if contract.get("schemaVersion") != 3 or contract.get("assetRole") != "component":
@@ -2012,17 +2163,23 @@ def derive_component(store: Store, args: argparse.Namespace) -> dict[str, Any]:
     label_kind = {
         "near_hand": "paw_overlay", "far_hand": "paw_overlay",
         "near_foot": "foot_overlay", "far_foot": "foot_overlay",
+        "body": "body", "equipment": "equipment",
     }
     if args.label not in label_kind:
-        raise PipelineError("derived overlays may only use hand or foot semantic labels")
+        raise PipelineError("unsupported derived component semantic label")
     contract = _component_contract(store, args.contract_id, label_kind[args.label])
     if contract.get("sourceMode") != "derived":
         raise PipelineError("derive-component requires sourceMode derived")
     source_attempt = load_json(store.record("attempts", args.source_attempt_id))
     if source_attempt.get("state") not in {"approved", "promoted"}:
-        raise PipelineError("derived components require an approved source component")
+        raise PipelineError("derived components require an approved source pose")
     source_job = load_json(store.record("jobs", source_attempt["jobId"]))
-    source_contract = _component_contract(store, source_job["contractId"], "body")
+    source_contract = load_json(store.record("contracts", source_job["contractId"]))
+    if source_contract.get("assetRole") == "component":
+        if source_contract.get("componentKind") != "body":
+            raise PipelineError("derived overlays require a body component or complete pose source")
+    elif source_contract.get("kind") not in {"ground_character", "action_pose"}:
+        raise PipelineError("derived overlays require a body component or complete pose source")
     source_artifact = candidate_artifact(source_attempt)
     mask_artifact = candidate_mask_artifact(source_attempt)
     if not mask_artifact:
@@ -2031,12 +2188,13 @@ def derive_component(store: Store, args: argparse.Namespace) -> dict[str, Any]:
     mask = Image.open(store.absolute(mask_artifact["path"], must_exist=True)).convert("RGBA")
     if image.size != mask.size:
         raise PipelineError("source component and semantic mask sizes differ")
-    color = MASK_COLORS[args.label]
+    selected_labels = {"core", "head_appendage"} if args.label == "body" else {args.label}
+    selected_colors = {MASK_COLORS[label] for label in selected_labels}
     derived = Image.new("RGBA", image.size, (0, 0, 0, 0))
-    derived.putdata([pixel if mask_pixel == color else (0, 0, 0, 0)
+    derived.putdata([pixel if mask_pixel in selected_colors else (0, 0, 0, 0)
                      for pixel, mask_pixel in zip(pixel_data(image), pixel_data(mask))])
     derived_mask = Image.new("RGBA", mask.size, (0, 0, 0, 0))
-    derived_mask.putdata([mask_pixel if mask_pixel == color else (0, 0, 0, 0)
+    derived_mask.putdata([mask_pixel if mask_pixel in selected_colors else (0, 0, 0, 0)
                           for mask_pixel in pixel_data(mask)])
     payload = {
         "contractId": args.contract_id, "sourceAttemptId": args.source_attempt_id,
@@ -2114,6 +2272,185 @@ def apply_assembly_mask_transform(image: Image.Image, transform: dict[str, Any])
     return normalize_transparent_rgb(result.convert("RGBA"))
 
 
+def _mask_geometry(mask: Image.Image, color: tuple[int, int, int, int]) -> dict[str, float]:
+    points = [(index % mask.width, index // mask.width)
+              for index, pixel in enumerate(pixel_data(mask)) if pixel == color]
+    if len(points) < 4:
+        raise PipelineError("death geometry mask requires at least four core pixels")
+    cx = sum(point[0] for point in points) / len(points)
+    cy = sum(point[1] for point in points) / len(points)
+    xx = sum((x - cx) ** 2 for x, _y in points) / len(points)
+    yy = sum((y - cy) ** 2 for _x, y in points) / len(points)
+    xy = sum((x - cx) * (y - cy) for x, y in points) / len(points)
+    angle = 0.5 * math.atan2(2 * xy, xx - yy)
+    ux, uy = math.cos(angle), math.sin(angle)
+    vx, vy = -uy, ux
+    major_values = [(x - cx) * ux + (y - cy) * uy for x, y in points]
+    minor_values = [(x - cx) * vx + (y - cy) * vy for x, y in points]
+    major = max(major_values) - min(major_values) + 1
+    minor = max(minor_values) - min(minor_values) + 1
+    if major < minor:
+        major, minor = minor, major
+        angle += math.pi / 2
+    while angle >= math.pi / 2:
+        angle -= math.pi
+    while angle < -math.pi / 2:
+        angle += math.pi
+    return {"centerX": cx, "centerY": cy, "angleRadians": angle,
+            "angleDegrees": math.degrees(angle), "major": major, "minor": minor,
+            "ratio": major / minor}
+
+
+def _affine_inverse_coefficients(matrix: tuple[float, float, float, float],
+                                 source_center: tuple[float, float],
+                                 target_center: tuple[float, float]) -> tuple[float, ...]:
+    a, b, c, d = matrix
+    determinant = a * d - b * c
+    if abs(determinant) < 1e-8:
+        raise PipelineError("death geometry transform is singular")
+    ia, ib, ic, id_ = d / determinant, -b / determinant, -c / determinant, a / determinant
+    sx, sy = source_center; tx, ty = target_center
+    return ia, ib, sx - ia * tx - ib * ty, ic, id_, sy - ic * tx - id_ * ty
+
+
+def _semantic_layer(image: Image.Image, mask: Image.Image, labels: set[str]) -> Image.Image:
+    colors = {MASK_COLORS[label] for label in labels}
+    result = Image.new("RGBA", image.size, (0, 0, 0, 0))
+    result.putdata([pixel if mask_pixel in colors else (0, 0, 0, 0)
+                    for pixel, mask_pixel in zip(pixel_data(image), pixel_data(mask))])
+    return result
+
+
+def _transform_semantic_layer(image: Image.Image, mask: Image.Image, labels: set[str],
+                              matrix: tuple[float, float, float, float],
+                              source_center: tuple[float, float], target_center: tuple[float, float]) -> tuple[Image.Image, Image.Image]:
+    coefficients = _affine_inverse_coefficients(matrix, source_center, target_center)
+    layer = _semantic_layer(image, mask, labels)
+    label_layer = Image.new("RGBA", mask.size, (0, 0, 0, 0))
+    allowed = {MASK_COLORS[label] for label in labels}
+    label_layer.putdata([value if value in allowed else (0, 0, 0, 0) for value in pixel_data(mask)])
+    transformed = layer.transform(image.size, Image.Transform.AFFINE, coefficients, Image.Resampling.BICUBIC)
+    transformed_mask = label_layer.transform(mask.size, Image.Transform.AFFINE, coefficients, Image.Resampling.NEAREST)
+    return normalize_transparent_rgb(transformed), normalize_transparent_rgb(transformed_mask)
+
+
+def render_death_recipe(store: Store, args: argparse.Namespace) -> dict[str, Any]:
+    spec_rel = store.relative(args.spec, must_exist=True)
+    spec = json.loads(store.absolute(spec_rel).read_text(encoding="utf-8"))
+    required = {"schemaVersion", "assetId", "sourceImage", "sourceMask", "referenceMask",
+                "output", "reviewOutput", "angleToleranceDegrees", "ratioTolerance"}
+    optional = {"expressionOverlay", "eyeRegions", "axisPolicy"}
+    if not isinstance(spec, dict) or set(spec) - optional != required or spec["schemaVersion"] != 1:
+        raise PipelineError("death recipe requires schemaVersion 1 and the canonical geometry fields")
+    source_rel = store.relative(spec["sourceImage"], must_exist=True)
+    source_mask_rel = store.relative(spec["sourceMask"], must_exist=True)
+    reference_mask_rel = store.relative(spec["referenceMask"], must_exist=True)
+    source = Image.open(store.absolute(source_rel)).convert("RGBA")
+    source_mask = Image.open(store.absolute(source_mask_rel)).convert("RGBA")
+    reference_mask = Image.open(store.absolute(reference_mask_rel)).convert("RGBA")
+    if source.size != (256, 256) or source_mask.size != source.size or reference_mask.size != source.size:
+        raise PipelineError("death recipe inputs must be matching 256x256 images")
+    source_geometry = _mask_geometry(source_mask, MASK_COLORS["core"])
+    reference_geometry = _mask_geometry(reference_mask, MASK_COLORS["core"])
+    source_angle = source_geometry["angleRadians"]; target_angle = reference_geometry["angleRadians"]
+    target_ratio = reference_geometry["ratio"]
+    if spec.get("axisPolicy", "legacy-major-only") == "legacy-major-only":
+        major_scale = min(1.0, target_ratio / source_geometry["ratio"])
+        minor_scale = 1.0
+    elif target_ratio >= source_geometry["ratio"]:
+        major_scale = 1.0
+        minor_scale = source_geometry["ratio"] / target_ratio
+    elif spec.get("axisPolicy") == "toward-reference-no-expand":
+        major_scale = target_ratio / source_geometry["ratio"]
+        minor_scale = 1.0
+    else:
+        raise PipelineError("death recipe axisPolicy must be toward-reference-no-expand")
+    cos_s, sin_s = math.cos(source_angle), math.sin(source_angle)
+    cos_t, sin_t = math.cos(target_angle), math.sin(target_angle)
+    # R(target) * diag(major_scale, minor_scale) * R(-source).  Only the
+    # axis that moves the ratio toward the approved reference may shrink;
+    # death shaping never expands either local axis.
+    matrix = (
+        cos_t * major_scale * cos_s + sin_t * minor_scale * sin_s,
+        cos_t * major_scale * sin_s - sin_t * minor_scale * cos_s,
+        sin_t * major_scale * cos_s - cos_t * minor_scale * sin_s,
+        sin_t * major_scale * sin_s + cos_t * minor_scale * cos_s,
+    )
+    source_center = (source_geometry["centerX"], source_geometry["centerY"])
+    target_center = source_center
+    core_image, core_mask = _transform_semantic_layer(source, source_mask, {"core"}, matrix, source_center, target_center)
+    delta = target_angle - source_angle; rotation = (math.cos(delta), -math.sin(delta), math.sin(delta), math.cos(delta))
+    attachments_image, attachments_mask = _transform_semantic_layer(
+        source, source_mask, {"head_appendage", "near_hand", "far_hand", "near_foot", "far_foot"},
+        rotation, source_center, target_center)
+    equipment_image = _semantic_layer(source, source_mask, {"equipment"})
+    equipment_mask = Image.new("RGBA", source.size, (0, 0, 0, 0))
+    equipment_mask.putdata([value if value == MASK_COLORS["equipment"] else (0, 0, 0, 0)
+                            for value in pixel_data(source_mask)])
+    canvas = Image.new("RGBA", source.size, (0, 0, 0, 0)); mask_canvas = canvas.copy()
+    for layer in (core_image, attachments_image, equipment_image): canvas.alpha_composite(layer)
+    for layer in (core_mask, attachments_mask, equipment_mask): mask_canvas.alpha_composite(layer)
+    expression_artifact = None
+    expression = None
+    if spec.get("expressionOverlay"):
+        expression_rel = store.relative(spec["expressionOverlay"], must_exist=True)
+        expression = Image.open(store.absolute(expression_rel)).convert("RGBA")
+        if expression.size != source.size:
+            raise PipelineError("death expression overlay must be 256x256")
+        regions = spec.get("eyeRegions") or []
+        if not regions or any(not isinstance(region, list) or len(region) != 4 for region in regions):
+            raise PipelineError("death expression overlay requires eyeRegions rectangles")
+        for index, pixel in enumerate(pixel_data(expression)):
+            if not pixel[3]: continue
+            x, y = index % expression.width, index // expression.width
+            if not any(x0 <= x <= x1 and y0 <= y <= y1 for x0, y0, x1, y1 in regions):
+                raise PipelineError("death expression overlay has opaque pixels outside eyeRegions")
+        expression_artifact = {"path": expression_rel, "sha256": sha256_file(store.absolute(expression_rel))}
+    alpha_box = canvas.getbbox()
+    if not alpha_box:
+        raise PipelineError("death recipe produced an empty image")
+    cx = (alpha_box[0] + alpha_box[2]) // 2; cy = (alpha_box[1] + alpha_box[3]) // 2
+    shift = (128 - cx, 128 - cy)
+    # Recompose without wrap-around; alpha_composite clips at the canvas edge.
+    composed = Image.alpha_composite(Image.alpha_composite(core_image, attachments_image), equipment_image)
+    canvas = Image.new("RGBA", source.size, (0, 0, 0, 0)); canvas.alpha_composite(composed, shift)
+    if expression is not None:
+        # Expression overlays are authored against the final centered face and
+        # therefore compose after geometry centering.
+        canvas.alpha_composite(expression)
+    mask_centered = Image.new("RGBA", source.size, (0, 0, 0, 0)); mask_centered.alpha_composite(mask_canvas, shift)
+    output_rel = store.relative(spec["output"]); review_rel = store.relative(spec["reviewOutput"])
+    output_path = store.absolute(output_rel); review_path = store.absolute(review_rel)
+    output_path.parent.mkdir(parents=True, exist_ok=True); review_path.parent.mkdir(parents=True, exist_ok=True)
+    canvas.save(output_path, format="PNG", optimize=False, compress_level=9)
+    result_geometry = _mask_geometry(mask_centered, MASK_COLORS["core"])
+    angle_error = abs(result_geometry["angleDegrees"] - reference_geometry["angleDegrees"])
+    ratio_error = abs(result_geometry["ratio"] - reference_geometry["ratio"]) / reference_geometry["ratio"]
+    report = {"angleErrorDegrees": angle_error, "ratioError": ratio_error,
+              "passed": angle_error <= spec["angleToleranceDegrees"] and ratio_error <= spec["ratioTolerance"]}
+    review = Image.new("RGBA", (768, 256), (0, 0, 0, 0))
+    reference_visual = Image.new("RGBA", (256, 256), (0, 0, 0, 0)); reference_visual.putalpha(reference_mask.getchannel("A"))
+    review.alpha_composite(source, (0, 0)); review.alpha_composite(reference_visual, (256, 0)); review.alpha_composite(canvas, (512, 0))
+    review.save(review_path, format="PNG", optimize=False, compress_level=9)
+    artifact = lambda rel: {"path": rel, "sha256": sha256_file(store.absolute(rel))}
+    payload = {"schemaVersion": 1, "assetId": spec["assetId"], "spec": artifact(spec_rel),
+               "source": artifact(source_rel), "sourceMask": artifact(source_mask_rel),
+               "referenceMask": artifact(reference_mask_rel), "expressionOverlay": expression_artifact,
+               "sourceGeometry": source_geometry, "referenceGeometry": reference_geometry,
+               "resultGeometry": result_geometry, "shift": list(shift), "report": report,
+               "artifacts": {"prepared": artifact(output_rel), "review": artifact(review_rel)}}
+    recipe_id = stable_id("death-recipe", payload)
+    payload["deathRecipeId"] = recipe_id
+    write_json_idempotent(store.record("death-recipes", recipe_id), payload, immutable=True)
+    register_supporting_artifact(store, argparse.Namespace(
+        path=output_rel, role="death-recipe-candidate",
+        note=f"Deterministic death recipe output {recipe_id}; candidate only, not human-approved or promoted."))
+    register_supporting_artifact(store, argparse.Namespace(
+        path=review_rel, role="death-recipe-review",
+        note=f"Deterministic source/reference/result review for {recipe_id}."))
+    return payload
+
+
 def _validated_assembly_spec(store: Store, spec_path: str) -> tuple[dict[str, Any], dict[str, Any]]:
     raw = json.loads(store.absolute(store.relative(spec_path, must_exist=True)).read_text(encoding="utf-8"))
     if not isinstance(raw, dict) or set(raw) != {"assetId", "contractId", "canvas", "layers"}:
@@ -2126,11 +2463,8 @@ def _validated_assembly_spec(store: Store, spec_path: str) -> tuple[dict[str, An
     if raw["canvas"] != [256, 256]:
         raise PipelineError("schema v3 sprite assemblies require a 256x256 canvas")
     roles = [layer.get("role") for layer in raw["layers"]]
-    valid_orders = {LEGACY_ASSEMBLY_LAYER_ORDER, ASSEMBLY_LAYER_ORDER}
-    if tuple(roles) not in valid_orders:
-        raise PipelineError(
-            "assembly requires either the legacy body/equipment/hand order or the complete "
-            "far foot, near foot, body, equipment, far paw, near paw order")
+    if len(roles) != len(ASSEMBLY_LAYER_ROLES) or set(roles) != ASSEMBLY_LAYER_ROLES:
+        raise PipelineError("assembly requires each of the six component roles exactly once")
     normalized_layers = []
     for layer in raw["layers"]:
         if set(layer) != {"role", "attemptId", "transform"} or layer["role"] not in ASSEMBLY_LAYER_ROLES:
@@ -2146,8 +2480,6 @@ def _validated_assembly_spec(store: Store, spec_path: str) -> tuple[dict[str, An
         if not isinstance(transform["flipHorizontal"], bool):
             raise PipelineError("assembly flipHorizontal must be boolean")
         attempt = load_json(store.record("attempts", layer["attemptId"]))
-        if attempt.get("state") not in {"approved", "promoted"}:
-            raise PipelineError("assembly layers must reference approved components")
         job = load_json(store.record("jobs", attempt["jobId"]))
         component_contract = _component_contract(store, job["contractId"])
         if layer["role"].endswith("paw_overlay"):
@@ -2159,6 +2491,58 @@ def _validated_assembly_spec(store: Store, spec_path: str) -> tuple[dict[str, An
         if component_contract.get("componentKind") != expected_kind:
             raise PipelineError("assembly layer role does not match component kind")
         artifact = candidate_artifact(attempt)
+        mask_artifact = candidate_mask_artifact(attempt)
+        if not mask_artifact:
+            raise PipelineError("assembly components require semantic masks")
+        with Image.open(store.absolute(artifact["path"], must_exist=True)) as image_source, Image.open(
+                store.absolute(mask_artifact["path"], must_exist=True)) as mask_source:
+            component_image = image_source.convert("RGBA")
+            component_mask = mask_source.convert("RGBA")
+        if component_image.size != component_mask.size:
+            raise PipelineError("assembly component and semantic mask sizes differ")
+        expected_labels = {
+            "far_foot_overlay": {"far_foot"},
+            "far_paw_overlay": {"far_hand"},
+            "body": {"core", "head_appendage"},
+            "equipment": {"equipment"},
+            "near_paw_overlay": {"near_hand"},
+            "near_foot_overlay": {"near_foot"},
+        }[layer["role"]]
+        allowed_colors = {MASK_COLORS[label] for label in expected_labels}
+        for subject_pixel, mask_pixel in zip(pixel_data(component_image), pixel_data(component_mask)):
+            if mask_pixel[3] and mask_pixel not in allowed_colors:
+                raise PipelineError(f"assembly layer {layer['role']} contains a foreign semantic label")
+            if subject_pixel[3] and mask_pixel not in allowed_colors:
+                raise PipelineError(f"assembly layer {layer['role']} contains unlabelled subject pixels")
+        source_mode = component_contract.get("sourceMode")
+        if source_mode == "generated":
+            if attempt.get("state") not in {"approved", "promoted"} or not attempt.get("approvalId"):
+                raise PipelineError("generated assembly components require human approval")
+            approval = load_json(store.record("approvals", attempt["approvalId"]))
+            if (approval.get("decision") != "approved" or approval.get("reviewer") != "cty41"
+                    or approval.get("attemptId") != attempt["attemptId"]
+                    or approval.get("candidateSha256") != artifact.get("sha256")
+                    or approval.get("maskSha256") != mask_artifact.get("sha256")):
+                raise PipelineError("generated component approval receipt mismatch")
+        elif source_mode in {"derived", "pre_v3_import"}:
+            report_artifact = attempt.get("report") or {}
+            report_path = store.absolute(report_artifact.get("path", ""), must_exist=True)
+            if sha256_file(report_path) != report_artifact.get("sha256") or not load_json(report_path).get("passed"):
+                raise PipelineError(f"{source_mode} assembly components require a passing validation report")
+            if attempt.get("state") not in {"review_pending", "approved", "promoted"}:
+                raise PipelineError(f"{source_mode} assembly component is not review-ready")
+            receipt_group = "component-derivations" if source_mode == "derived" else "component-migrations"
+            receipt_key = "componentDerivationId" if source_mode == "derived" else "componentMigrationId"
+            receipt_id = attempt.get(receipt_key)
+            if not receipt_id:
+                raise PipelineError(f"{source_mode} assembly component is missing its source receipt")
+            receipt = load_json(store.record(receipt_group, receipt_id))
+            receipt_artifact = receipt.get("artifact") if source_mode == "derived" else receipt.get("prepared")
+            if (receipt.get("contractId") != component_contract["contractId"]
+                    or not receipt_artifact or receipt_artifact.get("sha256") != artifact.get("sha256")):
+                raise PipelineError(f"{source_mode} component source receipt mismatch")
+        else:
+            raise PipelineError("assembly component has unsupported source mode")
         normalized_layers.append({**layer, "artifact": artifact, "componentContractId": component_contract["contractId"]})
     normalized = {"assetId": raw["assetId"], "contractId": raw["contractId"], "canvas": raw["canvas"], "layers": normalized_layers}
     return normalized, contract
@@ -2175,7 +2559,7 @@ def create_assembly(store: Store, args: argparse.Namespace) -> dict[str, Any]:
 def render_assembly(store: Store, args: argparse.Namespace) -> dict[str, Any]:
     assembly = load_json(store.record("assemblies", args.assembly_id))
     contract = load_json(store.record("contracts", assembly["contractId"]))
-    job_payload = {"assemblyId": args.assembly_id, "contractId": assembly["contractId"], "rendererVersion": 3}
+    job_payload = {"assemblyId": args.assembly_id, "contractId": assembly["contractId"], "rendererVersion": 4}
     job_id = stable_id("job", job_payload)
     attempt_id = f"{job_id}-a001"
     attempt_path = store.record("attempts", attempt_id)
@@ -2215,7 +2599,7 @@ def render_assembly(store: Store, args: argparse.Namespace) -> dict[str, Any]:
     mask_output_artifact = {"path": store.relative(mask_output), "sha256": sha256_file(mask_output)}
     receipt_payload = {
         "assemblyId": args.assembly_id,
-        "rendererVersion": 3,
+        "rendererVersion": 4,
         "assemblySha256": sha256_file(store.record("assemblies", args.assembly_id)),
         "output": artifact,
         "maskOutput": mask_output_artifact,
@@ -2308,20 +2692,26 @@ def promote(store: Store, args: argparse.Namespace) -> dict[str, Any]:
     if contract.get("assetRole") == "component" or contract.get("runtimeEligible") is False:
         raise PipelineError("approved components cannot be promoted as runtime sprites")
     master = copy_bound(store, candidate["path"], contract["outputs"]["master"])
-    master_image = Image.open(store.absolute(master["path"])).convert("RGBA")
     preview_path = store.absolute(contract["outputs"]["preview"])
     preview_path.parent.mkdir(parents=True, exist_ok=True)
-    preview = make_preview(master_image)
-    if preview_path.exists():
-        temp = preview_path.with_suffix(".candidate.png")
-        preview.save(temp, format="PNG", optimize=False, compress_level=9)
-        if sha256_file(temp) != sha256_file(preview_path):
-            temp.unlink()
-            raise PipelineError("promotion preview exists with different bytes")
-        temp.unlink()
+    if attempt.get("sourceMode") == "reviewed_import":
+        imported_preview = attempt.get("artifacts", {}).get("importedPreview")
+        if not imported_preview:
+            raise PipelineError("reviewed import is missing its approved preview")
+        preview_artifact = copy_bound(store, imported_preview["path"], contract["outputs"]["preview"])
     else:
-        preview.save(preview_path, format="PNG", optimize=False, compress_level=9)
-    preview_artifact = {"path": store.relative(preview_path), "sha256": sha256_file(preview_path)}
+        master_image = Image.open(store.absolute(master["path"])).convert("RGBA")
+        preview = make_preview(master_image)
+        if preview_path.exists():
+            temp = preview_path.with_suffix(".candidate.png")
+            preview.save(temp, format="PNG", optimize=False, compress_level=9)
+            if sha256_file(temp) != sha256_file(preview_path):
+                temp.unlink()
+                raise PipelineError("promotion preview exists with different bytes")
+            temp.unlink()
+        else:
+            preview.save(preview_path, format="PNG", optimize=False, compress_level=9)
+        preview_artifact = {"path": store.relative(preview_path), "sha256": sha256_file(preview_path)}
     update_provenance(store, [master, preview_artifact], contract)
     update_approved_cases(store, contract, master["path"])
     attempt["artifacts"]["promoted"] = {"master": master, "preview": preview_artifact}
@@ -2489,13 +2879,7 @@ def strict_check(store: Store, strict: bool) -> dict[str, Any]:
                     issues.append(f"attempt_approval_hash:{attempt.get('attemptId')}")
                 job = load_json(store.record("jobs", attempt["jobId"]))
                 contract = load_json(store.record("contracts", job["contractId"]))
-                required_reviews = {"overlay", "preview128", "tile64x32"}
-                if contract.get("occlusion"):
-                    required_reviews.add("depthReview")
-                if contract.get("identitySpec"):
-                    required_reviews.add("anchorTileCompare")
-                if contract.get("assetRole") == "assembled_sprite":
-                    required_reviews.add("assemblyLayerReview")
+                required_reviews = required_review_keys(attempt, contract)
                 if set(attempt.get("artifacts", {}).get("review", {})) != required_reviews:
                     issues.append(f"attempt_review_set:{attempt.get('attemptId')}")
                 receipt_reviews = receipt.get("reviewSha256")
@@ -2689,9 +3073,9 @@ def strict_check(store: Store, strict: bool) -> dict[str, Any]:
         if contract.get("schemaVersion") == 2:
             if approval.get("reviewer") != "cty41":
                 issues.append(f"approval_not_human:{approval.get('approvalId')}")
-            if contract.get("compositionSpec") and not approval.get("annotation"):
+            if contract.get("compositionSpec") and attempt.get("sourceMode") != "reviewed_import" and not approval.get("annotation"):
                 issues.append(f"approval_annotations_missing:{approval.get('approvalId')}")
-            elif contract.get("compositionSpec"):
+            elif contract.get("compositionSpec") and attempt.get("sourceMode") != "reviewed_import":
                 annotation = approval["annotation"]
                 annotation_path = store.record("annotations", annotation.get("annotationId", ""))
                 if not annotation_path.is_file() or sha256_file(annotation_path) != annotation.get("sha256"):
@@ -2797,6 +3181,15 @@ def build_parser() -> argparse.ArgumentParser:
     advisory.add_argument("--recorded-at", required=True)
     supporting = commands.add_parser("register-supporting-artifact"); supporting.add_argument("--path", required=True)
     supporting.add_argument("--role", default="supporting-derived"); supporting.add_argument("--note", required=True)
+    comparison_p = commands.add_parser("render-size-comparison")
+    comparison_p.add_argument("--identity", required=True); comparison_p.add_argument("--previous", required=True)
+    comparison_p.add_argument("--reference", required=True); comparison_p.add_argument("--candidate", required=True)
+    comparison_p.add_argument("--output", required=True)
+    adopt_p = commands.add_parser("adopt-reviewed-sprite")
+    adopt_p.add_argument("--contract-id", required=True); adopt_p.add_argument("--source", required=True)
+    adopt_p.add_argument("--candidate", required=True); adopt_p.add_argument("--preview", required=True)
+    adopt_p.add_argument("--size-comparison", required=True); adopt_p.add_argument("--reviewer", required=True)
+    adopt_p.add_argument("--reason", required=True); adopt_p.add_argument("--accepted-at", required=True)
     migrate_component_p = commands.add_parser("migrate-component")
     migrate_component_p.add_argument("--contract-id", required=True); migrate_component_p.add_argument("--source", required=True)
     migrate_component_p.add_argument("--prepared", required=True); migrate_component_p.add_argument("--processing", required=True)
@@ -2804,7 +3197,11 @@ def build_parser() -> argparse.ArgumentParser:
     migrate_component_p.add_argument("--accepted-at", required=True)
     derive_component_p = commands.add_parser("derive-component")
     derive_component_p.add_argument("--contract-id", required=True); derive_component_p.add_argument("--source-attempt-id", required=True)
-    derive_component_p.add_argument("--label", choices=("near_hand", "far_hand", "near_foot", "far_foot"), required=True)
+    derive_component_p.add_argument(
+        "--label",
+        choices=("near_hand", "far_hand", "near_foot", "far_foot", "body", "equipment"),
+        required=True,
+    )
     assembly_p = commands.add_parser("create-assembly"); assembly_p.add_argument("--spec", required=True)
     render_assembly_p = commands.add_parser("render-assembly"); render_assembly_p.add_argument("--assembly-id", required=True)
     check_p = commands.add_parser("check"); check_p.add_argument("--strict", action="store_true")
@@ -2832,6 +3229,8 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
         "record-generation-failure": record_generation_failure,
         "attach-annotations": attach_annotations, "record-advisory-review": record_advisory_review,
         "register-supporting-artifact": register_supporting_artifact,
+        "render-size-comparison": render_size_comparison,
+        "adopt-reviewed-sprite": adopt_reviewed_sprite,
         "migrate-component": migrate_component, "derive-component": derive_component,
         "create-assembly": create_assembly, "render-assembly": render_assembly,
         "check": lambda s, a: strict_check(s, a.strict),

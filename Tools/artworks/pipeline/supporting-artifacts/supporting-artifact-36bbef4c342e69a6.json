@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 2,
+  "supportingArtifactId": "supporting-artifact-36bbef4c342e69a6",
+  "artifact": {
+    "path": "Tools/artworks/doge/candidates/doge_capsule_demonbound_hit_ul_wip_v01.png",
+    "sha256": "7375ba0acf658e697bdc54519e859d38d3f73d3776a104f6337675dfaaf058ef"
+  },
+  "role": "action-candidate-wip",
+  "note": "Hit UL v1 swordless candidate; visual lean review and chroma cleanup pending."
+}

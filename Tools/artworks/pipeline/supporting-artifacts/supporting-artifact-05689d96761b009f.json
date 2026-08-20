@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 2,
+  "supportingArtifactId": "supporting-artifact-05689d96761b009f",
+  "artifact": {
+    "path": "Tools/artworks/doge/concepts/doge_capsule_demonbound_cast_ul_near_paw_chroma_source_v01.png",
+    "sha256": "0192b21ac73c996d2619d70e66944e174a505d3f187b2cac0f44643ca3ce1dab"
+  },
+  "role": "component-chroma-source-wip",
+  "note": "ImageGen near paw chroma source; supporting evidence only."
+}

@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 2,
+  "supportingArtifactId": "supporting-artifact-b032d06b5cb07de3",
+  "artifact": {
+    "path": "Tools/artworks/doge/candidates/doge_capsule_demonbound_cast_ul_sword_component_v01.png",
+    "sha256": "1a8457dad5d5d470ffe73dc4ff54a93bf5e43ab658cde769671474562dc6427a"
+  },
+  "role": "component-candidate-wip",
+  "note": "Transparent sword candidate; not approved."
+}

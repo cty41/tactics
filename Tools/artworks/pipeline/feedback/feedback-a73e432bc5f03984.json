@@ -1,0 +1,28 @@
+{
+  "schemaVersion": 2,
+  "feedbackId": "feedback-a73e432bc5f03984",
+  "attemptId": "job-293b5e094110786d-a001",
+  "candidateSha256": "e4b16e27b55972ef3b30bcd6a4d63285f1a03bd037518437ea9cb259a7e33b94",
+  "reviewer": "codex",
+  "verdict": "retry",
+  "strengths": [
+    "Correct medium chibi hit lean, two tear streaks, Demonbound coat and red collar remain readable."
+  ],
+  "defects": [
+    "Sword identity and scale drift: generated weapon is a large jeweled fantasy sword rather than the approved compact Demonbound blade.",
+    "Candidate is not yet semantic-masked or contract-calibrated."
+  ],
+  "nextPromptDelta": "Freeze the approved Demonbound sword exactly or omit it from generation and reuse the approved sword component; keep the current body pose and expression.",
+  "recordedAt": "2026-08-20T11:36:53.3063682+08:00",
+  "authorType": "agent",
+  "categories": [
+    "equipment_state",
+    "identity"
+  ],
+  "disposition": "retry",
+  "frozenInvariants": [],
+  "pendingFixes": [
+    "Sword identity and scale drift: generated weapon is a large jeweled fantasy sword rather than the approved compact Demonbound blade.",
+    "Candidate is not yet semantic-masked or contract-calibrated."
+  ]
+}

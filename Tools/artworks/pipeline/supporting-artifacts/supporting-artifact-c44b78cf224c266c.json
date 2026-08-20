@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 2,
+  "supportingArtifactId": "supporting-artifact-c44b78cf224c266c",
+  "artifact": {
+    "path": "Tools/artworks/doge/reviews/doge_capsule_demonbound_death_identity_pose_review_v02.png",
+    "sha256": "06a91d5be90e5c0ad372849ea57895d3b2d50cac8d82e0573bf2902717cf2211"
+  },
+  "role": "comparison-review",
+  "note": "Left to right: Demonbound Idle identity, approved Hunter Death topology, Demonbound Death v1, improved Death v2."
+}
