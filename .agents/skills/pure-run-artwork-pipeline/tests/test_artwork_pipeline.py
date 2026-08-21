@@ -322,6 +322,63 @@ class ArtworkPipelineTests(unittest.TestCase):
         self.assertEqual(pipeline.sha256_file(review), receipt["reviewSha256"])
         self.assertTrue(pipeline.approved_mask_pair(
             self.store, receipt["candidateSha256"], receipt["maskSha256"]))
+        self.assertEqual(
+            {"path": receipt["maskPath"], "sha256": receipt["maskSha256"]},
+            pipeline.approved_anchor_mask(self.store, receipt["candidateSha256"]))
+        evidence = pipeline.core_size_exception_evidence(
+            self.store,
+            {"geometry": {"core": {"bbox": [100, 100, 149, 220]}}},
+            {
+                "anchor": {"path": receipt["candidatePath"], "sha256": receipt["candidateSha256"]},
+                "tolerances": {"sizePx": 3},
+            },
+        )
+        self.assertEqual([40, 121], evidence["anchorCoreSize"])
+        self.assertEqual([10, 0], evidence["delta"])
+
+    def test_anchor_core_bbox_accepts_approved_binary_mask(self):
+        mask = Image.new("RGBA", (32, 32), (0, 0, 0, 255))
+        ImageDraw.Draw(mask).ellipse((8, 6, 23, 25), fill=(255, 255, 255, 255))
+        self.assertEqual((8, 6, 23, 25), pipeline.anchor_core_bbox(mask))
+
+    def test_compile_prompt_uses_bat_invariants_for_tomb_maw_bat(self):
+        self.contract_and_job()
+        anchor = self.root / "Tools/artworks/approved/anchor.png"
+        spec_path = self.root / "Tools/artworks/specs/bat-action.json"
+        spec_path.parent.mkdir(parents=True)
+        spec_path.write_text(json.dumps({
+            "canvas": [256, 256],
+            "coreAxis": {"top": [128, 90], "bottom": [128, 180], "tiltDegrees": [-8, 8]},
+            "footCenter": [128, 236],
+            "weapon": {"hiddenGrip": [128, 145], "exitWindow": [100, 120, 156, 182], "tipRegion": [100, 130, 156, 190]},
+            "forbiddenRegions": [],
+            "equipmentState": {"scabbard": "absent", "staticEffects": "absent"},
+        }), encoding="utf-8")
+        composition = pipeline.create_composition(self.store, self.ns(
+            asset_id="tomb-maw-bat-melee", spec=str(spec_path), anchor=str(anchor)))
+        guide = pipeline.render_pose_guide(self.store, self.ns(
+            composition_id=composition["compositionId"], output="Tools/artworks/reviews/bat-guide.png"))
+        prompt = self.root / "Tools/artworks/prompts/bat.md"
+        prompt.parent.mkdir(parents=True, exist_ok=True); prompt.write_text("bite", encoding="utf-8")
+        contract = pipeline.create_contract(self.store, self.ns(
+            asset_id="tomb-maw-bat-melee", approved_asset_id="tomb-maw-bat", kind="action_pose",
+            direction="down-right", pose="melee", anchor=str(anchor), anchor_mask=None,
+            mask_required=False, no_arms=False, near_hand_side=None, far_hand_side=None,
+            size_tolerance=8, center_tolerance=2, layer_rule=[], visibility_cap=[],
+            composition_id=composition["compositionId"], identity_anchor_mask=None,
+            forehead_blaze_min_iou=0.45, pose_reference=True,
+            output_master="Tools/artworks/approved/bat-melee.png",
+            output_preview="Tools/artworks/approved/bat-melee_128.png", rights_holder="cty41",
+            license="project-owned", provenance="project-owned-gpt-generated",
+            asset_role=None, component_kind=None, source_mode=None))
+        job = pipeline.create_job(self.store, self.ns(
+            contract_id=contract["contractId"], prompt=str(prompt), input=[f"mother_anchor={anchor}"],
+            pose_guide_id=guide["poseGuideId"], series_id=None, pose_id=None))
+        compiled = pipeline.compile_prompt(self.store, self.ns(
+            job_id=job["jobId"], pose_guide_id=guide["poseGuideId"], output="Tools/artworks/reviews/bat-prompt.md"))
+        text = self.store.absolute(compiled["artifact"]["path"]).read_text(encoding="utf-8")
+        self.assertIn("near-round spherical flying core", text)
+        self.assertNotIn("exactly four paws", text)
 
     def test_end_to_end_is_idempotent_and_promotes(self):
         _, job, _ = self.contract_and_job()
@@ -349,6 +406,20 @@ class ArtworkPipelineTests(unittest.TestCase):
         cases = json.loads(cases_path.read_text(encoding="utf-8"))
         self.assertEqual([], cases["approved_assets"])  # a single direction is not a complete formal mother pair
 
+    def test_action_identity_alias_does_not_replace_idle_casebook_mother(self):
+        cases_path = self.root / ".agents/skills/pure-run-artwork-pipeline/examples/cases.json"
+        cases_path.parent.mkdir(parents=True)
+        cases_path.write_text(json.dumps({"version": 1, "approved_assets": [{
+            "id": "tomb-maw-bat", "down_right": "idle-dr.png", "up_left": "idle-ul.png"
+        }], "cases": []}), encoding="utf-8")
+        pipeline.update_approved_cases(self.store, {
+            "assetId": "tomb-maw-bat-melee-bite-dr-v01",
+            "approvedAssetId": "tomb-maw-bat",
+            "direction": "down-right",
+        }, "bite-dr.png")
+        cases = json.loads(cases_path.read_text(encoding="utf-8"))
+        self.assertEqual("idle-dr.png", cases["approved_assets"][0]["down_right"])
+
     def test_different_ingest_and_failed_promotion_are_rejected(self):
         _, job, _ = self.contract_and_job()
         attempt = pipeline.retry(self.store, self.ns(job_id=job["jobId"], parent_attempt=None))
@@ -357,6 +428,30 @@ class ArtworkPipelineTests(unittest.TestCase):
         second = self.png("incoming/second.png", pear=True)
         with self.assertRaises(pipeline.PipelineError):
             pipeline.ingest(self.store, self.ns(attempt_id=attempt["attemptId"], source=str(second)))
+
+    def test_technical_remediation_reuses_exact_parent_generation(self):
+        _, job, _ = self.contract_and_job()
+        job_record = pipeline.load_json(self.store.record("jobs", job["jobId"]))
+        job_record["requiresInvocation"] = True
+        pipeline.write_json_idempotent(self.store.record("jobs", job["jobId"]), job_record)
+        parent = pipeline.retry(self.store, self.ns(job_id=job["jobId"], parent_attempt=None))
+        invocation = {
+            "schemaVersion": 2, "invocationId": "generation-invocation-fixture",
+            "attemptId": parent["attemptId"], "state": "started",
+        }
+        pipeline.write_json_idempotent(
+            self.store.record("generation-invocations", invocation["invocationId"]), invocation, immutable=True)
+        raw = self.png("incoming/remediation.png")
+        pipeline.ingest(self.store, self.ns(
+            attempt_id=parent["attemptId"], source=str(raw), invocation_id=invocation["invocationId"]))
+        parent = pipeline.load_json(self.store.record("attempts", parent["attemptId"]))
+        child = pipeline.retry(self.store, self.ns(
+            job_id=job["jobId"], parent_attempt=parent["attemptId"], feedback_id=None,
+            technical_remediation=True))
+        remediated = pipeline.ingest(self.store, self.ns(
+            attempt_id=child["attemptId"], source=str(raw), invocation_id=None))
+        self.assertEqual(parent["generationInvocationId"], remediated["generationInvocationId"])
+        self.assertEqual(parent["generationDeliveryId"], remediated["generationDeliveryId"])
 
     def test_no_arms_contract_rejects_forbidden_limb_labels(self):
         image = self.png("Tools/artworks/candidates/hero.png")
@@ -685,6 +780,16 @@ class ArtworkPipelineTests(unittest.TestCase):
             prepared = prepared.convert("RGBA")
             self.assertEqual((0, 0, 0, 0), prepared.getpixel((0, 0)))
             self.assertEqual((90, 80, 70, 255), prepared.getpixel((2, 2)))
+
+    def test_resampled_chroma_cleanup_removes_both_reserved_key_colors(self):
+        image = Image.new("RGBA", (3, 1), (0, 0, 0, 0))
+        image.putdata([(0, 255, 0, 1), (255, 0, 255, 1), (120, 70, 140, 255)])
+
+        cleaned = pipeline.clean_resampled_chroma(image, "00ff00", 48)
+
+        self.assertEqual((0, 0, 0, 0), cleaned.getpixel((0, 0)))
+        self.assertEqual((0, 0, 0, 0), cleaned.getpixel((1, 0)))
+        self.assertEqual((120, 70, 140, 255), cleaned.getpixel((2, 0)))
 
     def test_behind_core_intrusion_is_rejected_and_outer_arcs_pass(self):
         _contract, job = self.occlusion_contract_and_job()

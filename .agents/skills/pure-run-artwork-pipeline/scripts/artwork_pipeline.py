@@ -186,6 +186,25 @@ def approved_mask_pair(store: Store, candidate_hash: str, mask_hash: str) -> boo
     return False
 
 
+def approved_anchor_mask(store: Store, candidate_hash: str) -> dict[str, str] | None:
+    matches: dict[str, dict[str, str]] = {}
+    for path in (store.pipeline / "approvals").glob("*.json"):
+        receipt = load_json(path)
+        mask_path = receipt.get("maskPath")
+        mask_hash = receipt.get("maskSha256")
+        if (receipt.get("decision") != "approved"
+                or receipt.get("candidateSha256") != candidate_hash
+                or not mask_path or not mask_hash):
+            continue
+        absolute = store.absolute(mask_path, must_exist=True)
+        if sha256_file(absolute) != mask_hash:
+            raise PipelineError("approved anchor mask hash mismatch")
+        matches[mask_hash] = {"path": mask_path, "sha256": mask_hash}
+    if len(matches) > 1:
+        raise PipelineError("anchor has multiple approved masks; bind one explicitly in a new contract")
+    return next(iter(matches.values()), None)
+
+
 def required_review_keys(attempt: dict[str, Any], contract: dict[str, Any]) -> set[str]:
     if attempt.get("sourceMode") == "reviewed_import":
         return {"sizeComparison"}
@@ -217,10 +236,18 @@ def approval_review_hashes(store: Store, attempt: dict[str, Any], contract: dict
 def core_size_exception_evidence(store: Store, report: dict[str, Any], contract: dict[str, Any]) -> dict[str, Any]:
     core_box = report.get("geometry", {}).get("core", {}).get("bbox")
     anchor = contract.get("anchor") or {}
-    if not core_box or not anchor.get("maskPath"):
+    anchor_mask_ref = None
+    if anchor.get("maskPath"):
+        anchor_mask_ref = {"path": anchor["maskPath"], "sha256": anchor.get("maskSha256")}
+    elif anchor.get("sha256"):
+        anchor_mask_ref = approved_anchor_mask(store, anchor["sha256"])
+    if not core_box or not anchor_mask_ref:
         raise PipelineError("core size exception requires candidate and anchor core geometry")
-    anchor_mask = Image.open(store.absolute(anchor["maskPath"], must_exist=True)).convert("RGBA")
-    anchor_box = bbox_for(pixel_data(anchor_mask), anchor_mask.size, MASK_COLORS["core"])
+    anchor_mask_path = store.absolute(anchor_mask_ref["path"], must_exist=True)
+    if anchor_mask_ref.get("sha256") and sha256_file(anchor_mask_path) != anchor_mask_ref["sha256"]:
+        raise PipelineError("approved anchor mask hash mismatch")
+    anchor_mask = Image.open(anchor_mask_path).convert("RGBA")
+    anchor_box = anchor_core_bbox(anchor_mask)
     if not anchor_box:
         raise PipelineError("core size exception requires an anchor core mask")
     candidate_size = [core_box[2] - core_box[0] + 1, core_box[3] - core_box[1] + 1]
@@ -687,12 +714,28 @@ def ingest(store: Store, args: argparse.Namespace) -> dict[str, Any]:
         raise PipelineError("ingest requires ready attempt")
     job = load_json(store.record("jobs", attempt["jobId"]))
     invocation_id = getattr(args, "invocation_id", None)
+    inherited_generation = None
     if job.get("requiresInvocation"):
-        if not invocation_id:
+        if attempt.get("technicalRemediation") and not invocation_id:
+            parent_id = attempt.get("parentAttemptId")
+            if not parent_id:
+                raise PipelineError("technical remediation requires a parent attempt")
+            parent = load_json(store.record("attempts", parent_id))
+            parent_raw = parent.get("artifacts", {}).get("raw")
+            if not parent_raw or parent_raw.get("sha256") != digest:
+                raise PipelineError("technical remediation must reuse the exact parent ImageGen output")
+            if not parent.get("generationInvocationId") or not parent.get("generationDeliveryId"):
+                raise PipelineError("technical remediation parent is missing generation provenance")
+            inherited_generation = {
+                "generationInvocationId": parent["generationInvocationId"],
+                "generationDeliveryId": parent["generationDeliveryId"],
+            }
+        elif not invocation_id:
             raise PipelineError("schema v2 ingest requires --invocation-id")
-        invocation = load_json(store.record("generation-invocations", invocation_id))
-        if invocation.get("attemptId") != attempt["attemptId"] or invocation.get("state") != "started":
-            raise PipelineError("generation invocation does not match ready attempt")
+        else:
+            invocation = load_json(store.record("generation-invocations", invocation_id))
+            if invocation.get("attemptId") != attempt["attemptId"] or invocation.get("state") != "started":
+                raise PipelineError("generation invocation does not match ready attempt")
     binding = job.get("series")
     if binding:
         series = load_json(store.record("series", binding["seriesId"]))
@@ -718,6 +761,8 @@ def ingest(store: Store, args: argparse.Namespace) -> dict[str, Any]:
         write_json_idempotent(store.record("generation-deliveries", delivery_id), delivery, immutable=True)
         attempt["generationInvocationId"] = invocation_id
         attempt["generationDeliveryId"] = delivery_id
+    elif inherited_generation:
+        attempt.update(inherited_generation)
     register_public_artifacts(store, [source_artifact, attempt["artifacts"]["raw"]], "project-owned-gpt-generated")
     transition(attempt, {"ready"}, "ingested")
     save_attempt(store, attempt)
@@ -758,7 +803,11 @@ def clean_resampled_chroma(image: Image.Image, chroma: str | None, tolerance: in
     cleaned = []
     for red, green, blue, alpha in pixel_data(image.convert("RGBA")):
         distance_squared = sum((channel - target) ** 2 for channel, target in zip((red, green, blue), key))
-        if distance_squared <= tolerance ** 2 or (green > 180 and green > red + 80 and green > blue + 80):
+        reserved_key_residue = (
+            (green > 180 and green > red + 80 and green > blue + 80)
+            or (red > 180 and blue > 180 and red > green + 80 and blue > green + 80)
+        )
+        if distance_squared <= tolerance ** 2 or reserved_key_residue:
             cleaned.append((0, 0, 0, 0))
         elif alpha == 0:
             cleaned.append((0, 0, 0, 0))
@@ -896,13 +945,15 @@ def calibrate_core(store: Store, args: argparse.Namespace) -> dict[str, Any]:
     job = load_json(store.record("jobs", attempt["jobId"]))
     contract = load_json(store.record("contracts", job["contractId"]))
     anchor = contract.get("anchor") or {}
-    if not anchor.get("maskPath"):
+    anchor_mask_artifact = ({"path": anchor["maskPath"], "sha256": anchor["maskSha256"]}
+                            if anchor.get("maskPath") else approved_anchor_mask(store, anchor.get("sha256", "")))
+    if not anchor_mask_artifact:
         raise PipelineError("calibrate-core requires an approved anchor mask")
     source_image = Image.open(store.absolute(attempt["artifacts"]["prepared"]["path"], must_exist=True)).convert("RGBA")
     source_mask = Image.open(store.absolute(attempt["artifacts"]["mask"]["path"], must_exist=True)).convert("RGBA")
-    anchor_mask = Image.open(store.absolute(anchor["maskPath"], must_exist=True)).convert("RGBA")
+    anchor_mask = Image.open(store.absolute(anchor_mask_artifact["path"], must_exist=True)).convert("RGBA")
     source_box = bbox_for(pixel_data(source_mask), source_mask.size, MASK_COLORS["core"])
-    anchor_box = bbox_for(pixel_data(anchor_mask), anchor_mask.size, MASK_COLORS["core"])
+    anchor_box = anchor_core_bbox(anchor_mask)
     if not source_box or not anchor_box:
         raise PipelineError("source and anchor masks must both contain a core region")
     source_height = source_box[3] - source_box[1] + 1
@@ -935,7 +986,8 @@ def calibrate_core(store: Store, args: argparse.Namespace) -> dict[str, Any]:
     attempt["artifacts"]["calibrated"] = {"path": store.relative(image_path), "sha256": sha256_file(image_path)}
     attempt["artifacts"]["calibratedMask"] = {"path": store.relative(mask_path), "sha256": sha256_file(mask_path)}
     attempt["calibration"] = {"method": "uniform-core-height", "scale": scale, "offset": list(offset),
-                              "sourceCoreBbox": list(source_box), "anchorCoreBbox": list(anchor_box)}
+                              "sourceCoreBbox": list(source_box), "anchorCoreBbox": list(anchor_box),
+                              "anchorMask": anchor_mask_artifact}
     register_public_artifacts(store, [attempt["artifacts"]["calibrated"], attempt["artifacts"]["calibratedMask"]],
                               "project-owned-deterministically-core-calibrated-artwork")
     transition(attempt, {"annotated"}, "calibrated")
@@ -950,6 +1002,20 @@ def bbox_for(pixels: list[tuple[int, int, int, int]], size: tuple[int, int], col
         return None
     xs, ys = zip(*points)
     return min(xs), min(ys), max(xs), max(ys)
+
+
+def anchor_core_bbox(image: Image.Image) -> tuple[int, int, int, int] | None:
+    """Read either a semantic red core mask or an approved legacy binary core mask."""
+    rgba = image.convert("RGBA")
+    pixels = pixel_data(rgba)
+    semantic = bbox_for(pixels, rgba.size, MASK_COLORS["core"])
+    if semantic:
+        return semantic
+    opaque_colors = {value for value in pixels if value[3]}
+    binary_colors = {(0, 0, 0, 255), (255, 255, 255, 255)}
+    if opaque_colors and opaque_colors <= binary_colors and (255, 255, 255, 255) in opaque_colors:
+        return bbox_for(pixels, rgba.size, (255, 255, 255, 255))
+    return None
 
 
 def inspect_technical(path: Path, kind: str, *, require_master_canvas: bool = True) -> tuple[dict[str, Any], list[str]]:
@@ -1102,7 +1168,10 @@ def geometry_checks(store: Store, contract: dict[str, Any], attempt: dict[str, A
     core = boxes["core"]
     if core is None:
         issues.append("core_missing")
-    if contract.get("anchor") and not contract["anchor"].get("maskPath"):
+    anchor = contract.get("anchor") or {}
+    anchor_mask_artifact = ({"path": anchor["maskPath"], "sha256": anchor["maskSha256"]}
+                            if anchor.get("maskPath") else approved_anchor_mask(store, anchor.get("sha256", "")))
+    if contract.get("anchor") and not anchor_mask_artifact:
         issues.append("anchor_mask_missing")
     if contract["noArms"]:
         for label in ("near_arm", "far_arm", "near_leg", "far_leg"):
@@ -1162,11 +1231,10 @@ def geometry_checks(store: Store, contract: dict[str, Any], attempt: dict[str, A
                 hand_center_x = (box[0] + box[2]) / 2
                 if (side == "left" and hand_center_x >= core_center_x) or (side == "right" and hand_center_x <= core_center_x):
                     issues.append(f"{label}_wrong_side")
-        anchor = contract.get("anchor")
-        if anchor and anchor.get("maskPath"):
-            anchor_mask = Image.open(store.absolute(anchor["maskPath"], must_exist=True)).convert("RGBA")
+        if anchor and anchor_mask_artifact:
+            anchor_mask = Image.open(store.absolute(anchor_mask_artifact["path"], must_exist=True)).convert("RGBA")
             anchor_pixels = pixel_data(anchor_mask)
-            anchor_box = bbox_for(anchor_pixels, anchor_mask.size, MASK_COLORS["core"])
+            anchor_box = anchor_core_bbox(anchor_mask)
             if anchor_box:
                 tol_size = contract["tolerances"]["sizePx"]
                 tol_center = contract["tolerances"]["centerPx"]
@@ -1864,10 +1932,21 @@ def compile_prompt(store: Store, args: argparse.Namespace) -> dict[str, Any]:
         if feedback_id:
             feedback = load_json(store.record("feedback", feedback_id))
             unresolved.extend(feedback.get("pendingFixes", feedback.get("defects", [])))
+    approved_asset_id = contract.get("approvedAssetId")
+    anchor_path = (contract.get("anchor") or {}).get("path", "")
+    is_tomb_maw_bat = approved_asset_id == "tomb-maw-bat" or "tomb_maw_bat" in anchor_path
     if contract.get("componentKind") == "death_expression_overlay":
         invariants = [
             "transparent expression overlay only", "exactly two compact crossed-eye marks",
             "no face, coat, ears, mouth, collar, paws, equipment, effects, text, or watermark",
+        ]
+    elif is_tomb_maw_bat:
+        invariants = [
+            "near-round spherical flying core locked to the approved bat anchor",
+            "exactly two pointed ears and exactly two membrane wings attached to the core",
+            "no paws, arms, legs, humanoid torso, or tail",
+            "dark plum body, red wing membranes, yellow eyes, and ivory fangs",
+            "preserve the approved hover height and virtual tile landing axis",
         ]
     else:
         invariants = [
@@ -2045,7 +2124,7 @@ def render_size_comparison(store: Store, args: argparse.Namespace) -> dict[str, 
     for label, value in inputs:
         artifact = _bound_artifact(store, value)
         image = Image.open(store.absolute(artifact["path"])).convert("RGBA")
-        preview = make_preview(image) if image.size == (256, 256) else image.resize((128, 128), Image.Resampling.MITCHELL)
+        preview = make_preview(image) if image.size == (256, 256) else image.resize((128, 128), Image.Resampling.LANCZOS)
         panel = Image.new("RGBA", (144, 176), (32, 32, 32, 255))
         panel.alpha_composite(preview, (8, 8))
         ImageDraw.Draw(panel).text((8, 144), label, fill=(255, 255, 255, 255))
@@ -2664,6 +2743,9 @@ def render_assembly(store: Store, args: argparse.Namespace) -> dict[str, Any]:
 def update_approved_cases(store: Store, contract: dict[str, Any], master_path: str) -> None:
     cases_path = store.root / ".agents/skills/pure-run-artwork-pipeline/examples/cases.json"
     if not cases_path.is_file():
+        return
+    # Identity aliases on action/death contracts must not replace Idle direction mothers.
+    if contract.get("approvedAssetId") and contract["approvedAssetId"] != contract["assetId"]:
         return
     cases = json.loads(cases_path.read_text(encoding="utf-8"))
     direction_key = contract["direction"].replace("-", "_")
