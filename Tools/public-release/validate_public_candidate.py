@@ -94,6 +94,22 @@ def _is_probably_text(path: Path) -> bool:
 def _artwork_states(root: Path) -> dict[str, str]:
     pipeline = root / "Tools/artworks/pipeline"
     states: dict[str, str] = {}
+
+    def record_artifacts(value: object, state: str, *, replace: bool = False) -> None:
+        if isinstance(value, dict):
+            path = value.get("path")
+            if isinstance(path, str):
+                normalized = path.replace("\\", "/")
+                if replace:
+                    states[normalized] = state
+                else:
+                    states.setdefault(normalized, state)
+            for child in value.values():
+                record_artifacts(child, state, replace=replace)
+        elif isinstance(value, list):
+            for child in value:
+                record_artifacts(child, state, replace=replace)
+
     legacy = pipeline / "legacy-assets.json"
     if legacy.is_file():
         for asset in _read_json(legacy).get("assets", []):
@@ -102,11 +118,15 @@ def _artwork_states(root: Path) -> dict[str, str]:
     if attempts.is_dir():
         for attempt_path in attempts.glob("*.json"):
             attempt = _read_json(attempt_path)
-            if attempt.get("state") != "promoted":
-                continue
-            for artifact in attempt.get("artifacts", {}).get("promoted", {}).values():
-                if isinstance(artifact, dict) and artifact.get("path"):
-                    states[artifact["path"].replace("\\", "/")] = "promoted"
+            attempt_state = attempt.get("state", "")
+            record_artifacts(attempt.get("artifacts", {}), f"attempt-{attempt_state}")
+            if attempt_state == "promoted":
+                record_artifacts(attempt.get("artifacts", {}).get("promoted", {}), "promoted", replace=True)
+    for directory, state in (("pose-guides", "pose-guide"), ("supporting-artifacts", "supporting-artifact")):
+        records = pipeline / directory
+        if records.is_dir():
+            for record_path in records.glob("*.json"):
+                record_artifacts(_read_json(record_path), state)
     return states
 
 
