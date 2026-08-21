@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 2,
+  "supportingArtifactId": "supporting-artifact-aeab7857d13d7692",
+  "artifact": {
+    "path": "Tools/artworks/doge/demonbound/death_crossed_eye_guide_v1.svg",
+    "sha256": "e534bad81fa9fdaebc1fae761cb59ed7f3fe5d1d79150b02c49caf8d1c870e20"
+  },
+  "role": "death-expression-guide-source",
+  "note": "Vector source for the registered Demonbound crossed-eye death expression guide; offline artwork support only."
+}

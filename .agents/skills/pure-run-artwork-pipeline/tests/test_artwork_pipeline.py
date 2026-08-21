@@ -63,6 +63,25 @@ class ArtworkPipelineTests(unittest.TestCase):
                 path=[str(asset)], from_license="project-owned", to_license="CC-BY-4.0",
                 reviewer="codex", reason="not authorized", decided_at="2026-08-21T22:00:00+08:00"))
 
+    def test_register_supporting_svg_records_public_provenance(self):
+        guide = self.root / "Tools/artworks/doge/demonbound/pose-guide.svg"
+        guide.parent.mkdir(parents=True)
+        guide.write_text('<svg xmlns="http://www.w3.org/2000/svg"/>', encoding="utf-8")
+
+        record = pipeline.register_supporting_artifact(self.store, self.ns(
+            path=str(guide), role="pose-guide-source", note="offline artwork support only"))
+
+        digest = pipeline.sha256_file(guide)
+        self.assertEqual({"path": "Tools/artworks/doge/demonbound/pose-guide.svg", "sha256": digest},
+                         record["artifact"])
+        self.assertTrue(self.store.record("supporting-artifacts", record["supportingArtifactId"]).is_file())
+        manifest = json.loads((self.root / "Tools/public-release/asset-provenance.json").read_text(encoding="utf-8"))
+        self.assertEqual({
+            "path": "Tools/artworks/doge/demonbound/pose-guide.svg", "sha256": digest,
+            "status": "approved", "rightsHolder": "cty41", "license": "CC-BY-4.0",
+            "provenance": "project-owned-supporting-derived",
+        }, manifest["entries"][0])
+
     def png(self, rel: str, pear: bool = False, variant: int = 0) -> Path:
         path = self.root / rel
         path.parent.mkdir(parents=True, exist_ok=True)

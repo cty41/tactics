@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 2,
+  "supportingArtifactId": "supporting-artifact-6eee97e681f08994",
+  "artifact": {
+    "path": "Tools/artworks/doge/demonbound/death_v2_semantic_mask.svg",
+    "sha256": "5105acb0b8a3c5c832cd1ccc70fd044dee3a3bc01f70c90feaebef6488506d16"
+  },
+  "role": "death-semantic-mask-source",
+  "note": "Vector source for the registered Demonbound death semantic mask used by deterministic death recipes; offline artwork support only."
+}

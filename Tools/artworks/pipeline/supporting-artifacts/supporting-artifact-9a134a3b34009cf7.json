@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 2,
+  "supportingArtifactId": "supporting-artifact-9a134a3b34009cf7",
+  "artifact": {
+    "path": "Tools/artworks/doge/demonbound/melee_up_left_pose_guide_v01.svg",
+    "sha256": "ca5cd0ca7b600e2af84f851d0dcf56affe94a2b1c0b8989f159f0b614691992d"
+  },
+  "role": "pose-guide-source",
+  "note": "Vector source for the registered Demonbound melee up-left pose guide referenced by artwork jobs; offline artwork support only."
+}

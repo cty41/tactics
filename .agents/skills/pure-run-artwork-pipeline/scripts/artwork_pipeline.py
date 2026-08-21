@@ -2091,7 +2091,7 @@ def register_supporting_artifact(store: Store, args: argparse.Namespace) -> dict
     record_id = stable_id("supporting-artifact", payload)
     record = {"schemaVersion": 2, "supportingArtifactId": record_id, **payload}
     write_json_idempotent(store.record("supporting-artifacts", record_id), record, immutable=True)
-    if Path(rel).suffix.lower() == ".png":
+    if Path(rel).suffix.lower() in {".png", ".svg"}:
         register_public_artifacts(store, [artifact], "project-owned-supporting-derived")
     return record
 

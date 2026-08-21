@@ -29,6 +29,7 @@ description: "Use when generating, editing, chroma-keying, calibrating, reviewin
 | 限定几何例外 | `approve-exception`；首版只允许 `core_size_out_of_tolerance`，并绑定完整证据哈希 |
 | 已人工确认成图的诚实收编 | `render-size-comparison` → `adopt-reviewed-sprite` → `approve` → `promote`；不得伪造 invocation |
 | 公开许可变更 | `relicense-public-artifact`；仅允许 `cty41` 将哈希匹配的 approved `project-owned` 成图显式发布为 `CC-BY-4.0`，并生成不可变 receipt |
+| 登记离线辅助图 | `register-supporting-artifact`；PNG/SVG 导引、蒙版和参考源按当前哈希登记为 `supporting-derived`，不得作为运行时 Sprite |
 | 状态机严格门禁 | `python scripts/artwork_pipeline.py --root <repo> check --strict` |
 | 运行时视觉 QA | 使用 Godot 后台测试、生产输入注入或已有截图；不控制真实 Editor 窗口 |
 
