@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 2,
+  "supportingArtifactId": "supporting-artifact-d8f559c04241728c",
+  "artifact": {
+    "path": "Tools/artworks/doge/demonbound/hunter_death_core_reference_mask.svg",
+    "sha256": "6e222ca08e0324ba738422289d65d2234cf26c7efabcad2c3c0f9ba478e95ebb"
+  },
+  "role": "death-reference-mask-source",
+  "note": "Vector source for the registered Hunter death core reference mask used by Demonbound death geometry review; offline artwork support only."
+}

@@ -10777,6 +10777,38 @@
       "rightsHolder": "cty41",
       "license": "CC-BY-4.0",
       "provenance": "project-owned-migrated-runtime-art"
+    },
+    {
+      "path": "Tools/artworks/doge/demonbound/death_crossed_eye_guide_v1.svg",
+      "sha256": "e534bad81fa9fdaebc1fae761cb59ed7f3fe5d1d79150b02c49caf8d1c870e20",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-supporting-derived"
+    },
+    {
+      "path": "Tools/artworks/doge/demonbound/death_v2_semantic_mask.svg",
+      "sha256": "5105acb0b8a3c5c832cd1ccc70fd044dee3a3bc01f70c90feaebef6488506d16",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-supporting-derived"
+    },
+    {
+      "path": "Tools/artworks/doge/demonbound/hunter_death_core_reference_mask.svg",
+      "sha256": "6e222ca08e0324ba738422289d65d2234cf26c7efabcad2c3c0f9ba478e95ebb",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-supporting-derived"
+    },
+    {
+      "path": "Tools/artworks/doge/demonbound/melee_up_left_pose_guide_v01.svg",
+      "sha256": "ca5cd0ca7b600e2af84f851d0dcf56affe94a2b1c0b8989f159f0b614691992d",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-supporting-derived"
     }
   ]
 }
