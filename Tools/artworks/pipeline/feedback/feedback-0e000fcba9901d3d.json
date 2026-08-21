@@ -1,0 +1,27 @@
+{
+  "schemaVersion": 2,
+  "feedbackId": "feedback-0e000fcba9901d3d",
+  "attemptId": "job-d8c37ffa3a568007-a003",
+  "candidateSha256": "dcb720038c8d0e8187f7579bc161c39049ae67080c6acd4f1dfdb689489c62f1",
+  "reviewer": "codex",
+  "verdict": "technical_failed",
+  "strengths": [
+    "User accepted the stronger flap direction for continued processing."
+  ],
+  "defects": [
+    "First semantic mask included pixels outside the subject and antialiased unknown colors; annotations were not yet bound."
+  ],
+  "nextPromptDelta": "",
+  "recordedAt": "2026-08-21T10:27:55.8036936+08:00",
+  "authorType": "agent",
+  "categories": [
+    "processing"
+  ],
+  "disposition": "technical_failed",
+  "frozenInvariants": [
+    "Preserve the exact v02 generated image and calibrated core geometry."
+  ],
+  "pendingFixes": [
+    "Rebuild a binary subject-clipped semantic mask, bind action annotations, and rerun deterministic calibration."
+  ]
+}

@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 2,
+  "feedbackId": "feedback-69af101ee49efb33",
+  "attemptId": "job-fcd2010d14e8bee6-a004",
+  "candidateSha256": "453831b1f5b678c2641707ee3600f5a5d427cdb9cfdf492c19b4c0dc94a6c746",
+  "reviewer": "codex",
+  "verdict": "technical_failed",
+  "strengths": [
+    "Hard-edged mask removed unknown colours and outside-subject pixels."
+  ],
+  "defects": [
+    "ImageMagick multiply preserved the full subject instead of intersecting the binary core ellipse, so wings were mislabeled as core."
+  ],
+  "nextPromptDelta": "No ImageGen change; use an explicit minimum operation for the binary subject/ellipse intersection.",
+  "recordedAt": "2026-08-21T03:35:55Z",
+  "authorType": "agent",
+  "categories": [],
+  "disposition": "technical_failed",
+  "frozenInvariants": [],
+  "pendingFixes": [
+    "Regenerate semantic mask with a verified ellipse-only core bbox."
+  ]
+}

@@ -1,0 +1,60 @@
+{
+  "schemaVersion": 2,
+  "compositionId": "composition-312e0d7276d37a37",
+  "assetId": "tomb-maw-bat-hit-ul-v01",
+  "spec": {
+    "canvas": [
+      256,
+      256
+    ],
+    "coreAxis": {
+      "top": [
+        139,
+        88
+      ],
+      "bottom": [
+        124,
+        178
+      ],
+      "tiltDegrees": [
+        6.0,
+        12.0
+      ]
+    },
+    "footCenter": [
+      128,
+      236
+    ],
+    "weapon": {
+      "hiddenGrip": [
+        128,
+        145
+      ],
+      "exitWindow": [
+        87,
+        103,
+        146,
+        151
+      ],
+      "tipRegion": [
+        80,
+        99,
+        149,
+        157
+      ]
+    },
+    "forbiddenRegions": [],
+    "equipmentState": {
+      "scabbard": "absent",
+      "staticEffects": "absent"
+    }
+  },
+  "source": {
+    "path": "Tools/artworks/pure_run/enemies/tomb_maw_bat_hit_ul_composition_v01.json",
+    "sha256": "0de1903c2b77ed081b60df0ef12eeff7ec8e57d6b8589f6f92c74674e65b1249"
+  },
+  "anchor": {
+    "path": "Tools/artworks/pure_run/enemies/approved/tomb_maw_bat_ranged_color_ul_v01.png",
+    "sha256": "d8c0037bd029f6f59049d846a4698e0fed63d1d139fb6fde0642cc944c12facb"
+  }
+}

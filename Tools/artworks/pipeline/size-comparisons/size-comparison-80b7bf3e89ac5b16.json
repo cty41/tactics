@@ -1,0 +1,92 @@
+{
+  "schemaVersion": 1,
+  "sizeComparisonId": "size-comparison-80b7bf3e89ac5b16",
+  "inputs": [
+    {
+      "label": "Identity",
+      "artifact": {
+        "path": "Tools/artworks/pure_run/enemies/approved/tomb_maw_bat_ranged_color_ul_v01_128.png",
+        "sha256": "afd88fafaca13d1cda6a2c0db40e08acd537492d595532cee48f2453d7b4dce2"
+      }
+    },
+    {
+      "label": "Previous",
+      "artifact": {
+        "path": "Tools/artworks/pure_run/enemies/approved/tomb_maw_bat_melee_bite_attack_dr_v01_128.png",
+        "sha256": "31b8bee56d1d3e161281f0abd626c12a02dd18041a02d4337b87e6a441807534"
+      }
+    },
+    {
+      "label": "Pose reference",
+      "artifact": {
+        "path": "Tools/artworks/doge/calibrated/doge_capsule_hunter_color_ul_v02_128.png",
+        "sha256": "ff3a412f1c7e03a04f61c82f61f0d2b03e991d438c0bfd90db631b5d7631629b"
+      }
+    },
+    {
+      "label": "Candidate",
+      "artifact": {
+        "path": "Tools/artworks/pipeline/reviews/job-b00e513c68225856-a006/preview128.png",
+        "sha256": "45887b017aaf04ca165cd973e64137d4c92e15514bccbcfbc692eac570a28346"
+      }
+    }
+  ],
+  "measurements": [
+    {
+      "label": "Identity",
+      "bbox": [
+        13,
+        48,
+        107,
+        106
+      ],
+      "bboxSize": [
+        94,
+        58
+      ]
+    },
+    {
+      "label": "Previous",
+      "bbox": [
+        3,
+        40,
+        86,
+        96
+      ],
+      "bboxSize": [
+        83,
+        56
+      ]
+    },
+    {
+      "label": "Pose reference",
+      "bbox": [
+        37,
+        57,
+        91,
+        119
+      ],
+      "bboxSize": [
+        54,
+        62
+      ]
+    },
+    {
+      "label": "Candidate",
+      "bbox": [
+        24,
+        42,
+        112,
+        102
+      ],
+      "bboxSize": [
+        88,
+        60
+      ]
+    }
+  ],
+  "artifact": {
+    "path": "Tools/artworks/pure_run/enemies/reviews/tomb_maw_bat_melee_bite_ul_tilemap_red_shiba_amazon_compare_v01.png",
+    "sha256": "8a2bf193887f2e2f2240085a8f18686ec3e828246cf01c5685aa98ecf336010e"
+  }
+}

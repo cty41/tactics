@@ -1,0 +1,60 @@
+{
+  "schemaVersion": 2,
+  "compositionId": "composition-8720ce5484bcd2df",
+  "assetId": "tomb-maw-bat-death-dr-v02",
+  "spec": {
+    "canvas": [
+      256,
+      256
+    ],
+    "coreAxis": {
+      "bottom": [
+        128,
+        210
+      ],
+      "top": [
+        128,
+        154
+      ],
+      "tiltDegrees": [
+        -5.0,
+        5.0
+      ]
+    },
+    "footCenter": [
+      128,
+      236
+    ],
+    "weapon": {
+      "hiddenGrip": [
+        128,
+        190
+      ],
+      "exitWindow": [
+        124,
+        186,
+        132,
+        194
+      ],
+      "tipRegion": [
+        124,
+        186,
+        132,
+        194
+      ]
+    },
+    "forbiddenRegions": [],
+    "equipmentState": {
+      "scabbard": "absent",
+      "staticEffects": "absent"
+    }
+  },
+  "source": {
+    "path": "Tools/artworks/pure_run/enemies/tomb_maw_bat_death_composition_v01.json",
+    "sha256": "52b3e182beb126f54c3ff05ee3fa77133c125d88167e66aa7d1e5e5684ac95b9"
+  },
+  "anchor": {
+    "path": "Tools/artworks/pure_run/enemies/approved/tomb_maw_bat_ranged_color_v06.png",
+    "sha256": "d71bd44be7dec83f116133ce8ab03394930dd3ade61cd21ea68fbb463464bc8a"
+  }
+}

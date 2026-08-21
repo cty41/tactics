@@ -1,0 +1,60 @@
+{
+  "schemaVersion": 2,
+  "compositionId": "composition-5f9f87ebee331db3",
+  "assetId": "tomb-maw-bat-hit-dr-v01",
+  "spec": {
+    "canvas": [
+      256,
+      256
+    ],
+    "coreAxis": {
+      "top": [
+        139,
+        88
+      ],
+      "bottom": [
+        124,
+        178
+      ],
+      "tiltDegrees": [
+        6.0,
+        12.0
+      ]
+    },
+    "footCenter": [
+      128,
+      236
+    ],
+    "weapon": {
+      "hiddenGrip": [
+        128,
+        145
+      ],
+      "exitWindow": [
+        92,
+        104,
+        166,
+        151
+      ],
+      "tipRegion": [
+        87,
+        100,
+        171,
+        157
+      ]
+    },
+    "forbiddenRegions": [],
+    "equipmentState": {
+      "scabbard": "absent",
+      "staticEffects": "absent"
+    }
+  },
+  "source": {
+    "path": "Tools/artworks/pure_run/enemies/tomb_maw_bat_hit_dr_composition_v01.json",
+    "sha256": "b28179d31c5eb4792409da14519b6f09d6ce98b5dd745f02697a3b120b076da6"
+  },
+  "anchor": {
+    "path": "Tools/artworks/pure_run/enemies/approved/tomb_maw_bat_ranged_color_v06.png",
+    "sha256": "d71bd44be7dec83f116133ce8ab03394930dd3ade61cd21ea68fbb463464bc8a"
+  }
+}

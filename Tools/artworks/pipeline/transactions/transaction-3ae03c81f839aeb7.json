@@ -1,0 +1,11 @@
+{
+  "schemaVersion": 2,
+  "transactionId": "transaction-3ae03c81f839aeb7",
+  "operation": "prepare",
+  "payload": {
+    "attemptId": "job-d8c37ffa3a568007-a002",
+    "chroma": "00ff00",
+    "chromaTolerance": 120
+  },
+  "state": "committed"
+}

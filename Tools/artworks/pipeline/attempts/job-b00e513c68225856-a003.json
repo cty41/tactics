@@ -1,0 +1,78 @@
+{
+  "schemaVersion": 2,
+  "attemptId": "job-b00e513c68225856-a003",
+  "jobId": "job-b00e513c68225856",
+  "ordinal": 3,
+  "parentAttemptId": "job-b00e513c68225856-a002",
+  "retryFeedbackId": null,
+  "promptDelta": null,
+  "technicalRemediation": true,
+  "state": "technical_failed",
+  "artifacts": {
+    "source": {
+      "path": "Tools/artworks/pure_run/enemies/concepts/tomb_maw_bat_melee_bite_attack_ul_chroma_source_v01.png",
+      "sha256": "eeff44933398f5ba82166431f21dcfea7bfcb2714c184c4de696e803265617df"
+    },
+    "raw": {
+      "path": "Tools/artworks/pipeline/artifacts/job-b00e513c68225856/job-b00e513c68225856-a003/raw.png",
+      "sha256": "eeff44933398f5ba82166431f21dcfea7bfcb2714c184c4de696e803265617df"
+    },
+    "prepared": {
+      "path": "Tools/artworks/pipeline/artifacts/job-b00e513c68225856/job-b00e513c68225856-a003/prepared.png",
+      "sha256": "a2d12dea515fab4f16514f9ee4c5806c287c56cadb2c0d20b485ca2b95473353"
+    },
+    "maskSource": {
+      "path": "Tools/artworks/pure_run/enemies/concepts/tomb_maw_bat_melee_bite_attack_ul_semantic_mask_v03.png",
+      "sha256": "1262e2ac26860d14f3cf6eb81815dbeb4a56737a101e134f0a788374df2eff2e"
+    },
+    "mask": {
+      "path": "Tools/artworks/pipeline/artifacts/job-b00e513c68225856/job-b00e513c68225856-a003/mask.png",
+      "sha256": "1262e2ac26860d14f3cf6eb81815dbeb4a56737a101e134f0a788374df2eff2e"
+    },
+    "calibrated": {
+      "path": "Tools/artworks/pipeline/artifacts/job-b00e513c68225856/job-b00e513c68225856-a003/calibrated.png",
+      "sha256": "061c4011d32f7b6bc7500aa337c8f7a76f58930a8ea515d70ca7c542ef8ff74a"
+    },
+    "calibratedMask": {
+      "path": "Tools/artworks/pipeline/artifacts/job-b00e513c68225856/job-b00e513c68225856-a003/calibrated-mask.png",
+      "sha256": "4f87b331638471255a158a769dcaf94ecd2b3881769b78e9047aa42dcade9a1b"
+    }
+  },
+  "report": {
+    "path": "Tools/artworks/pipeline/reports/report-86c2103117b2c72c.json",
+    "sha256": "4c24e463d28b55bce6685966f414e644cf313a640d6c384e86b0760d1c60c5fd"
+  },
+  "approvalId": null,
+  "feedbackId": null,
+  "generationInvocationId": "generation-invocation-1b5fb8b61cc7c03b",
+  "generationDeliveryId": "generation-delivery-eb78a9e65a4df106",
+  "preparation": {
+    "chroma": "00ff00",
+    "chromaTolerance": 120
+  },
+  "calibration": {
+    "method": "uniform-core-height",
+    "scale": 0.2054176072234763,
+    "offset": [
+      7,
+      19
+    ],
+    "sourceCoreBbox": [
+      455,
+      336,
+      760,
+      778
+    ],
+    "anchorCoreBbox": [
+      91,
+      88,
+      173,
+      178
+    ],
+    "anchorMask": {
+      "path": "Tools/artworks/pure_run/enemies/reviews/tomb_maw_bat_ranged_color_ul_core_mask_v01.png",
+      "sha256": "5ef1d6cf485e94fad64d5558fbc99f9e4197fb54a2ba4aee4fb231ef61ccd6d5"
+    }
+  },
+  "annotationId": "annotations-aeb36eda4cd7f2f3"
+}

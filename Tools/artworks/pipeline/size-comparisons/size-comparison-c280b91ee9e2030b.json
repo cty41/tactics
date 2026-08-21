@@ -1,0 +1,92 @@
+{
+  "schemaVersion": 1,
+  "sizeComparisonId": "size-comparison-c280b91ee9e2030b",
+  "inputs": [
+    {
+      "label": "Identity",
+      "artifact": {
+        "path": "Tools/artworks/pure_run/enemies/approved/tomb_maw_bat_ranged_color_v06_128.png",
+        "sha256": "6b816acd9688a078a60d24cb4ef16d0e69cc5a876fae7e9405a6f9ef99cd6c0e"
+      }
+    },
+    {
+      "label": "Previous",
+      "artifact": {
+        "path": "Tools/artworks/pure_run/enemies/approved/tomb_maw_bat_wind_blade_attack_dr_v03_128.png",
+        "sha256": "e82bb86c6bb99515f9b7ce201d4915a1033d8b2e36354f27422f419559320d57"
+      }
+    },
+    {
+      "label": "Pose reference",
+      "artifact": {
+        "path": "godot/assets/units/actions/doge_hunter_hit_dr.png",
+        "sha256": "a921486bec40be843d02efdce8617e2a1b764c33e6a9e8e4278cf76c92fa9e01"
+      }
+    },
+    {
+      "label": "Candidate",
+      "artifact": {
+        "path": "Tools/artworks/pipeline/reviews/job-6d22f48938cd05e4-a007/preview128.png",
+        "sha256": "899eaf954ecc94862c58d9ed33273c04fec1f4cc6781f418bffe1864fc6979d4"
+      }
+    }
+  ],
+  "measurements": [
+    {
+      "label": "Identity",
+      "bbox": [
+        10,
+        50,
+        104,
+        96
+      ],
+      "bboxSize": [
+        94,
+        46
+      ]
+    },
+    {
+      "label": "Previous",
+      "bbox": [
+        7,
+        47,
+        102,
+        96
+      ],
+      "bboxSize": [
+        95,
+        49
+      ]
+    },
+    {
+      "label": "Pose reference",
+      "bbox": [
+        39,
+        57,
+        91,
+        119
+      ],
+      "bboxSize": [
+        52,
+        62
+      ]
+    },
+    {
+      "label": "Candidate",
+      "bbox": [
+        2,
+        51,
+        92,
+        96
+      ],
+      "bboxSize": [
+        90,
+        45
+      ]
+    }
+  ],
+  "artifact": {
+    "path": "Tools/artworks/pure_run/enemies/reviews/tomb_maw_bat_hit_dr_tilemap_red_shiba_amazon_compare_v01.png",
+    "sha256": "c5883458a146aa36596962af2f0262bea4257178e422322243a2ac519d0617e1"
+  }
+}

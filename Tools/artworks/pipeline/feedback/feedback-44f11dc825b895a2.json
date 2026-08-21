@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 2,
+  "feedbackId": "feedback-44f11dc825b895a2",
+  "attemptId": "job-6d22f48938cd05e4-a007",
+  "candidateSha256": "a62bef402f80a4eb30957e2f6884ac0f3c29db7fd51e1faa375a83abc8c43f5a",
+  "reviewer": "cty41",
+  "verdict": "selected",
+  "strengths": [
+    "DR Hit pose accepted for formal promotion; impact expression, tears, wing recoil, and overall scale are approved."
+  ],
+  "defects": [],
+  "nextPromptDelta": "",
+  "recordedAt": "2026-08-21T14:14:48.8759489+08:00",
+  "authorType": "human",
+  "categories": [
+    "pose_axis"
+  ],
+  "disposition": "selected",
+  "frozenInvariants": [
+    "Approved DR Hit pose and visual scale."
+  ],
+  "pendingFixes": []
+}

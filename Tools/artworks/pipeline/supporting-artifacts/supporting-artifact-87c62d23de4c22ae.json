@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 2,
+  "supportingArtifactId": "supporting-artifact-87c62d23de4c22ae",
+  "artifact": {
+    "path": "Tools/artworks/pure_run/enemies/reviews/tomb_maw_bat_ranged_color_ul_core_mask_review_v01.png",
+    "sha256": "0bfa6f642714eaaea34291cd31b426e13f09f4b05548f6e7f885e1cbac577fdb"
+  },
+  "role": "anchor-mask-review",
+  "note": "Left is approved UL Idle. Right overlays the semantic mask: red is the spherical core used for scale and center; cyan is wings and external silhouette excluded from core calibration."
+}

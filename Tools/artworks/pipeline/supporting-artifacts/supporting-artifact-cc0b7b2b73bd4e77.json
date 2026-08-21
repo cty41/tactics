@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 2,
+  "supportingArtifactId": "supporting-artifact-cc0b7b2b73bd4e77",
+  "artifact": {
+    "path": "Tools/artworks/pure_run/enemies/reviews/tomb_maw_bat_melee_bite_ul_tilemap_red_shiba_amazon_compare_v01.png",
+    "sha256": "8a2bf193887f2e2f2240085a8f18686ec3e828246cf01c5685aa98ecf336010e"
+  },
+  "role": "review-comparison",
+  "note": "Approved Tomb Maw Bat UL melee bite size comparison against formal UL idle, approved DR bite, and red-shiba Amazon UL reference."
+}

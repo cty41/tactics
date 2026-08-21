@@ -1,0 +1,34 @@
+{
+  "schemaVersion": 2,
+  "annotationId": "annotations-a4ed4bcd78000f32",
+  "attemptId": "job-6d22f48938cd05e4-a003",
+  "candidateSha256": "bda688c51e92ea1c7731904021724fa50b236e57431d6a89f04f75c4bf87ff8c",
+  "maskSha256": "fb5ead91c1ed0826b80e89d9477f9279222d957d806d7f62863a68920502dadc",
+  "source": {
+    "path": "Tools/artworks/pure_run/enemies/concepts/tomb_maw_bat_hit_dr_v01_annotations.json",
+    "sha256": "418b878c34fc08f3ef9f3de7f653789954663708568dfee1591b3ce8452c4f73"
+  },
+  "regions": {
+    "eyeRegion": [
+      113,
+      128,
+      166,
+      153
+    ],
+    "weaponExit": [
+      101,
+      132,
+      163,
+      151
+    ],
+    "weaponTip": [
+      96,
+      127,
+      166,
+      153
+    ],
+    "gemRegion": null,
+    "scabbard": null,
+    "staticEffect": null
+  }
+}

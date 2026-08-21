@@ -1,0 +1,15 @@
+{
+  "schemaVersion": 1,
+  "approvalId": "approval-0cdb757b58c5ef19",
+  "attemptId": "bootstrap:Tools/artworks/pure_run/enemies/approved/tomb_maw_bat_ranged_color_ul_v01.png",
+  "candidateSha256": "d8c0037bd029f6f59049d846a4698e0fed63d1d139fb6fde0642cc944c12facb",
+  "maskSha256": "5ef1d6cf485e94fad64d5558fbc99f9e4197fb54a2ba4aee4fb231ef61ccd6d5",
+  "reviewSha256": "0bfa6f642714eaaea34291cd31b426e13f09f4b05548f6e7f885e1cbac577fdb",
+  "candidatePath": "Tools/artworks/pure_run/enemies/approved/tomb_maw_bat_ranged_color_ul_v01.png",
+  "maskPath": "Tools/artworks/pure_run/enemies/reviews/tomb_maw_bat_ranged_color_ul_core_mask_v01.png",
+  "reviewPath": "Tools/artworks/pure_run/enemies/reviews/tomb_maw_bat_ranged_color_ul_core_mask_review_v01.png",
+  "reviewer": "cty41",
+  "decision": "approved",
+  "reason": "User confirmed the displayed size was acceptable after the UL core-mask review; red spherical core is accepted as the scale and center authority while wings remain excluded.",
+  "decidedAt": "2026-08-21T10:24:44.0006056+08:00"
+}

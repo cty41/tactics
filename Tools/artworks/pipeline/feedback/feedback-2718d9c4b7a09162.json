@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 2,
+  "feedbackId": "feedback-2718d9c4b7a09162",
+  "attemptId": "job-348d71e797321e77-a002",
+  "candidateSha256": "7759ee609ee9e66cb68511e5dd253287ebf3c3ce04608bc18a507145872776d3",
+  "reviewer": "cty41",
+  "verdict": "selected",
+  "strengths": [
+    "UL Hit pose accepted for formal promotion; rear anatomy, single visible eye and tear, wing recoil, and scale are approved."
+  ],
+  "defects": [],
+  "nextPromptDelta": "",
+  "recordedAt": "2026-08-21T14:36:35.0911331+08:00",
+  "authorType": "human",
+  "categories": [
+    "pose_axis"
+  ],
+  "disposition": "selected",
+  "frozenInvariants": [
+    "Approved UL Hit pose, rear visibility, and reaction silhouette."
+  ],
+  "pendingFixes": []
+}

@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 2,
+  "compiledPromptId": "compiled-prompt-90ab8e901c81fa51",
+  "jobId": "job-b00e513c68225856",
+  "poseGuideId": "pose-guide-234cf7bce3baa6a6",
+  "artifact": {
+    "path": "Tools/artworks/pure_run/enemies/reviews/tomb_maw_bat_melee_bite_ul_compiled_prompt_v01.md",
+    "sha256": "65042e17528f7f3798d93e263db5d5b26e5891972edef946a8d8d5b68e0d19d0"
+  }
+}

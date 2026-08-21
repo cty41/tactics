@@ -1,0 +1,27 @@
+{
+  "schemaVersion": 2,
+  "feedbackId": "feedback-f0a6826af8d08167",
+  "attemptId": "job-d8c37ffa3a568007-a001",
+  "candidateSha256": "43783a4bc418fa0989723d97fb996b12770325b6ff692d8bb1015207970b05bc",
+  "reviewer": "codex",
+  "verdict": "technical_failed",
+  "strengths": [
+    "Native UL rear view and synchronized horizontal wing sweep are readable."
+  ],
+  "defects": [
+    "Generated chroma background varies enough that tolerance 36 leaves opaque corners; raw output also requires normal high-resolution core calibration."
+  ],
+  "nextPromptDelta": "",
+  "recordedAt": "2026-08-21T10:17:54.6520308+08:00",
+  "authorType": "agent",
+  "categories": [
+    "chroma"
+  ],
+  "disposition": "technical_failed",
+  "frozenInvariants": [
+    "Preserve the exact generated subject bytes and composition."
+  ],
+  "pendingFixes": [
+    "Repeat deterministic chroma removal at a higher safe tolerance, then attach semantic core/wing mask and calibrate uniformly."
+  ]
+}

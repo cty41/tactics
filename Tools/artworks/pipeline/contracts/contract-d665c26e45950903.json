@@ -1,0 +1,39 @@
+{
+  "schemaVersion": 2,
+  "contractId": "contract-d665c26e45950903",
+  "assetId": "tomb-maw-bat-wind-blade-ul-v01",
+  "approvedAssetId": "tomb-maw-bat",
+  "kind": "action_pose",
+  "direction": "up-left",
+  "pose": "ranged",
+  "anchor": {
+    "path": "Tools/artworks/pure_run/enemies/approved/tomb_maw_bat_ranged_color_ul_v01.png",
+    "sha256": "d8c0037bd029f6f59049d846a4698e0fed63d1d139fb6fde0642cc944c12facb"
+  },
+  "maskRequired": false,
+  "noArms": false,
+  "handSides": {
+    "near_hand": null,
+    "far_hand": null
+  },
+  "occlusion": null,
+  "compositionSpec": {
+    "compositionId": "composition-37a6ef03dbd54f1a",
+    "sha256": "454e3b03272ab9ad9025cf19f930ebf17f134af21554484af61feece203bc4d9"
+  },
+  "identitySpec": null,
+  "requiresInvocation": true,
+  "tolerances": {
+    "sizePx": 8,
+    "centerPx": 2
+  },
+  "outputs": {
+    "master": "Tools/artworks/pure_run/enemies/approved/tomb_maw_bat_wind_blade_attack_ul_v01.png",
+    "preview": "Tools/artworks/pure_run/enemies/approved/tomb_maw_bat_wind_blade_attack_ul_v01_128.png"
+  },
+  "rights": {
+    "rightsHolder": "cty41",
+    "license": "project-owned",
+    "provenance": "project-owned-gpt-generated"
+  }
+}

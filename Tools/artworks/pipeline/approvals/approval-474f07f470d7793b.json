@@ -1,0 +1,42 @@
+{
+  "schemaVersion": 2,
+  "approvalId": "approval-474f07f470d7793b",
+  "attemptId": "job-d8c37ffa3a568007-a005",
+  "candidateSha256": "58832df28847fae29f75309b8574a104860f4fa9befa04c2de9357806013d43e",
+  "maskSha256": "e7d934db42d3382db464f06d360865777e8b5cc578f71f22d273d41856d34988",
+  "reportSha256": "68199b3f932956cb75e3fb0e3919b6c15ed5c542deb3819a1f25d94d6de2f735",
+  "contractId": "contract-d665c26e45950903",
+  "contractSha256": "e4e098d935e92e4daadb74bf8fa73c9efdcde2401b963e644bb949a431fa4440",
+  "reviewSha256": {
+    "overlay": "653b45f12ac8cbbe96ae24a8af416aa7c2ddb961b136619ef8c5dd305731b493",
+    "preview128": "323b51368c42d3b2cea839d6546e872855aae20894e3fd9f57fcdbf232b312a4",
+    "tile64x32": "fae8ce388e7f447dc66ed1b84a309b795b8d66556ac52e827e17dabd67e97d02"
+  },
+  "annotation": {
+    "annotationId": "annotations-9b9c963227a0aa03",
+    "sha256": "545e7987b0e9f55102e1a8ed1371ec66acccfbcb2b1177b888b677ccb3d63e92"
+  },
+  "reviewer": "cty41",
+  "decision": "approved",
+  "approvalMode": "gate-exception",
+  "waivedIssues": [
+    {
+      "code": "core_size_out_of_tolerance",
+      "candidateCoreSize": [
+        93,
+        91
+      ],
+      "anchorCoreSize": [
+        83,
+        91
+      ],
+      "delta": [
+        10,
+        0
+      ],
+      "tolerancePx": 8
+    }
+  ],
+  "reason": "cty41 explicitly accepted the Tilemap comparison and the slightly wider spherical core; all other deterministic checks passed.",
+  "decidedAt": "2026-08-21T02:51:16Z"
+}

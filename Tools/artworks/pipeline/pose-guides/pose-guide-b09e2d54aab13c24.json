@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 2,
+  "poseGuideId": "pose-guide-b09e2d54aab13c24",
+  "compositionId": "composition-5f9f87ebee331db3",
+  "compositionSha256": "bf643b0f58c68e68629c39c1ccaded8bd4828dea58b333d0c5a674f3c0bb1133",
+  "anchorSha256": "d71bd44be7dec83f116133ce8ab03394930dd3ade61cd21ea68fbb463464bc8a",
+  "artifact": {
+    "path": "Tools/artworks/pure_run/enemies/reviews/tomb_maw_bat_hit_dr_pose_guide_v01.png",
+    "sha256": "5cb5ea1c2187bd0c33ad9ea286a31f770482554fa2b0751676e367dc067823de"
+  },
+  "role": "supporting-derived"
+}

@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 2,
+  "supportingArtifactId": "supporting-artifact-f283a11994e0863c",
+  "artifact": {
+    "path": "Tools/artworks/pure_run/enemies/reviews/tomb_maw_bat_melee_bite_dr_tilemap_amazon_compare_v01.png",
+    "sha256": "ab1b3dc95d9cd010e90c47086cc17bb53ec0b722e5fba1bbf250960c9077c493"
+  },
+  "role": "tilemap-amazon-comparison",
+  "note": "Approved Bat Idle DR, approved Wind Blade DR, candidate Bite DR, and Amazon Idle DR aligned to 64x32 tile centers. Amazon is pose/standard-unit scale reference only, not a bat identity or calibration anchor."
+}

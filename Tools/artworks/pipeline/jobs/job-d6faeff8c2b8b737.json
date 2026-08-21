@@ -1,0 +1,36 @@
+{
+  "schemaVersion": 2,
+  "jobId": "job-d6faeff8c2b8b737",
+  "state": "ready",
+  "contractId": "contract-c29307506225dcc6",
+  "contractSha256": "cebfb4f7bc7976b43de83ed8314bc4e0f9e9c0f8fa498c8990c553f8da355d90",
+  "prompt": null,
+  "inputs": [
+    {
+      "path": "Tools/artworks/pure_run/enemies/candidates/tomb_maw_bat_ranged_death_color_v02.png",
+      "sha256": "8ddc4f85c3d98967fd28acf7239797f7b8ea24db9a207a64150e6c16413082db"
+    },
+    {
+      "path": "Tools/artworks/pure_run/enemies/candidates/tomb_maw_bat_ranged_death_color_v02.png",
+      "sha256": "8ddc4f85c3d98967fd28acf7239797f7b8ea24db9a207a64150e6c16413082db"
+    },
+    {
+      "path": "Tools/artworks/pure_run/enemies/candidates/tomb_maw_bat_ranged_death_color_v02_128.png",
+      "sha256": "11e1068230f846c50dba9073a63fc9d4e865947a7dc68f8f13befe78a0e1f81a"
+    },
+    {
+      "path": "Tools/artworks/pure_run/enemies/reviews/tomb_maw_bat_death_size_compare_v03.png",
+      "sha256": "f059d2c6ab769c660def00954ae2a2b6369013999c1365006adbe1ff795aa869"
+    }
+  ],
+  "target": {
+    "direction": "down-right",
+    "pose": "death"
+  },
+  "series": null,
+  "conceptOnly": false,
+  "contractRequirements": null,
+  "requiresInvocation": false,
+  "sourceMode": "reviewed_import",
+  "reviewedImportId": "reviewed-import-ecbf6cc0c2fe3166"
+}

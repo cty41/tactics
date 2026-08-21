@@ -1,0 +1,42 @@
+{
+  "schemaVersion": 2,
+  "attemptId": "job-d8c37ffa3a568007-a002",
+  "jobId": "job-d8c37ffa3a568007",
+  "ordinal": 2,
+  "parentAttemptId": "job-d8c37ffa3a568007-a001",
+  "retryFeedbackId": null,
+  "promptDelta": null,
+  "technicalRemediation": true,
+  "state": "annotated",
+  "artifacts": {
+    "source": {
+      "path": "Tools/artworks/pure_run/enemies/concepts/tomb_maw_bat_wind_blade_attack_ul_chroma_source_v01.png",
+      "sha256": "4afeff7c2e0dd2c59492d627d444ad588f204f70ad396dcc29b7efa668bbd95b"
+    },
+    "raw": {
+      "path": "Tools/artworks/pipeline/artifacts/job-d8c37ffa3a568007/job-d8c37ffa3a568007-a002/raw.png",
+      "sha256": "4afeff7c2e0dd2c59492d627d444ad588f204f70ad396dcc29b7efa668bbd95b"
+    },
+    "prepared": {
+      "path": "Tools/artworks/pipeline/artifacts/job-d8c37ffa3a568007/job-d8c37ffa3a568007-a002/prepared.png",
+      "sha256": "871a683e2a7ae2601f65de93902cc3047e5ef8691661d8492c7d716437fb5dbd"
+    },
+    "maskSource": {
+      "path": "Tools/artworks/pure_run/enemies/concepts/tomb_maw_bat_wind_blade_attack_ul_semantic_mask_v01.png",
+      "sha256": "b023035fb1fe7552c6547273c14be5f820d8da446177af809665bb600e503b2e"
+    },
+    "mask": {
+      "path": "Tools/artworks/pipeline/artifacts/job-d8c37ffa3a568007/job-d8c37ffa3a568007-a002/mask.png",
+      "sha256": "b023035fb1fe7552c6547273c14be5f820d8da446177af809665bb600e503b2e"
+    }
+  },
+  "report": null,
+  "approvalId": null,
+  "feedbackId": "feedback-5baae321e1d7e6b7",
+  "generationInvocationId": "generation-invocation-9173bf1ba97a5b5f",
+  "generationDeliveryId": "generation-delivery-96b658ba9ad7df95",
+  "preparation": {
+    "chroma": "00ff00",
+    "chromaTolerance": 120
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "schemaVersion": 1,
+  "approvalId": "approval-31d086f559511211",
+  "attemptId": "bootstrap:Tools/artworks/pure_run/enemies/approved/tomb_maw_bat_ranged_color_v06.png",
+  "candidateSha256": "d71bd44be7dec83f116133ce8ab03394930dd3ade61cd21ea68fbb463464bc8a",
+  "maskSha256": "5738ba31198d798b5902f79d18e2bb3ccd0d8d7233d1e94dc9c4a39d6a918511",
+  "reviewSha256": "d46c2bd84a3ced05553392084f0708a3599ff05410fcbed4d2dfb0fc58fde53c",
+  "candidatePath": "Tools/artworks/pure_run/enemies/approved/tomb_maw_bat_ranged_color_v06.png",
+  "maskPath": "Tools/artworks/pure_run/enemies/reviews/tomb_maw_bat_ranged_color_dr_core_mask_v01.png",
+  "reviewPath": "Tools/artworks/pure_run/enemies/reviews/tomb_maw_bat_ranged_color_dr_core_mask_review_v01.png",
+  "reviewer": "cty41",
+  "decision": "approved",
+  "reason": "cty41 confirmed the DR spherical-core mask for bite-action Tilemap calibration.",
+  "decidedAt": "2026-08-21T03:27:24Z"
+}

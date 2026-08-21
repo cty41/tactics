@@ -1,0 +1,8 @@
+{
+  "schemaVersion": 2,
+  "generationFailureId": "generation-failure-8df3d337ed10174b",
+  "invocationId": "generation-invocation-37d2537e2b6df0c3",
+  "attemptId": "job-fcd2010d14e8bee6-a001",
+  "reason": "Compiled prompt contained ground-capsule identity invariants that conflict with the flying bat anchor; no provider call was made.",
+  "failedAt": "2026-08-21T02:56:05Z"
+}

@@ -1,0 +1,28 @@
+{
+  "schemaVersion": 2,
+  "feedbackId": "feedback-9e8669086c8b157c",
+  "attemptId": "job-d8c37ffa3a568007-a004",
+  "candidateSha256": "08d853c9dccaab2abbde68101bd6c9a668a10cc98a6d5472a5d7ed9742518018",
+  "reviewer": "codex",
+  "verdict": "retry",
+  "strengths": [
+    "The active flap silhouette is now readable and should be preserved."
+  ],
+  "defects": [
+    "At formal core scale the near wing reaches the bottom canvas edge, and the spherical core is wider than the approved UL anchor."
+  ],
+  "nextPromptDelta": "Keep the flap action, but compact the wing span and especially the low near wing; make the core smaller in width and truly round without changing its center.",
+  "recordedAt": "2026-08-21T10:30:59.7778124+08:00",
+  "authorType": "agent",
+  "categories": [
+    "core_geometry",
+    "topology"
+  ],
+  "disposition": "retry",
+  "frozenInvariants": [
+    "Preserve the accepted near-wing downstroke and far-wing raised depth relationship, UL identity, palette, and hover center."
+  ],
+  "pendingFixes": [
+    "Shorten and fold both wings into safe padding while retaining the flap; restore the core to the approved near-round width/height."
+  ]
+}

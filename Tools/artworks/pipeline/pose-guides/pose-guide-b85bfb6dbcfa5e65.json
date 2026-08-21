@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 2,
+  "poseGuideId": "pose-guide-b85bfb6dbcfa5e65",
+  "compositionId": "composition-e7108c2d6fe699d9",
+  "compositionSha256": "756b7b4a580452f80b74f3ac7722efc0e4f94d1b6a55204b59267c9af793fe1a",
+  "anchorSha256": "d71bd44be7dec83f116133ce8ab03394930dd3ade61cd21ea68fbb463464bc8a",
+  "artifact": {
+    "path": "Tools/artworks/pure_run/enemies/reviews/tomb_maw_bat_melee_bite_dr_pose_guide_v01.png",
+    "sha256": "359574e2bc988fd78a830e1951c9e62d4e05e1be5932dd63765ab89bce59675f"
+  },
+  "role": "supporting-derived"
+}

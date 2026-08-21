@@ -1,0 +1,21 @@
+{
+  "schemaVersion": 2,
+  "feedbackId": "feedback-dfaf18b95f08b00d",
+  "attemptId": "job-fcd2010d14e8bee6-a005",
+  "candidateSha256": "275e36c12c1ff77f9c26d76cdebad6500a81419f56b8d50971053e17c1fbb585",
+  "reviewer": "cty41",
+  "verdict": "selected",
+  "strengths": [
+    "The bite pose, clear fangs, backward wing sweep, calibrated Tilemap occupancy, and scale relative to the approved red-shiba Amazon are accepted."
+  ],
+  "defects": [],
+  "nextPromptDelta": "",
+  "recordedAt": "2026-08-21T03:42:02Z",
+  "authorType": "human",
+  "categories": [],
+  "disposition": "selected",
+  "frozenInvariants": [
+    "Use this exact calibrated DR bite sprite as the approved melee/lifesteal action anchor."
+  ],
+  "pendingFixes": []
+}

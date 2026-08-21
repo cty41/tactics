@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 2,
+  "compiledPromptId": "compiled-prompt-742f85949611d926",
+  "jobId": "job-d8c37ffa3a568007",
+  "poseGuideId": "pose-guide-d1cd32ae7fc53d3c",
+  "artifact": {
+    "path": "Tools/artworks/pure_run/enemies/reviews/tomb_maw_bat_wind_blade_ul_compiled_prompt_v03.md",
+    "sha256": "6272a8cbd3e2c305a32af86cd08d2b1e16d30c99ee3e2d70cb9c6f87f661ed7d"
+  }
+}

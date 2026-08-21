@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 2,
+  "supportingArtifactId": "supporting-artifact-d3e3970cfb422262",
+  "artifact": {
+    "path": "Tools/artworks/pure_run/enemies/reviews/tomb_maw_bat_melee_bite_dr_tilemap_red_shiba_amazon_compare_v02.png",
+    "sha256": "17a9957b10add28cce04e47d8a2f2904db10f77797f29c71aabd1cd1fc698d78"
+  },
+  "role": "tilemap-red-shiba-amazon-comparison",
+  "note": "Supersedes the invalid v01 comparison that used the deprecated human Amazon. Approved Bat Idle DR, approved Wind Blade DR, candidate Bite DR, and approved red-shiba Amazon DR share the same 64x32 tile-center baseline. Red-shiba Amazon is standard-unit scale reference only."
+}

@@ -1,0 +1,21 @@
+{
+  "schemaVersion": 2,
+  "approvalId": "approval-96a943feea58e932",
+  "attemptId": "job-fcd2010d14e8bee6-a005",
+  "candidateSha256": "275e36c12c1ff77f9c26d76cdebad6500a81419f56b8d50971053e17c1fbb585",
+  "maskSha256": "68fc954cf3570e235af8b098486e1dca0e6bd43e1fcddd3346e22e412dd1b953",
+  "reviewer": "cty41",
+  "reviewSha256": {
+    "overlay": "5e19a277b0e81fcb79ecd24528b4c89cc9a81b6ddf1dabf55f6f4cf12c8d2fe2",
+    "preview128": "31b8bee56d1d3e161281f0abd626c12a02dd18041a02d4337b87e6a441807534",
+    "tile64x32": "917c54dbc70234fef0b67360498a2e415886509c37b875f73d6e0cc85730f2f2"
+  },
+  "decision": "approved",
+  "reason": "cty41 approved the corrected Tilemap comparison against the formal red-shiba Amazon and requested formal promotion.",
+  "decidedAt": "2026-08-21T03:42:02Z",
+  "annotation": {
+    "annotationId": "annotations-020d200fb0ddada0",
+    "sha256": "1d401bb6b4df532f3b4482145dfef50cd327d55e7513a6b22dcde6b6ff52a56e"
+  },
+  "reportSha256": "2e5d7edb69c5e1fc48b7ab1fd72200b0bee271cb55c7563f50ecf77dc362ab2b"
+}
