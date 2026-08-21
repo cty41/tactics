@@ -37,6 +37,32 @@ class ArtworkPipelineTests(unittest.TestCase):
     def tearDown(self):
         self.temp.cleanup()
 
+    def test_relicense_public_artifacts_records_cty41_decision_and_updates_manifest(self):
+        asset = self.png("Tools/artworks/approved/relicensed.png")
+        digest = pipeline.sha256_file(asset)
+        manifest_path = self.root / "Tools/public-release/asset-provenance.json"
+        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+        manifest["entries"].append({
+            "path": "Tools/artworks/approved/relicensed.png", "sha256": digest,
+            "status": "approved", "rightsHolder": "cty41", "license": "project-owned",
+            "provenance": "project-owned-gpt-generated",
+        })
+        manifest_path.write_text(json.dumps(manifest), encoding="utf-8")
+
+        receipt = pipeline.relicense_public_artifacts(self.store, self.ns(
+            path=[str(asset)], from_license="project-owned", to_license="CC-BY-4.0",
+            reviewer="cty41", reason="publish approved project-owned output",
+            decided_at="2026-08-21T22:00:00+08:00"))
+
+        updated = json.loads(manifest_path.read_text(encoding="utf-8"))
+        self.assertEqual("CC-BY-4.0", updated["entries"][0]["license"])
+        self.assertEqual(digest, receipt["artifacts"][0]["sha256"])
+        self.assertTrue(self.store.record("license-receipts", receipt["licenseReceiptId"]).is_file())
+        with self.assertRaisesRegex(pipeline.PipelineError, "reviewer cty41"):
+            pipeline.relicense_public_artifacts(self.store, self.ns(
+                path=[str(asset)], from_license="project-owned", to_license="CC-BY-4.0",
+                reviewer="codex", reason="not authorized", decided_at="2026-08-21T22:00:00+08:00"))
+
     def png(self, rel: str, pear: bool = False, variant: int = 0) -> Path:
         path = self.root / rel
         path.parent.mkdir(parents=True, exist_ok=True)

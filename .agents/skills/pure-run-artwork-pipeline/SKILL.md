@@ -28,6 +28,7 @@ description: "Use when generating, editing, chroma-keying, calibrating, reviewin
 | 连续姿态生产 | `create-series` → 每版 `record-feedback` → `select-attempt` → `advance-series` |
 | 限定几何例外 | `approve-exception`；首版只允许 `core_size_out_of_tolerance`，并绑定完整证据哈希 |
 | 已人工确认成图的诚实收编 | `render-size-comparison` → `adopt-reviewed-sprite` → `approve` → `promote`；不得伪造 invocation |
+| 公开许可变更 | `relicense-public-artifact`；仅允许 `cty41` 将哈希匹配的 approved `project-owned` 成图显式发布为 `CC-BY-4.0`，并生成不可变 receipt |
 | 状态机严格门禁 | `python scripts/artwork_pipeline.py --root <repo> check --strict` |
 | 运行时视觉 QA | 使用 Godot 后台测试、生产输入注入或已有截图；不控制真实 Editor 窗口 |
 
@@ -72,6 +73,7 @@ description: "Use when generating, editing, chroma-keying, calibrating, reviewin
 - 运行时接入授权、视觉 QA、截图要求或“补齐代表单位”都不授权 Computer Use、`activate_window` 或真实鼠标键盘输入。后台验证不足时记录 `manual_visual_qa_pending`，不得抢占用户焦点。
 - 不覆盖已确认版本；新设计使用新的版本号，失败候选移动到 `rejected`，而不是删除历史证据。
 - 不手改 registry 状态、report 或 receipt；所有转换必须经 `artwork_pipeline.py`。同一 attempt 不得摄取不同字节，`technical_failed` 不得走普通批准或直接晋升；只有下述限定例外命令可以原子转为 `approved`。
+- 不手改公开素材许可证。`relicense-public-artifact` 只接受 `cty41`、当前文件哈希与 provenance 完全匹配、状态为 approved 的 `project-owned → CC-BY-4.0` 决策；其他权利人、许可证方向或未批准素材必须拒绝。
 - `approve-exception` 不是通用跳过门禁：首版只豁免报告中唯一的 `core_size_out_of_tolerance`，且只能由 `cty41` 签发。基线、Alpha、透明 RGB、色幕、蒙版、缺爪、接触、错误侧、梨形、遮挡、裁切、路径和哈希问题一律不可豁免。
 - Series 中满意稿和失败稿同样必须留下不可变 feedback；无限 series 可在逐版反馈与人工 Review 门禁下继续产生不同输出，有限 series 不得越过其显式预算；不得把失败稿作为母图。provisional anchor 只允许维持有限预算耗尽后的生产连续性，不能成为正式资产血缘。
 - Feedback v2 必须区分 `authorType: agent|human`，使用结构化缺陷分类和 `selected|backup|retry|technical_failed|exhausted` disposition；Agent 或视觉模型的建议不得签发 `cty41` approval。视觉语义辅助只能用 `record-advisory-review` 留下非绑定风险，不参与确定性通过判定。
