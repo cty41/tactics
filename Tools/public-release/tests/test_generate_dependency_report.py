@@ -33,6 +33,23 @@ class DependencyInventoryTests(unittest.TestCase):
             self.assertEqual(1, first["dependencyCount"])
             self.assertEqual("Example.Package", first["dependencies"][0]["name"])
 
+    def test_report_includes_manifest_pinned_vendor(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            manifest = root / "Tools/migration/manifest"
+            vendor = root / "godot/addons/godot_ai"
+            manifest.mkdir(parents=True)
+            vendor.mkdir(parents=True)
+            (manifest / "godot-tooling.json").write_text(
+                json.dumps({"godotAi": {"tag": "v3.1.2", "vendorPath": "godot/addons/godot_ai"}}),
+                encoding="utf-8",
+            )
+            report = MODULE.build_report(root)
+            self.assertIn(
+                {"ecosystem": "Vendored", "name": "godot-ai", "version": "3.1.2"},
+                report["dependencies"],
+            )
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -142,9 +142,14 @@ scopes:
       - Tools/godot/Test-GodotWindowsLaunch.ps1
       - Tools/migration/manifest/godot-tooling.json
       - Tools/godot/Verify-GodotProject.ps1
+      - Tools/godot/Open-GodotDev.ps1
+      - Tools/godot/GodotDevSession.psm1
+      - Tools/godot/tests/test_godot_dev_launcher.py
       - Tools/godot/Sync-GodotAiCodexConfig.ps1
       - Tools/migration/godot_ai_codex_config.py
+      - Tools/migration/godot_ai_vendor.py
       - Tools/migration/tests/test_godot_ai_codex_config.py
+      - Tools/migration/tests/test_godot_ai_vendor.py
       - Tools/migration/tests/test_godot_editor_lifecycle.py
       - Tools/agent-policy/validate_godot_incidents.py
       - Tools/agent-policy/validate_foreground_interaction_policy.py

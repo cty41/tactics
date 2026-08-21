@@ -23,7 +23,8 @@
 !godot/*.packages.lock.json
 /godot/gdunit4_testadapter_v5/
 /godot/tests/gdunit4_testadapter_v5/
-/godot/addons/godot_ai/
+# godot-ai is a pinned, reviewed source dependency. Local editor/cache state remains ignored.
+/godot/override.cfg
 *.DS_Store
 *.patch
 

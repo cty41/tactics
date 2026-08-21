@@ -100,15 +100,6 @@ try {
         }
     }
 
-    $isolatedProject = Join-Path $testRoot 'godot\project.godot'
-    $projectText = [IO.File]::ReadAllText($isolatedProject)
-    $projectText = [Regex]::Replace($projectText,
-        '(?m)^_mcp_game_helper="\*res://addons/godot_ai/runtime/game_helper\.gd"\r?\n', '')
-    $projectText = $projectText.Replace(
-        'enabled=PackedStringArray("res://addons/godot_ai/plugin.cfg", "res://addons/tactics_tooling/plugin.cfg")',
-        'enabled=PackedStringArray("res://addons/tactics_tooling/plugin.cfg")')
-    [IO.File]::WriteAllText($isolatedProject, $projectText, [Text.UTF8Encoding]::new($false))
-
     git -C $testRoot add --all
     git -C $testRoot commit --quiet -m "Unity retirement dry run $sourceCommit"
     if ($LASTEXITCODE -ne 0) { throw 'Unable to initialize dry-run Git snapshot.' }

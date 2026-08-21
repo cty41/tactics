@@ -7,11 +7,12 @@ description: Use when configuring or operating the canonical Godot project throu
 
 ## Quick Reference
 
-- Baseline: local `D:/codes/godot-ai`, tag `v3.1.2`, pinned by `Tools/migration/manifest/godot-tooling.json`.
+- Baseline: tracked `godot/addons/godot_ai`, vendored from tag `v3.1.2` and pinned by `Tools/migration/manifest/godot-tooling.json`.
 - Project: `godot/project.godot` only.
 - Config: local ignored `.codex/config.toml`; never leave godot-ai in the user-level Codex config.
 - Profiles: `phase3-observe`, `content-authoring`, `ui-input`, `presentation`; each is cumulative.
-- Sync: `Tools/godot/Sync-GodotAiCodexConfig.ps1` imports, validates and switches the exact allowlist.
+- Launch: `Tools/godot/Open-GodotDev.ps1` is the supported Editor entry; it builds, isolates and records the session.
+- Sync: `Tools/godot/Sync-GodotAiCodexConfig.ps1` bootstraps, validates and switches the exact allowlist.
 - Custom Tactics tools remain deferred until the C# mutation kernel is stable.
 
 ## When to use
@@ -20,8 +21,8 @@ Use for validated, repeatable Godot Editor/MCP operations after Core/Application
 
 ## Workflow
 
-1. Verify the pin, ports and selected profile in the manifest; never mutate vendored godot-ai source.
-2. For first setup, let Godot generate the Windows Codex block once, then run `Sync-GodotAiCodexConfig.ps1 -ImportFromUser -Profile phase3-observe`. Restart a Codex task rooted at the migration worktree.
+1. Verify the vendor tree, ports and selected profile in the manifest; never use the Dock self-updater. Refresh the vendor only as an explicit reviewed dependency update.
+2. Run `Open-GodotDev.ps1 -Mode Agent -UserDataProfile Worktree -GodotAiProfile phase3-observe`. If it prints `CODEX_RESTART_REQUIRED`, restart the Codex task once from this worktree root.
 3. Before every write sequence, call `session_manage` and `editor_state`. Require exactly one session, Godot 4.7.1 and the canonical project path; otherwise stop.
    Repository writes that require session count `0` must use `godot-editor-lifecycle` to close and conditionally restore the verified Editor; do not improvise process commands.
 4. Use only tools exposed by the selected cumulative profile. See `references/tool-boundary.md` for the stage matrix and permanent deny-list.
@@ -38,6 +39,7 @@ Use for validated, repeatable Godot Editor/MCP operations after Core/Application
 - Do not make godot-ai a Core, Application, runtime, catalog or migration-ledger dependency.
 - Do not use generic MCP composition as proof of atomic domain mutation.
 - Do not edit the pinned plugin to solve a project-specific workflow.
+- Do not launch the Editor directly, share Agent user data, or overlap verifier/GdUnit with the same-worktree Editor.
 - Do not use `script_*`, `filesystem_manage`, `client_manage` or `autoload_manage`.
 
 ## Checklist

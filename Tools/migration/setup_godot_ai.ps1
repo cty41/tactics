@@ -23,4 +23,5 @@ Get-ChildItem -LiteralPath $pluginTarget -Force |
     Remove-Item -Recurse -Force
 Get-ChildItem -LiteralPath $pluginSource -Force |
     Copy-Item -Destination $pluginTarget -Recurse -Force
-Write-Output "godot-ai v3.1.2 copied to $pluginTarget (ignored by git). Enable the plugin in Project Settings for the editor smoke gate."
+Copy-Item -LiteralPath (Join-Path $sourcePath 'LICENSE') -Destination (Join-Path $pluginTarget 'LICENSE') -Force
+Write-Output "godot-ai v3.1.2 copied to $pluginTarget. Review and commit the exact vendor diff; in-Dock self-update is unsupported."

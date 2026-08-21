@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "documentType": "tactics-public-dependency-inventory",
-  "dependencyCount": 22,
+  "dependencyCount": 23,
   "dependencies": [
     {
       "ecosystem": "NuGet",
@@ -72,6 +72,11 @@
       "ecosystem": "NuGet",
       "name": "tactics.core",
       "version": "unknown"
+    },
+    {
+      "ecosystem": "Vendored",
+      "name": "godot-ai",
+      "version": "3.1.2"
     },
     {
       "ecosystem": "npm",

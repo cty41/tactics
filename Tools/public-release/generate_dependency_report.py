@@ -41,8 +41,24 @@ def collect_npm(root: Path) -> list[dict[str, str]]:
     ]
 
 
+def collect_vendored(root: Path) -> list[dict[str, str]]:
+    manifest_path = root / "Tools" / "migration" / "manifest" / "godot-tooling.json"
+    if not manifest_path.is_file():
+        return []
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    godot_ai = manifest.get("godotAi", {})
+    vendor_path = root / str(godot_ai.get("vendorPath", ""))
+    if not vendor_path.is_dir():
+        return []
+    return [{
+        "ecosystem": "Vendored",
+        "name": "godot-ai",
+        "version": str(godot_ai.get("tag", "unknown")).removeprefix("v"),
+    }]
+
+
 def build_report(root: Path) -> dict[str, object]:
-    dependencies = collect_nuget(root) + collect_npm(root)
+    dependencies = collect_nuget(root) + collect_npm(root) + collect_vendored(root)
     dependencies.sort(key=lambda item: (item["ecosystem"], item["name"].lower(), item["version"]))
     return {
         "schemaVersion": 1,
