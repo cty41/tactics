@@ -37,11 +37,6 @@
       "up_left": "Tools/artworks/pure_run/enemies/approved/splitjaw_goat_charger_color_ul_v01.png"
     },
     {
-      "id": "tomb-maw-bat",
-      "down_right": "Tools/artworks/pure_run/enemies/approved/tomb_maw_bat_ranged_color_v06.png",
-      "up_left": "Tools/artworks/pure_run/enemies/approved/tomb_maw_bat_ranged_color_ul_v01.png"
-    },
-    {
       "id": "demonbound-idle",
       "down_right": "Tools/artworks/doge/calibrated/doge_capsule_demonbound_idle_dr_v01.png",
       "up_left": "Tools/artworks/doge/calibrated/doge_capsule_demonbound_idle_ul_v01.png"
@@ -50,6 +45,11 @@
       "id": "demonbound-melee",
       "down_right": "Tools/artworks/doge/calibrated/doge_capsule_demonbound_melee_dr_v01.png",
       "up_left": "Tools/artworks/doge/calibrated/doge_capsule_demonbound_melee_ul_v01.png"
+    },
+    {
+      "id": "tomb-maw-bat",
+      "down_right": "Tools/artworks/pure_run/enemies/approved/tomb_maw_bat_ranged_color_v06.png",
+      "up_left": "Tools/artworks/pure_run/enemies/approved/tomb_maw_bat_ranged_color_ul_v01.png"
     }
   ],
   "cases": [
