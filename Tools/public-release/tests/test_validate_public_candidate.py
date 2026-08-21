@@ -119,6 +119,39 @@ class PublicCandidateAuditTests(unittest.TestCase):
         accepted = audit(self.root, candidate=True)
         self.assertFalse(any(error.startswith("artwork_") for error in accepted.errors), accepted.errors)
 
+    def test_candidate_accepts_attempt_and_supporting_artifact_inventory(self):
+        pipeline = self.root / "Tools/artworks/pipeline"
+        attempts = pipeline / "attempts"
+        supporting = pipeline / "supporting-artifacts"
+        attempts.mkdir(parents=True)
+        supporting.mkdir(parents=True)
+        paths = [
+            "Tools/artworks/doge/concepts/hero-source.png",
+            "Tools/artworks/doge/reviews/hero-review.png",
+        ]
+        manifest = json.loads((self.root / "Tools/public-release/asset-provenance.json").read_text(encoding="utf-8"))
+        for path in paths:
+            target = self.root / path
+            target.parent.mkdir(parents=True, exist_ok=True)
+            target.write_bytes(path.encode("utf-8"))
+            manifest["entries"].append({
+                "path": path, "sha256": hashlib.sha256(path.encode("utf-8")).hexdigest(),
+                "status": "approved", "rightsHolder": "cty41", "license": "CC-BY-4.0",
+                "provenance": "test",
+            })
+        (self.root / "Tools/public-release/asset-provenance.json").write_text(json.dumps(manifest), encoding="utf-8")
+        (attempts / "attempt.json").write_text(json.dumps({
+            "state": "validated", "artifacts": {"source": {"path": paths[0]}},
+        }), encoding="utf-8")
+        (supporting / "review.json").write_text(json.dumps({
+            "artifact": {"path": paths[1]}, "role": "review",
+        }), encoding="utf-8")
+        subprocess.run(["git", "add", "."], cwd=self.root, check=True)
+
+        result = audit(self.root, candidate=True)
+
+        self.assertFalse(any(error.startswith("artwork_state_unregistered:") for error in result.errors), result.errors)
+
 
 if __name__ == "__main__":
     unittest.main()
