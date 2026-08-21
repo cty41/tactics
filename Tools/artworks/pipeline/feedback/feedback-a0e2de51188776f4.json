@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 2,
+  "feedbackId": "feedback-a0e2de51188776f4",
+  "attemptId": "job-b00e513c68225856-a006",
+  "candidateSha256": "b6998f498ac0b70fec797163d56b7f4d6f3c8df0e09f4302f7edec1173701245",
+  "reviewer": "cty41",
+  "verdict": "selected",
+  "strengths": [
+    "UL melee bite candidate accepted for formal promotion."
+  ],
+  "defects": [],
+  "nextPromptDelta": "",
+  "recordedAt": "2026-08-21T13:20:48.1529054+08:00",
+  "authorType": "human",
+  "categories": [
+    "pose_axis"
+  ],
+  "disposition": "selected",
+  "frozenInvariants": [
+    "Approved up-left bite pose, identity, mouth, wings, scale, and placement."
+  ],
+  "pendingFixes": []
+}

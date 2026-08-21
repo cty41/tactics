@@ -1,0 +1,40 @@
+{
+  "schemaVersion": 2,
+  "jobId": "job-d8c37ffa3a568007",
+  "state": "ready",
+  "contractId": "contract-d665c26e45950903",
+  "contractSha256": "e4e098d935e92e4daadb74bf8fa73c9efdcde2401b963e644bb949a431fa4440",
+  "prompt": {
+    "path": "Tools/artworks/pure_run/enemies/tomb_maw_bat_wind_blade_ul_prompt_v01.md",
+    "sha256": "92857620ac6d383787b5e7d411c0c3edf5039d1839b69e08400a890a9b567978"
+  },
+  "inputs": [
+    {
+      "role": "action_reference",
+      "path": "Tools/artworks/pure_run/enemies/approved/tomb_maw_bat_wind_blade_attack_dr_v03.png",
+      "sha256": "3d178d9af2a9a093c3792f0e22d760cb21c1e45669b50b81c2e5bd8381a2d9f2"
+    },
+    {
+      "role": "mother_anchor",
+      "path": "Tools/artworks/pure_run/enemies/approved/tomb_maw_bat_ranged_color_ul_v01.png",
+      "sha256": "d8c0037bd029f6f59049d846a4698e0fed63d1d139fb6fde0642cc944c12facb"
+    },
+    {
+      "role": "pose_guide",
+      "path": "Tools/artworks/pure_run/enemies/reviews/tomb_maw_bat_wind_blade_ul_pose_guide_v01.png",
+      "sha256": "0ff1f88bd5e4c07e38696d0b1a990fe254084b86bd19ca69735221831ae32aab"
+    }
+  ],
+  "target": {
+    "direction": "up-left",
+    "pose": "ranged"
+  },
+  "series": null,
+  "conceptOnly": false,
+  "contractRequirements": null,
+  "requiresInvocation": true,
+  "poseGuide": {
+    "poseGuideId": "pose-guide-d1cd32ae7fc53d3c",
+    "sha256": "261a6b1870900ee1145146cacba9472850901f172b8a64290639a3d85c514219"
+  }
+}

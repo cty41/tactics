@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 2,
+  "invocationId": "generation-invocation-9173bf1ba97a5b5f",
+  "state": "started",
+  "attemptId": "job-d8c37ffa3a568007-a002",
+  "compiledPromptId": "compiled-prompt-520a95959311325a",
+  "compiledPromptSha256": "ed5fe2f97ac0636939c10d98fcec656c8d5dde7c6acd99b0f00e508a56fbed84",
+  "provider": "openai-imagegen-technical-remediation",
+  "startedAt": "2026-08-21T10:18:04.3746436+08:00"
+}

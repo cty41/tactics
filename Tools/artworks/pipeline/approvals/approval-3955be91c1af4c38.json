@@ -1,0 +1,42 @@
+{
+  "schemaVersion": 2,
+  "approvalId": "approval-3955be91c1af4c38",
+  "attemptId": "job-b00e513c68225856-a006",
+  "candidateSha256": "b6998f498ac0b70fec797163d56b7f4d6f3c8df0e09f4302f7edec1173701245",
+  "maskSha256": "025f1ed78d2f9740ed17c12f61595ee0208eb1de1d5e5991cf613cbad779d80e",
+  "reportSha256": "d02d4f029113c156354387002efa6c31b0196c1b2fe6bbca923707b1473f33af",
+  "contractId": "contract-75e5c215886e4c1a",
+  "contractSha256": "3a72fd843f6c5c25f655b1a7ba7191f20a9103119a9bf49ceab730764d75e184",
+  "reviewSha256": {
+    "overlay": "dc2bce9c79e234f9d041d29518dfbf14f23f4bf788110a025e5b3fd04eed3e2f",
+    "preview128": "45887b017aaf04ca165cd973e64137d4c92e15514bccbcfbc692eac570a28346",
+    "tile64x32": "432c1b77b0521c6dea8467e93f5495a5e7ee917cb968539a5243829ac6394e63"
+  },
+  "annotation": {
+    "annotationId": "annotations-1004496beca7d2ef",
+    "sha256": "f7e1d1162616bcedb4285a0bc0390dd81abc41733069e008cc3c6d98a6deab97"
+  },
+  "reviewer": "cty41",
+  "decision": "approved",
+  "approvalMode": "gate-exception",
+  "waivedIssues": [
+    {
+      "code": "core_size_out_of_tolerance",
+      "candidateCoreSize": [
+        92,
+        91
+      ],
+      "anchorCoreSize": [
+        83,
+        91
+      ],
+      "delta": [
+        9,
+        0
+      ],
+      "tolerancePx": 8
+    }
+  ],
+  "reason": "User approved the up-left bite pose; its action silhouette is intentionally 8px wider than idle while matched in core height and center.",
+  "decidedAt": "2026-08-21T13:20:48.1529054+08:00"
+}

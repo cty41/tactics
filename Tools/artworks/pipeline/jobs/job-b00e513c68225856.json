@@ -1,0 +1,35 @@
+{
+  "schemaVersion": 2,
+  "jobId": "job-b00e513c68225856",
+  "state": "ready",
+  "contractId": "contract-75e5c215886e4c1a",
+  "contractSha256": "3a72fd843f6c5c25f655b1a7ba7191f20a9103119a9bf49ceab730764d75e184",
+  "prompt": {
+    "path": "Tools/artworks/pure_run/enemies/tomb_maw_bat_melee_bite_ul_prompt_v01.md",
+    "sha256": "14a514623afdabbdf9d06b6ce5d4e64693bb8a3d9aa00703e166e808f384ee73"
+  },
+  "inputs": [
+    {
+      "role": "action_reference",
+      "path": "Tools/artworks/pure_run/enemies/approved/tomb_maw_bat_melee_bite_attack_dr_v01.png",
+      "sha256": "275e36c12c1ff77f9c26d76cdebad6500a81419f56b8d50971053e17c1fbb585"
+    },
+    {
+      "role": "mother_anchor",
+      "path": "Tools/artworks/pure_run/enemies/approved/tomb_maw_bat_ranged_color_ul_v01.png",
+      "sha256": "d8c0037bd029f6f59049d846a4698e0fed63d1d139fb6fde0642cc944c12facb"
+    }
+  ],
+  "target": {
+    "direction": "up-left",
+    "pose": "melee"
+  },
+  "series": null,
+  "conceptOnly": false,
+  "contractRequirements": null,
+  "requiresInvocation": true,
+  "poseGuide": {
+    "poseGuideId": "pose-guide-234cf7bce3baa6a6",
+    "sha256": "0aa8ac0b5fdeaa64d62d22d22b04e74cc09094ffd635b71179ff5f57226ae4f5"
+  }
+}

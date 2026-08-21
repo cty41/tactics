@@ -1,0 +1,37 @@
+{
+  "schemaVersion": 2,
+  "attemptId": "job-d8c37ffa3a568007-a001",
+  "jobId": "job-d8c37ffa3a568007",
+  "ordinal": 1,
+  "parentAttemptId": null,
+  "retryFeedbackId": null,
+  "promptDelta": null,
+  "technicalRemediation": false,
+  "state": "technical_failed",
+  "artifacts": {
+    "source": {
+      "path": "Tools/artworks/pure_run/enemies/concepts/tomb_maw_bat_wind_blade_attack_ul_chroma_source_v01.png",
+      "sha256": "4afeff7c2e0dd2c59492d627d444ad588f204f70ad396dcc29b7efa668bbd95b"
+    },
+    "raw": {
+      "path": "Tools/artworks/pipeline/artifacts/job-d8c37ffa3a568007/job-d8c37ffa3a568007-a001/raw.png",
+      "sha256": "4afeff7c2e0dd2c59492d627d444ad588f204f70ad396dcc29b7efa668bbd95b"
+    },
+    "prepared": {
+      "path": "Tools/artworks/pipeline/artifacts/job-d8c37ffa3a568007/job-d8c37ffa3a568007-a001/prepared.png",
+      "sha256": "43783a4bc418fa0989723d97fb996b12770325b6ff692d8bb1015207970b05bc"
+    }
+  },
+  "report": {
+    "path": "Tools/artworks/pipeline/reports/report-e2107ab8d4f256ac.json",
+    "sha256": "aa08cfba4699175fa2e4e60c15a7fc4423b345c2610711bc527663ce5f326893"
+  },
+  "approvalId": null,
+  "feedbackId": "feedback-f0a6826af8d08167",
+  "generationInvocationId": "generation-invocation-dc3fa4ce601e7269",
+  "generationDeliveryId": "generation-delivery-515c3bb5c928bb5c",
+  "preparation": {
+    "chroma": "00ff00",
+    "chromaTolerance": 36
+  }
+}

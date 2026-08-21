@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 2,
+  "feedbackId": "feedback-d935c38802145d8d",
+  "attemptId": "job-d8c37ffa3a568007-a005",
+  "candidateSha256": "58832df28847fae29f75309b8574a104860f4fa9befa04c2de9357806013d43e",
+  "reviewer": "cty41",
+  "verdict": "selected",
+  "strengths": [
+    "Active asymmetric flap clearly reads as Wind Blade release; identity, hover height, and tile occupancy are accepted."
+  ],
+  "defects": [
+    "Core is wider than the approved UL idle mask by the deterministic tolerance, accepted visually by cty41."
+  ],
+  "nextPromptDelta": "",
+  "recordedAt": "2026-08-21T02:49:09Z",
+  "authorType": "human",
+  "categories": [],
+  "disposition": "selected",
+  "frozenInvariants": [
+    "Use this exact native UL action silhouette and scale as the approved Wind Blade UL sprite."
+  ],
+  "pendingFixes": [
+    "Core is wider than the approved UL idle mask by the deterministic tolerance, accepted visually by cty41."
+  ]
+}

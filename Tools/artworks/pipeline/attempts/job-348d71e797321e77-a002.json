@@ -1,0 +1,102 @@
+{
+  "schemaVersion": 2,
+  "attemptId": "job-348d71e797321e77-a002",
+  "jobId": "job-348d71e797321e77",
+  "ordinal": 2,
+  "parentAttemptId": "job-348d71e797321e77-a001",
+  "retryFeedbackId": null,
+  "promptDelta": null,
+  "technicalRemediation": true,
+  "state": "promoted",
+  "artifacts": {
+    "source": {
+      "path": "Tools/artworks/pure_run/enemies/concepts/tomb_maw_bat_hit_ul_chroma_source_v01.png",
+      "sha256": "024bc34be51aa673a87f8ad1965b4f489ea0dbf31db1653725c63851319c49ae"
+    },
+    "raw": {
+      "path": "Tools/artworks/pipeline/artifacts/job-348d71e797321e77/job-348d71e797321e77-a002/raw.png",
+      "sha256": "024bc34be51aa673a87f8ad1965b4f489ea0dbf31db1653725c63851319c49ae"
+    },
+    "prepared": {
+      "path": "Tools/artworks/pipeline/artifacts/job-348d71e797321e77/job-348d71e797321e77-a002/prepared.png",
+      "sha256": "60d4a1a80d109e558d86ccf79898044bf1e6dd3b2cc870c5ee33c3db5c9fb659"
+    },
+    "maskSource": {
+      "path": "Tools/artworks/pure_run/enemies/concepts/tomb_maw_bat_hit_ul_semantic_mask_v02.png",
+      "sha256": "9d98a0e55a7d490b367f52d02b73abfef67bf4e15f5c3e1953e56278adb11d8e"
+    },
+    "mask": {
+      "path": "Tools/artworks/pipeline/artifacts/job-348d71e797321e77/job-348d71e797321e77-a002/mask.png",
+      "sha256": "9d98a0e55a7d490b367f52d02b73abfef67bf4e15f5c3e1953e56278adb11d8e"
+    },
+    "calibrated": {
+      "path": "Tools/artworks/pipeline/artifacts/job-348d71e797321e77/job-348d71e797321e77-a002/calibrated.png",
+      "sha256": "7759ee609ee9e66cb68511e5dd253287ebf3c3ce04608bc18a507145872776d3"
+    },
+    "calibratedMask": {
+      "path": "Tools/artworks/pipeline/artifacts/job-348d71e797321e77/job-348d71e797321e77-a002/calibrated-mask.png",
+      "sha256": "191f85e6e030c32d5743026c2c7d77772269ef88ddc8f153d6703b71b0729ca0"
+    },
+    "review": {
+      "overlay": {
+        "path": "Tools/artworks/pipeline/reviews/job-348d71e797321e77-a002/overlay.png",
+        "sha256": "581b3a4410451588edb9dc89ff68c06d282244ef2d81e3ffe4e867db58daeb14"
+      },
+      "preview128": {
+        "path": "Tools/artworks/pipeline/reviews/job-348d71e797321e77-a002/preview128.png",
+        "sha256": "79d4c2c423375226dcacecc619c50a4f3076f0630d3cf220339779da751cc1a0"
+      },
+      "tile64x32": {
+        "path": "Tools/artworks/pipeline/reviews/job-348d71e797321e77-a002/tile64x32.png",
+        "sha256": "655747a058fd0519ce44949179522c5ef1977847d9799b9b178276ea8c7347a4"
+      }
+    },
+    "promoted": {
+      "master": {
+        "path": "Tools/artworks/pure_run/enemies/approved/tomb_maw_bat_hit_ul_v01.png",
+        "sha256": "7759ee609ee9e66cb68511e5dd253287ebf3c3ce04608bc18a507145872776d3"
+      },
+      "preview": {
+        "path": "Tools/artworks/pure_run/enemies/approved/tomb_maw_bat_hit_ul_v01_128.png",
+        "sha256": "79d4c2c423375226dcacecc619c50a4f3076f0630d3cf220339779da751cc1a0"
+      }
+    }
+  },
+  "report": {
+    "path": "Tools/artworks/pipeline/reports/report-3a2482cac7a52168.json",
+    "sha256": "729bf6fe740f9080da24155b162f31c29756ec10547838077b43a49da14659fa"
+  },
+  "approvalId": "approval-78d940937fc8a28c",
+  "feedbackId": "feedback-2718d9c4b7a09162",
+  "generationInvocationId": "generation-invocation-3743c20ba068f9c9",
+  "generationDeliveryId": "generation-delivery-06fe52377cbe2f98",
+  "preparation": {
+    "chroma": "00ff00",
+    "chromaTolerance": 180
+  },
+  "calibration": {
+    "method": "uniform-core-height",
+    "scale": 0.2297979797979798,
+    "offset": [
+      -13,
+      -10
+    ],
+    "sourceCoreBbox": [
+      465,
+      425,
+      795,
+      820
+    ],
+    "anchorCoreBbox": [
+      91,
+      88,
+      173,
+      178
+    ],
+    "anchorMask": {
+      "path": "Tools/artworks/pure_run/enemies/reviews/tomb_maw_bat_ranged_color_ul_core_mask_v01.png",
+      "sha256": "5ef1d6cf485e94fad64d5558fbc99f9e4197fb54a2ba4aee4fb231ef61ccd6d5"
+    }
+  },
+  "annotationId": "annotations-2afae7a1514d61f0"
+}

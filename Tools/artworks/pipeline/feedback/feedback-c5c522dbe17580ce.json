@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 2,
+  "feedbackId": "feedback-c5c522dbe17580ce",
+  "attemptId": "job-fcd2010d14e8bee6-a003",
+  "candidateSha256": "3f1a1e2454e3daafad4add5455a26258140755e40f0df52abf3125a7a13da1a1",
+  "reviewer": "codex",
+  "verdict": "technical_failed",
+  "strengths": [
+    "Continuous ellipse removed the disconnected-row defect without changing the raw sprite."
+  ],
+  "defects": [
+    "Full antialiased ellipse extended outside subject alpha and introduced non-semantic edge colours."
+  ],
+  "nextPromptDelta": "No ImageGen change; use a smaller hard-edged ellipse clipped to the opaque spherical body.",
+  "recordedAt": "2026-08-21T03:34:54Z",
+  "authorType": "agent",
+  "categories": [],
+  "disposition": "technical_failed",
+  "frozenInvariants": [],
+  "pendingFixes": [
+    "Create exact red/cyan/transparent mask fully inside subject alpha."
+  ]
+}

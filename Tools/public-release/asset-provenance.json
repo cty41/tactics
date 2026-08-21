@@ -9169,6 +9169,1558 @@
       "rightsHolder": "cty41",
       "license": "CC-BY-4.0",
       "provenance": "project-owned-migrated-runtime-art"
+    },
+    {
+      "path": "Tools/artworks/pure_run/enemies/reviews/tomb_maw_bat_death_size_compare_v03.png",
+      "sha256": "f059d2c6ab769c660def00954ae2a2b6369013999c1365006adbe1ff795aa869",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-artwork-review"
+    },
+    {
+      "path": "Tools/artworks/pure_run/enemies/reviews/tomb_maw_bat_death_tilemap_compare_v04.png",
+      "sha256": "47ec491e0f6d29999733689c4db5b9178a4c1b90656909eff1f59cd15b0b6cb0",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-supporting-derived"
+    },
+    {
+      "path": "Tools/artworks/pure_run/enemies/approved/tomb_maw_bat_ranged_death_color_v02.png",
+      "sha256": "8ddc4f85c3d98967fd28acf7239797f7b8ea24db9a207a64150e6c16413082db",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "project-owned",
+      "provenance": "project-owned-gpt-generated"
+    },
+    {
+      "path": "Tools/artworks/pure_run/enemies/approved/tomb_maw_bat_ranged_death_color_v02_128.png",
+      "sha256": "11e1068230f846c50dba9073a63fc9d4e865947a7dc68f8f13befe78a0e1f81a",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "project-owned",
+      "provenance": "project-owned-gpt-generated"
+    },
+    {
+      "path": "Tools/artworks/pure_run/enemies/reviews/tomb_maw_bat_wind_blade_ul_pose_guide_v01.png",
+      "sha256": "0ff1f88bd5e4c07e38696d0b1a990fe254084b86bd19ca69735221831ae32aab",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-supporting-derived"
+    },
+    {
+      "path": "Tools/artworks/pure_run/enemies/concepts/tomb_maw_bat_wind_blade_attack_ul_chroma_source_v01.png",
+      "sha256": "4afeff7c2e0dd2c59492d627d444ad588f204f70ad396dcc29b7efa668bbd95b",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-gpt-generated"
+    },
+    {
+      "path": "Tools/artworks/pipeline/artifacts/job-d8c37ffa3a568007/job-d8c37ffa3a568007-a001/raw.png",
+      "sha256": "4afeff7c2e0dd2c59492d627d444ad588f204f70ad396dcc29b7efa668bbd95b",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-gpt-generated"
+    },
+    {
+      "path": "Tools/artworks/pipeline/artifacts/job-d8c37ffa3a568007/job-d8c37ffa3a568007-a001/prepared.png",
+      "sha256": "43783a4bc418fa0989723d97fb996b12770325b6ff692d8bb1015207970b05bc",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-derived-artwork"
+    },
+    {
+      "path": "Tools/artworks/pipeline/artifacts/job-d8c37ffa3a568007/job-d8c37ffa3a568007-a002/raw.png",
+      "sha256": "4afeff7c2e0dd2c59492d627d444ad588f204f70ad396dcc29b7efa668bbd95b",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-gpt-generated"
+    },
+    {
+      "path": "Tools/artworks/pipeline/artifacts/job-d8c37ffa3a568007/job-d8c37ffa3a568007-a002/prepared.png",
+      "sha256": "871a683e2a7ae2601f65de93902cc3047e5ef8691661d8492c7d716437fb5dbd",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-derived-artwork"
+    },
+    {
+      "path": "Tools/artworks/pure_run/enemies/concepts/tomb_maw_bat_wind_blade_attack_ul_semantic_mask_v01.png",
+      "sha256": "b023035fb1fe7552c6547273c14be5f820d8da446177af809665bb600e503b2e",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-semantic-mask"
+    },
+    {
+      "path": "Tools/artworks/pipeline/artifacts/job-d8c37ffa3a568007/job-d8c37ffa3a568007-a002/mask.png",
+      "sha256": "b023035fb1fe7552c6547273c14be5f820d8da446177af809665bb600e503b2e",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-semantic-mask"
+    },
+    {
+      "path": "Tools/artworks/pure_run/enemies/reviews/tomb_maw_bat_ranged_color_ul_core_mask_review_v01.png",
+      "sha256": "0bfa6f642714eaaea34291cd31b426e13f09f4b05548f6e7f885e1cbac577fdb",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-supporting-derived"
+    },
+    {
+      "path": "Tools/artworks/pure_run/enemies/concepts/tomb_maw_bat_wind_blade_attack_ul_chroma_source_v02.png",
+      "sha256": "751014ebc4437262fa4b2a714cbd78538cab289048506d78f10e59102722f8ab",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-gpt-generated"
+    },
+    {
+      "path": "Tools/artworks/pipeline/artifacts/job-d8c37ffa3a568007/job-d8c37ffa3a568007-a003/raw.png",
+      "sha256": "751014ebc4437262fa4b2a714cbd78538cab289048506d78f10e59102722f8ab",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-gpt-generated"
+    },
+    {
+      "path": "Tools/artworks/pipeline/artifacts/job-d8c37ffa3a568007/job-d8c37ffa3a568007-a003/prepared.png",
+      "sha256": "d2a063fdbd112da276bcf74f80810a67209246393e9d2d5459fb6ddc4c120f5b",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-derived-artwork"
+    },
+    {
+      "path": "Tools/artworks/pure_run/enemies/concepts/tomb_maw_bat_wind_blade_attack_ul_semantic_mask_v02.png",
+      "sha256": "00fb2ab868b5e6d10b179de1f70010944e7e92496535fbe043aa606404472598",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-semantic-mask"
+    },
+    {
+      "path": "Tools/artworks/pipeline/artifacts/job-d8c37ffa3a568007/job-d8c37ffa3a568007-a003/mask.png",
+      "sha256": "00fb2ab868b5e6d10b179de1f70010944e7e92496535fbe043aa606404472598",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-semantic-mask"
+    },
+    {
+      "path": "Tools/artworks/pipeline/artifacts/job-d8c37ffa3a568007/job-d8c37ffa3a568007-a003/calibrated.png",
+      "sha256": "dcb720038c8d0e8187f7579bc161c39049ae67080c6acd4f1dfdb689489c62f1",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-deterministically-core-calibrated-artwork"
+    },
+    {
+      "path": "Tools/artworks/pipeline/artifacts/job-d8c37ffa3a568007/job-d8c37ffa3a568007-a003/calibrated-mask.png",
+      "sha256": "9c500fdba5b2bf3142754092cd745e39393fc9c4490c6a43c89e4ec2cdefc885",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-deterministically-core-calibrated-artwork"
+    },
+    {
+      "path": "Tools/artworks/pipeline/reviews/job-d8c37ffa3a568007-a003/overlay.png",
+      "sha256": "f242b54f5f41de7867609db8b155720b016b0dd38bbde49b65c6e0840191f825",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-artwork-review"
+    },
+    {
+      "path": "Tools/artworks/pipeline/reviews/job-d8c37ffa3a568007-a003/preview128.png",
+      "sha256": "2d065471111cdd033450d6c69ff437a42cee7d044c6c7e33e84947025709a3d5",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-artwork-review"
+    },
+    {
+      "path": "Tools/artworks/pipeline/reviews/job-d8c37ffa3a568007-a003/tile64x32.png",
+      "sha256": "e2a775bc1cf3a16b58a12843606cd7fa8e6cd5efc0ef2c89516f11987974f38c",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-artwork-review"
+    },
+    {
+      "path": "Tools/artworks/pipeline/artifacts/job-d8c37ffa3a568007/job-d8c37ffa3a568007-a004/raw.png",
+      "sha256": "751014ebc4437262fa4b2a714cbd78538cab289048506d78f10e59102722f8ab",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-gpt-generated"
+    },
+    {
+      "path": "Tools/artworks/pipeline/artifacts/job-d8c37ffa3a568007/job-d8c37ffa3a568007-a004/prepared.png",
+      "sha256": "d2a063fdbd112da276bcf74f80810a67209246393e9d2d5459fb6ddc4c120f5b",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-derived-artwork"
+    },
+    {
+      "path": "Tools/artworks/pure_run/enemies/concepts/tomb_maw_bat_wind_blade_attack_ul_semantic_mask_v03.png",
+      "sha256": "46544823bbfc92f9cf09efb9c13aa8231ce86b506f695f17de6cc05c32b366ca",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-semantic-mask"
+    },
+    {
+      "path": "Tools/artworks/pipeline/artifacts/job-d8c37ffa3a568007/job-d8c37ffa3a568007-a004/mask.png",
+      "sha256": "46544823bbfc92f9cf09efb9c13aa8231ce86b506f695f17de6cc05c32b366ca",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-semantic-mask"
+    },
+    {
+      "path": "Tools/artworks/pipeline/artifacts/job-d8c37ffa3a568007/job-d8c37ffa3a568007-a004/calibrated.png",
+      "sha256": "08d853c9dccaab2abbde68101bd6c9a668a10cc98a6d5472a5d7ed9742518018",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-deterministically-core-calibrated-artwork"
+    },
+    {
+      "path": "Tools/artworks/pipeline/artifacts/job-d8c37ffa3a568007/job-d8c37ffa3a568007-a004/calibrated-mask.png",
+      "sha256": "d47435b5a483bf4a39087cd1ef428daf9d6637c3f2e23d5e16a32e4fc05a72f2",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-deterministically-core-calibrated-artwork"
+    },
+    {
+      "path": "Tools/artworks/pure_run/enemies/concepts/tomb_maw_bat_wind_blade_attack_ul_chroma_source_v03.png",
+      "sha256": "28f1b79d39853920875eb1a86c8bf45d5210d2bc88ba9fb6959f281b7af4c49a",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-gpt-generated"
+    },
+    {
+      "path": "Tools/artworks/pipeline/artifacts/job-d8c37ffa3a568007/job-d8c37ffa3a568007-a005/raw.png",
+      "sha256": "28f1b79d39853920875eb1a86c8bf45d5210d2bc88ba9fb6959f281b7af4c49a",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-gpt-generated"
+    },
+    {
+      "path": "Tools/artworks/pipeline/artifacts/job-d8c37ffa3a568007/job-d8c37ffa3a568007-a005/prepared.png",
+      "sha256": "81ae04632f437c37ae9ccc00c09aaf58dc70c06315d487e7507c78f8c9240aac",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-derived-artwork"
+    },
+    {
+      "path": "Tools/artworks/pure_run/enemies/concepts/tomb_maw_bat_wind_blade_attack_ul_semantic_mask_v04.png",
+      "sha256": "d713ffa40c1433db808ebd9dbafc5474f1f11bd0ae365256351697633f25b252",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-semantic-mask"
+    },
+    {
+      "path": "Tools/artworks/pipeline/artifacts/job-d8c37ffa3a568007/job-d8c37ffa3a568007-a005/mask.png",
+      "sha256": "d713ffa40c1433db808ebd9dbafc5474f1f11bd0ae365256351697633f25b252",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-semantic-mask"
+    },
+    {
+      "path": "Tools/artworks/pipeline/artifacts/job-d8c37ffa3a568007/job-d8c37ffa3a568007-a005/calibrated.png",
+      "sha256": "58832df28847fae29f75309b8574a104860f4fa9befa04c2de9357806013d43e",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-deterministically-core-calibrated-artwork"
+    },
+    {
+      "path": "Tools/artworks/pipeline/artifacts/job-d8c37ffa3a568007/job-d8c37ffa3a568007-a005/calibrated-mask.png",
+      "sha256": "e7d934db42d3382db464f06d360865777e8b5cc578f71f22d273d41856d34988",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-deterministically-core-calibrated-artwork"
+    },
+    {
+      "path": "Tools/artworks/pipeline/reviews/job-d8c37ffa3a568007-a005/overlay.png",
+      "sha256": "653b45f12ac8cbbe96ae24a8af416aa7c2ddb961b136619ef8c5dd305731b493",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-artwork-review"
+    },
+    {
+      "path": "Tools/artworks/pipeline/reviews/job-d8c37ffa3a568007-a005/preview128.png",
+      "sha256": "323b51368c42d3b2cea839d6546e872855aae20894e3fd9f57fcdbf232b312a4",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-artwork-review"
+    },
+    {
+      "path": "Tools/artworks/pipeline/reviews/job-d8c37ffa3a568007-a005/tile64x32.png",
+      "sha256": "fae8ce388e7f447dc66ed1b84a309b795b8d66556ac52e827e17dabd67e97d02",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-artwork-review"
+    },
+    {
+      "path": "Tools/artworks/pure_run/enemies/reviews/tomb_maw_bat_wind_blade_tilemap_compare_v05.png",
+      "sha256": "a39c8658666f1b382497f9b1707e020907a49b191e0aee12a3d6408f3fa14fa9",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-supporting-derived"
+    },
+    {
+      "path": "Tools/artworks/pure_run/enemies/approved/tomb_maw_bat_wind_blade_attack_ul_v01.png",
+      "sha256": "58832df28847fae29f75309b8574a104860f4fa9befa04c2de9357806013d43e",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "project-owned",
+      "provenance": "project-owned-gpt-generated"
+    },
+    {
+      "path": "Tools/artworks/pure_run/enemies/approved/tomb_maw_bat_wind_blade_attack_ul_v01_128.png",
+      "sha256": "323b51368c42d3b2cea839d6546e872855aae20894e3fd9f57fcdbf232b312a4",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "project-owned",
+      "provenance": "project-owned-gpt-generated"
+    },
+    {
+      "path": "Tools/artworks/pure_run/enemies/reviews/tomb_maw_bat_melee_bite_dr_pose_guide_v01.png",
+      "sha256": "359574e2bc988fd78a830e1951c9e62d4e05e1be5932dd63765ab89bce59675f",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-supporting-derived"
+    },
+    {
+      "path": "Tools/artworks/pure_run/enemies/concepts/tomb_maw_bat_melee_bite_attack_dr_chroma_source_v01.png",
+      "sha256": "3904fd4bd1ba838815f24fe719e1092b808b63f9311468ee496c468955222364",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-gpt-generated"
+    },
+    {
+      "path": "Tools/artworks/pipeline/artifacts/job-fcd2010d14e8bee6/job-fcd2010d14e8bee6-a002/raw.png",
+      "sha256": "3904fd4bd1ba838815f24fe719e1092b808b63f9311468ee496c468955222364",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-gpt-generated"
+    },
+    {
+      "path": "Tools/artworks/pure_run/enemies/reviews/tomb_maw_bat_ranged_color_dr_core_mask_review_v01.png",
+      "sha256": "d46c2bd84a3ced05553392084f0708a3599ff05410fcbed4d2dfb0fc58fde53c",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-supporting-derived"
+    },
+    {
+      "path": "Tools/artworks/pipeline/artifacts/job-fcd2010d14e8bee6/job-fcd2010d14e8bee6-a002/prepared.png",
+      "sha256": "63e70595aacb92932075cb4d377610897828a88765ea13492a76f8d982c44200",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-derived-artwork"
+    },
+    {
+      "path": "Tools/artworks/pure_run/enemies/concepts/tomb_maw_bat_melee_bite_attack_dr_semantic_mask_v01.png",
+      "sha256": "14394976244d65625be30208455b4f243b9bd11ba6a64ca27d506923ba92db5e",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-semantic-mask"
+    },
+    {
+      "path": "Tools/artworks/pipeline/artifacts/job-fcd2010d14e8bee6/job-fcd2010d14e8bee6-a002/mask.png",
+      "sha256": "14394976244d65625be30208455b4f243b9bd11ba6a64ca27d506923ba92db5e",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-semantic-mask"
+    },
+    {
+      "path": "Tools/artworks/pipeline/artifacts/job-fcd2010d14e8bee6/job-fcd2010d14e8bee6-a002/calibrated.png",
+      "sha256": "fd0019c1a30fbb46af9f89f1f13ce7a6e1e921cddf6307bb9e4491decb399f1c",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-deterministically-core-calibrated-artwork"
+    },
+    {
+      "path": "Tools/artworks/pipeline/artifacts/job-fcd2010d14e8bee6/job-fcd2010d14e8bee6-a002/calibrated-mask.png",
+      "sha256": "a16988e4f778b06af20c0010bcd812ab600891c37a5d6d6f2a5a6b9fc8229275",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-deterministically-core-calibrated-artwork"
+    },
+    {
+      "path": "Tools/artworks/pipeline/reviews/job-fcd2010d14e8bee6-a002/overlay.png",
+      "sha256": "d4ab2904a6f90c4078d5738ca6664b53cd0094727e6322356fa6e8dd23d413e1",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-artwork-review"
+    },
+    {
+      "path": "Tools/artworks/pipeline/reviews/job-fcd2010d14e8bee6-a002/preview128.png",
+      "sha256": "faa4530fda152ea70b86ae49982252aa8a5e71e7a94b4e22450b821b52e99c33",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-artwork-review"
+    },
+    {
+      "path": "Tools/artworks/pipeline/reviews/job-fcd2010d14e8bee6-a002/tile64x32.png",
+      "sha256": "a7c65754d12f8e247e8e1a707ab169738a100db67b733e3fbdcbdf4aeabc178f",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-artwork-review"
+    },
+    {
+      "path": "Tools/artworks/pipeline/artifacts/job-fcd2010d14e8bee6/job-fcd2010d14e8bee6-a003/raw.png",
+      "sha256": "3904fd4bd1ba838815f24fe719e1092b808b63f9311468ee496c468955222364",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-gpt-generated"
+    },
+    {
+      "path": "Tools/artworks/pipeline/artifacts/job-fcd2010d14e8bee6/job-fcd2010d14e8bee6-a003/prepared.png",
+      "sha256": "63e70595aacb92932075cb4d377610897828a88765ea13492a76f8d982c44200",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-derived-artwork"
+    },
+    {
+      "path": "Tools/artworks/pure_run/enemies/concepts/tomb_maw_bat_melee_bite_attack_dr_semantic_mask_v02.png",
+      "sha256": "72a6820edf58997b80331de8444907c27d6e68e6cd182a5d8bd75a1d008fbd00",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-semantic-mask"
+    },
+    {
+      "path": "Tools/artworks/pipeline/artifacts/job-fcd2010d14e8bee6/job-fcd2010d14e8bee6-a003/mask.png",
+      "sha256": "72a6820edf58997b80331de8444907c27d6e68e6cd182a5d8bd75a1d008fbd00",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-semantic-mask"
+    },
+    {
+      "path": "Tools/artworks/pipeline/artifacts/job-fcd2010d14e8bee6/job-fcd2010d14e8bee6-a003/calibrated.png",
+      "sha256": "3f1a1e2454e3daafad4add5455a26258140755e40f0df52abf3125a7a13da1a1",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-deterministically-core-calibrated-artwork"
+    },
+    {
+      "path": "Tools/artworks/pipeline/artifacts/job-fcd2010d14e8bee6/job-fcd2010d14e8bee6-a003/calibrated-mask.png",
+      "sha256": "f6e0648f7583d160409ad18defc1792164ec72c829a7aa9bfe028eba99896218",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-deterministically-core-calibrated-artwork"
+    },
+    {
+      "path": "Tools/artworks/pipeline/artifacts/job-fcd2010d14e8bee6/job-fcd2010d14e8bee6-a004/raw.png",
+      "sha256": "3904fd4bd1ba838815f24fe719e1092b808b63f9311468ee496c468955222364",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-gpt-generated"
+    },
+    {
+      "path": "Tools/artworks/pipeline/artifacts/job-fcd2010d14e8bee6/job-fcd2010d14e8bee6-a004/prepared.png",
+      "sha256": "63e70595aacb92932075cb4d377610897828a88765ea13492a76f8d982c44200",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-derived-artwork"
+    },
+    {
+      "path": "Tools/artworks/pure_run/enemies/concepts/tomb_maw_bat_melee_bite_attack_dr_semantic_mask_v03.png",
+      "sha256": "5bc4bceacd42944a6b7a424d36861a74de4974a79aeb2acc57121e2f95c71e7b",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-semantic-mask"
+    },
+    {
+      "path": "Tools/artworks/pipeline/artifacts/job-fcd2010d14e8bee6/job-fcd2010d14e8bee6-a004/mask.png",
+      "sha256": "5bc4bceacd42944a6b7a424d36861a74de4974a79aeb2acc57121e2f95c71e7b",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-semantic-mask"
+    },
+    {
+      "path": "Tools/artworks/pipeline/artifacts/job-fcd2010d14e8bee6/job-fcd2010d14e8bee6-a004/calibrated.png",
+      "sha256": "453831b1f5b678c2641707ee3600f5a5d427cdb9cfdf492c19b4c0dc94a6c746",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-deterministically-core-calibrated-artwork"
+    },
+    {
+      "path": "Tools/artworks/pipeline/artifacts/job-fcd2010d14e8bee6/job-fcd2010d14e8bee6-a004/calibrated-mask.png",
+      "sha256": "5d99d56fd202bb5ed8ec2cd8b5ec4658b3b84b17a90c12c11a9e4052b67a9ec0",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-deterministically-core-calibrated-artwork"
+    },
+    {
+      "path": "Tools/artworks/pipeline/artifacts/job-fcd2010d14e8bee6/job-fcd2010d14e8bee6-a005/raw.png",
+      "sha256": "3904fd4bd1ba838815f24fe719e1092b808b63f9311468ee496c468955222364",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-gpt-generated"
+    },
+    {
+      "path": "Tools/artworks/pipeline/artifacts/job-fcd2010d14e8bee6/job-fcd2010d14e8bee6-a005/prepared.png",
+      "sha256": "63e70595aacb92932075cb4d377610897828a88765ea13492a76f8d982c44200",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-derived-artwork"
+    },
+    {
+      "path": "Tools/artworks/pure_run/enemies/concepts/tomb_maw_bat_melee_bite_attack_dr_semantic_mask_v04.png",
+      "sha256": "ab599bf4bbdc812fad7d0e8786be8d6641414039616cfd281c5d68c4fa8ee9da",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-semantic-mask"
+    },
+    {
+      "path": "Tools/artworks/pipeline/artifacts/job-fcd2010d14e8bee6/job-fcd2010d14e8bee6-a005/mask.png",
+      "sha256": "ab599bf4bbdc812fad7d0e8786be8d6641414039616cfd281c5d68c4fa8ee9da",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-semantic-mask"
+    },
+    {
+      "path": "Tools/artworks/pipeline/artifacts/job-fcd2010d14e8bee6/job-fcd2010d14e8bee6-a005/calibrated.png",
+      "sha256": "275e36c12c1ff77f9c26d76cdebad6500a81419f56b8d50971053e17c1fbb585",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-deterministically-core-calibrated-artwork"
+    },
+    {
+      "path": "Tools/artworks/pipeline/artifacts/job-fcd2010d14e8bee6/job-fcd2010d14e8bee6-a005/calibrated-mask.png",
+      "sha256": "68fc954cf3570e235af8b098486e1dca0e6bd43e1fcddd3346e22e412dd1b953",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-deterministically-core-calibrated-artwork"
+    },
+    {
+      "path": "Tools/artworks/pipeline/reviews/job-fcd2010d14e8bee6-a005/overlay.png",
+      "sha256": "5e19a277b0e81fcb79ecd24528b4c89cc9a81b6ddf1dabf55f6f4cf12c8d2fe2",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-artwork-review"
+    },
+    {
+      "path": "Tools/artworks/pipeline/reviews/job-fcd2010d14e8bee6-a005/preview128.png",
+      "sha256": "31b8bee56d1d3e161281f0abd626c12a02dd18041a02d4337b87e6a441807534",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-artwork-review"
+    },
+    {
+      "path": "Tools/artworks/pipeline/reviews/job-fcd2010d14e8bee6-a005/tile64x32.png",
+      "sha256": "917c54dbc70234fef0b67360498a2e415886509c37b875f73d6e0cc85730f2f2",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-artwork-review"
+    },
+    {
+      "path": "Tools/artworks/pure_run/enemies/reviews/tomb_maw_bat_melee_bite_dr_tilemap_amazon_compare_v01.png",
+      "sha256": "ab1b3dc95d9cd010e90c47086cc17bb53ec0b722e5fba1bbf250960c9077c493",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-supporting-derived"
+    },
+    {
+      "path": "Tools/artworks/pure_run/enemies/reviews/tomb_maw_bat_melee_bite_dr_tilemap_red_shiba_amazon_compare_v02.png",
+      "sha256": "17a9957b10add28cce04e47d8a2f2904db10f77797f29c71aabd1cd1fc698d78",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-supporting-derived"
+    },
+    {
+      "path": "Tools/artworks/pure_run/enemies/approved/tomb_maw_bat_melee_bite_attack_dr_v01.png",
+      "sha256": "275e36c12c1ff77f9c26d76cdebad6500a81419f56b8d50971053e17c1fbb585",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "project-owned",
+      "provenance": "project-owned-gpt-generated"
+    },
+    {
+      "path": "Tools/artworks/pure_run/enemies/approved/tomb_maw_bat_melee_bite_attack_dr_v01_128.png",
+      "sha256": "31b8bee56d1d3e161281f0abd626c12a02dd18041a02d4337b87e6a441807534",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "project-owned",
+      "provenance": "project-owned-gpt-generated"
+    },
+    {
+      "path": "Tools/artworks/pure_run/enemies/reviews/tomb_maw_bat_melee_bite_ul_pose_guide_v01.png",
+      "sha256": "c66cde728ef1c3cf4197286264989174b5a4c7fa608627cac75fe85c83c30c11",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-supporting-derived"
+    },
+    {
+      "path": "Tools/artworks/pure_run/enemies/concepts/tomb_maw_bat_melee_bite_attack_ul_chroma_source_v01.png",
+      "sha256": "eeff44933398f5ba82166431f21dcfea7bfcb2714c184c4de696e803265617df",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-gpt-generated"
+    },
+    {
+      "path": "Tools/artworks/pipeline/artifacts/job-b00e513c68225856/job-b00e513c68225856-a001/raw.png",
+      "sha256": "eeff44933398f5ba82166431f21dcfea7bfcb2714c184c4de696e803265617df",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-gpt-generated"
+    },
+    {
+      "path": "Tools/artworks/pipeline/artifacts/job-b00e513c68225856/job-b00e513c68225856-a001/prepared.png",
+      "sha256": "a2d12dea515fab4f16514f9ee4c5806c287c56cadb2c0d20b485ca2b95473353",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-derived-artwork"
+    },
+    {
+      "path": "Tools/artworks/pure_run/enemies/concepts/tomb_maw_bat_melee_bite_attack_ul_semantic_mask_v01.png",
+      "sha256": "ebec65b6cc1008e8bf7e3753ecf70da1f3e565e3c263f2e0e93d82d25a237510",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-semantic-mask"
+    },
+    {
+      "path": "Tools/artworks/pipeline/artifacts/job-b00e513c68225856/job-b00e513c68225856-a001/mask.png",
+      "sha256": "ebec65b6cc1008e8bf7e3753ecf70da1f3e565e3c263f2e0e93d82d25a237510",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-semantic-mask"
+    },
+    {
+      "path": "Tools/artworks/pipeline/artifacts/job-b00e513c68225856/job-b00e513c68225856-a001/calibrated.png",
+      "sha256": "915df8e30e831480531866e0ef8b98ac62cab50869bf43e33cf92f8eefbc4b3c",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-deterministically-core-calibrated-artwork"
+    },
+    {
+      "path": "Tools/artworks/pipeline/artifacts/job-b00e513c68225856/job-b00e513c68225856-a001/calibrated-mask.png",
+      "sha256": "d5a69dc12e8999229ea97005eba2ff1205575ad66e7b1a5a6746987f59eb0766",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-deterministically-core-calibrated-artwork"
+    },
+    {
+      "path": "Tools/artworks/pipeline/artifacts/job-b00e513c68225856/job-b00e513c68225856-a002/raw.png",
+      "sha256": "eeff44933398f5ba82166431f21dcfea7bfcb2714c184c4de696e803265617df",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-gpt-generated"
+    },
+    {
+      "path": "Tools/artworks/pipeline/artifacts/job-b00e513c68225856/job-b00e513c68225856-a002/prepared.png",
+      "sha256": "a2d12dea515fab4f16514f9ee4c5806c287c56cadb2c0d20b485ca2b95473353",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-derived-artwork"
+    },
+    {
+      "path": "Tools/artworks/pure_run/enemies/concepts/tomb_maw_bat_melee_bite_attack_ul_semantic_mask_v02.png",
+      "sha256": "426c9f214b9cea827ae296bbefaef567f979211c5502d10a9744dc7ec3eff161",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-semantic-mask"
+    },
+    {
+      "path": "Tools/artworks/pipeline/artifacts/job-b00e513c68225856/job-b00e513c68225856-a002/mask.png",
+      "sha256": "426c9f214b9cea827ae296bbefaef567f979211c5502d10a9744dc7ec3eff161",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-semantic-mask"
+    },
+    {
+      "path": "Tools/artworks/pipeline/artifacts/job-b00e513c68225856/job-b00e513c68225856-a002/calibrated.png",
+      "sha256": "18bff2932d149cef756e3dc7d5df4a683f90bf77739da8f66275e1a19655e20d",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-deterministically-core-calibrated-artwork"
+    },
+    {
+      "path": "Tools/artworks/pipeline/artifacts/job-b00e513c68225856/job-b00e513c68225856-a002/calibrated-mask.png",
+      "sha256": "2d071cf64248bd3d3c3264a1ddd2d0fa9dd37bd5d59845a88a64ea5fbda386fd",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-deterministically-core-calibrated-artwork"
+    },
+    {
+      "path": "Tools/artworks/pipeline/artifacts/job-b00e513c68225856/job-b00e513c68225856-a003/raw.png",
+      "sha256": "eeff44933398f5ba82166431f21dcfea7bfcb2714c184c4de696e803265617df",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-gpt-generated"
+    },
+    {
+      "path": "Tools/artworks/pipeline/artifacts/job-b00e513c68225856/job-b00e513c68225856-a003/prepared.png",
+      "sha256": "a2d12dea515fab4f16514f9ee4c5806c287c56cadb2c0d20b485ca2b95473353",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-derived-artwork"
+    },
+    {
+      "path": "Tools/artworks/pure_run/enemies/concepts/tomb_maw_bat_melee_bite_attack_ul_semantic_mask_v03.png",
+      "sha256": "1262e2ac26860d14f3cf6eb81815dbeb4a56737a101e134f0a788374df2eff2e",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-semantic-mask"
+    },
+    {
+      "path": "Tools/artworks/pipeline/artifacts/job-b00e513c68225856/job-b00e513c68225856-a003/mask.png",
+      "sha256": "1262e2ac26860d14f3cf6eb81815dbeb4a56737a101e134f0a788374df2eff2e",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-semantic-mask"
+    },
+    {
+      "path": "Tools/artworks/pipeline/artifacts/job-b00e513c68225856/job-b00e513c68225856-a003/calibrated.png",
+      "sha256": "061c4011d32f7b6bc7500aa337c8f7a76f58930a8ea515d70ca7c542ef8ff74a",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-deterministically-core-calibrated-artwork"
+    },
+    {
+      "path": "Tools/artworks/pipeline/artifacts/job-b00e513c68225856/job-b00e513c68225856-a003/calibrated-mask.png",
+      "sha256": "4f87b331638471255a158a769dcaf94ecd2b3881769b78e9047aa42dcade9a1b",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-deterministically-core-calibrated-artwork"
+    },
+    {
+      "path": "Tools/artworks/pipeline/artifacts/job-b00e513c68225856/job-b00e513c68225856-a004/raw.png",
+      "sha256": "eeff44933398f5ba82166431f21dcfea7bfcb2714c184c4de696e803265617df",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-gpt-generated"
+    },
+    {
+      "path": "Tools/artworks/pipeline/artifacts/job-b00e513c68225856/job-b00e513c68225856-a004/prepared.png",
+      "sha256": "a2d12dea515fab4f16514f9ee4c5806c287c56cadb2c0d20b485ca2b95473353",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-derived-artwork"
+    },
+    {
+      "path": "Tools/artworks/pure_run/enemies/concepts/tomb_maw_bat_melee_bite_attack_ul_semantic_mask_v04.png",
+      "sha256": "a9405d47f20f3470618cf163f5afde80559976c1aa3da59feba2134a306421a9",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-semantic-mask"
+    },
+    {
+      "path": "Tools/artworks/pipeline/artifacts/job-b00e513c68225856/job-b00e513c68225856-a004/mask.png",
+      "sha256": "a9405d47f20f3470618cf163f5afde80559976c1aa3da59feba2134a306421a9",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-semantic-mask"
+    },
+    {
+      "path": "Tools/artworks/pipeline/artifacts/job-b00e513c68225856/job-b00e513c68225856-a004/calibrated.png",
+      "sha256": "953e8e087989aa86500f09a76a82014734d2ed9dfd911a78b2e8b1078cb96055",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-deterministically-core-calibrated-artwork"
+    },
+    {
+      "path": "Tools/artworks/pipeline/artifacts/job-b00e513c68225856/job-b00e513c68225856-a004/calibrated-mask.png",
+      "sha256": "025f1ed78d2f9740ed17c12f61595ee0208eb1de1d5e5991cf613cbad779d80e",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-deterministically-core-calibrated-artwork"
+    },
+    {
+      "path": "Tools/artworks/pipeline/artifacts/job-b00e513c68225856/job-b00e513c68225856-a005/raw.png",
+      "sha256": "eeff44933398f5ba82166431f21dcfea7bfcb2714c184c4de696e803265617df",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-gpt-generated"
+    },
+    {
+      "path": "Tools/artworks/pipeline/artifacts/job-b00e513c68225856/job-b00e513c68225856-a005/prepared.png",
+      "sha256": "cc12c0221955bab1c043bd0e9bfab66383aac7d653852e0d769f2bc11c0caad8",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-derived-artwork"
+    },
+    {
+      "path": "Tools/artworks/pipeline/artifacts/job-b00e513c68225856/job-b00e513c68225856-a005/mask.png",
+      "sha256": "a9405d47f20f3470618cf163f5afde80559976c1aa3da59feba2134a306421a9",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-semantic-mask"
+    },
+    {
+      "path": "Tools/artworks/pipeline/artifacts/job-b00e513c68225856/job-b00e513c68225856-a005/calibrated.png",
+      "sha256": "d123846eedc2e9e0b19ea0f361ae0c3564b40ce44cae97c45fbcb2b3bb80ca4e",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-deterministically-core-calibrated-artwork"
+    },
+    {
+      "path": "Tools/artworks/pipeline/artifacts/job-b00e513c68225856/job-b00e513c68225856-a005/calibrated-mask.png",
+      "sha256": "025f1ed78d2f9740ed17c12f61595ee0208eb1de1d5e5991cf613cbad779d80e",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-deterministically-core-calibrated-artwork"
+    },
+    {
+      "path": "Tools/artworks/pipeline/artifacts/job-b00e513c68225856/job-b00e513c68225856-a006/raw.png",
+      "sha256": "eeff44933398f5ba82166431f21dcfea7bfcb2714c184c4de696e803265617df",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-gpt-generated"
+    },
+    {
+      "path": "Tools/artworks/pipeline/artifacts/job-b00e513c68225856/job-b00e513c68225856-a006/prepared.png",
+      "sha256": "cc12c0221955bab1c043bd0e9bfab66383aac7d653852e0d769f2bc11c0caad8",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-derived-artwork"
+    },
+    {
+      "path": "Tools/artworks/pipeline/artifacts/job-b00e513c68225856/job-b00e513c68225856-a006/mask.png",
+      "sha256": "a9405d47f20f3470618cf163f5afde80559976c1aa3da59feba2134a306421a9",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-semantic-mask"
+    },
+    {
+      "path": "Tools/artworks/pipeline/artifacts/job-b00e513c68225856/job-b00e513c68225856-a006/calibrated.png",
+      "sha256": "b6998f498ac0b70fec797163d56b7f4d6f3c8df0e09f4302f7edec1173701245",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-deterministically-core-calibrated-artwork"
+    },
+    {
+      "path": "Tools/artworks/pipeline/artifacts/job-b00e513c68225856/job-b00e513c68225856-a006/calibrated-mask.png",
+      "sha256": "025f1ed78d2f9740ed17c12f61595ee0208eb1de1d5e5991cf613cbad779d80e",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-deterministically-core-calibrated-artwork"
+    },
+    {
+      "path": "Tools/artworks/pipeline/reviews/job-b00e513c68225856-a006/overlay.png",
+      "sha256": "dc2bce9c79e234f9d041d29518dfbf14f23f4bf788110a025e5b3fd04eed3e2f",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-artwork-review"
+    },
+    {
+      "path": "Tools/artworks/pipeline/reviews/job-b00e513c68225856-a006/preview128.png",
+      "sha256": "45887b017aaf04ca165cd973e64137d4c92e15514bccbcfbc692eac570a28346",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-artwork-review"
+    },
+    {
+      "path": "Tools/artworks/pipeline/reviews/job-b00e513c68225856-a006/tile64x32.png",
+      "sha256": "432c1b77b0521c6dea8467e93f5495a5e7ee917cb968539a5243829ac6394e63",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-artwork-review"
+    },
+    {
+      "path": "Tools/artworks/pure_run/enemies/reviews/tomb_maw_bat_melee_bite_ul_tilemap_red_shiba_amazon_compare_v01.png",
+      "sha256": "8a2bf193887f2e2f2240085a8f18686ec3e828246cf01c5685aa98ecf336010e",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-artwork-review"
+    },
+    {
+      "path": "Tools/artworks/pure_run/enemies/approved/tomb_maw_bat_melee_bite_attack_ul_v01.png",
+      "sha256": "b6998f498ac0b70fec797163d56b7f4d6f3c8df0e09f4302f7edec1173701245",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "project-owned",
+      "provenance": "project-owned-gpt-generated"
+    },
+    {
+      "path": "Tools/artworks/pure_run/enemies/approved/tomb_maw_bat_melee_bite_attack_ul_v01_128.png",
+      "sha256": "45887b017aaf04ca165cd973e64137d4c92e15514bccbcfbc692eac570a28346",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "project-owned",
+      "provenance": "project-owned-gpt-generated"
+    },
+    {
+      "path": "Tools/artworks/pure_run/enemies/reviews/tomb_maw_bat_hit_dr_pose_guide_v01.png",
+      "sha256": "5cb5ea1c2187bd0c33ad9ea286a31f770482554fa2b0751676e367dc067823de",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-supporting-derived"
+    },
+    {
+      "path": "Tools/artworks/pure_run/enemies/concepts/tomb_maw_bat_hit_dr_chroma_source_v01.png",
+      "sha256": "457dd7ce64840b4e5c45a8705d164b32de3f3b5ab20902beb5c5e19f6e5e2f56",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-gpt-generated"
+    },
+    {
+      "path": "Tools/artworks/pipeline/artifacts/job-6d22f48938cd05e4/job-6d22f48938cd05e4-a001/raw.png",
+      "sha256": "457dd7ce64840b4e5c45a8705d164b32de3f3b5ab20902beb5c5e19f6e5e2f56",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-gpt-generated"
+    },
+    {
+      "path": "Tools/artworks/pipeline/artifacts/job-6d22f48938cd05e4/job-6d22f48938cd05e4-a001/prepared.png",
+      "sha256": "80221e7a98ae64eeeb326931106f9d38cb976d59e5852343fb4dd3087ad1fa0d",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-derived-artwork"
+    },
+    {
+      "path": "Tools/artworks/pure_run/enemies/concepts/tomb_maw_bat_hit_dr_semantic_mask_v01.png",
+      "sha256": "ffb7022c4a1f70d2c78fb9e8dbab54f11ac86f7eb855b0dff205685a4e99ce10",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-semantic-mask"
+    },
+    {
+      "path": "Tools/artworks/pipeline/artifacts/job-6d22f48938cd05e4/job-6d22f48938cd05e4-a001/mask.png",
+      "sha256": "ffb7022c4a1f70d2c78fb9e8dbab54f11ac86f7eb855b0dff205685a4e99ce10",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-semantic-mask"
+    },
+    {
+      "path": "Tools/artworks/pipeline/artifacts/job-6d22f48938cd05e4/job-6d22f48938cd05e4-a001/calibrated.png",
+      "sha256": "15c1a94b6c7cf290021c088a7f1d12f6c44233cc0f5545167f69b33bf58d7480",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-deterministically-core-calibrated-artwork"
+    },
+    {
+      "path": "Tools/artworks/pipeline/artifacts/job-6d22f48938cd05e4/job-6d22f48938cd05e4-a001/calibrated-mask.png",
+      "sha256": "23bae85977099700459ed19dd3c92b4878abdae84be9a5629648391e127eac36",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-deterministically-core-calibrated-artwork"
+    },
+    {
+      "path": "Tools/artworks/pipeline/artifacts/job-6d22f48938cd05e4/job-6d22f48938cd05e4-a002/raw.png",
+      "sha256": "457dd7ce64840b4e5c45a8705d164b32de3f3b5ab20902beb5c5e19f6e5e2f56",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-gpt-generated"
+    },
+    {
+      "path": "Tools/artworks/pipeline/artifacts/job-6d22f48938cd05e4/job-6d22f48938cd05e4-a002/prepared.png",
+      "sha256": "80221e7a98ae64eeeb326931106f9d38cb976d59e5852343fb4dd3087ad1fa0d",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-derived-artwork"
+    },
+    {
+      "path": "Tools/artworks/pure_run/enemies/concepts/tomb_maw_bat_hit_dr_semantic_mask_v02.png",
+      "sha256": "12366e0f0076253493362cb626eca3d05b5e9e5e2592a491a56c0a3909952d82",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-semantic-mask"
+    },
+    {
+      "path": "Tools/artworks/pipeline/artifacts/job-6d22f48938cd05e4/job-6d22f48938cd05e4-a002/mask.png",
+      "sha256": "12366e0f0076253493362cb626eca3d05b5e9e5e2592a491a56c0a3909952d82",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-semantic-mask"
+    },
+    {
+      "path": "Tools/artworks/pipeline/artifacts/job-6d22f48938cd05e4/job-6d22f48938cd05e4-a002/calibrated.png",
+      "sha256": "628090f780cbb2db344655051a166e42b49337c867f1f6c76847307e56acac82",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-deterministically-core-calibrated-artwork"
+    },
+    {
+      "path": "Tools/artworks/pipeline/artifacts/job-6d22f48938cd05e4/job-6d22f48938cd05e4-a002/calibrated-mask.png",
+      "sha256": "0eff8784543014046a98d2d2f09b96305f9df16396f5d17d8c93521c5a27a0f3",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-deterministically-core-calibrated-artwork"
+    },
+    {
+      "path": "Tools/artworks/pipeline/artifacts/job-6d22f48938cd05e4/job-6d22f48938cd05e4-a003/raw.png",
+      "sha256": "457dd7ce64840b4e5c45a8705d164b32de3f3b5ab20902beb5c5e19f6e5e2f56",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-gpt-generated"
+    },
+    {
+      "path": "Tools/artworks/pipeline/artifacts/job-6d22f48938cd05e4/job-6d22f48938cd05e4-a003/prepared.png",
+      "sha256": "80221e7a98ae64eeeb326931106f9d38cb976d59e5852343fb4dd3087ad1fa0d",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-derived-artwork"
+    },
+    {
+      "path": "Tools/artworks/pure_run/enemies/concepts/tomb_maw_bat_hit_dr_semantic_mask_v03.png",
+      "sha256": "5f9f03c1f6ca5c4b711afaf9c5cf193beaddc9ebf34422264c659f3077128ce6",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-semantic-mask"
+    },
+    {
+      "path": "Tools/artworks/pipeline/artifacts/job-6d22f48938cd05e4/job-6d22f48938cd05e4-a003/mask.png",
+      "sha256": "5f9f03c1f6ca5c4b711afaf9c5cf193beaddc9ebf34422264c659f3077128ce6",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-semantic-mask"
+    },
+    {
+      "path": "Tools/artworks/pipeline/artifacts/job-6d22f48938cd05e4/job-6d22f48938cd05e4-a003/calibrated.png",
+      "sha256": "bda688c51e92ea1c7731904021724fa50b236e57431d6a89f04f75c4bf87ff8c",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-deterministically-core-calibrated-artwork"
+    },
+    {
+      "path": "Tools/artworks/pipeline/artifacts/job-6d22f48938cd05e4/job-6d22f48938cd05e4-a003/calibrated-mask.png",
+      "sha256": "fb5ead91c1ed0826b80e89d9477f9279222d957d806d7f62863a68920502dadc",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-deterministically-core-calibrated-artwork"
+    },
+    {
+      "path": "Tools/artworks/pipeline/artifacts/job-6d22f48938cd05e4/job-6d22f48938cd05e4-a004/raw.png",
+      "sha256": "457dd7ce64840b4e5c45a8705d164b32de3f3b5ab20902beb5c5e19f6e5e2f56",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-gpt-generated"
+    },
+    {
+      "path": "Tools/artworks/pipeline/artifacts/job-6d22f48938cd05e4/job-6d22f48938cd05e4-a004/prepared.png",
+      "sha256": "80221e7a98ae64eeeb326931106f9d38cb976d59e5852343fb4dd3087ad1fa0d",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-derived-artwork"
+    },
+    {
+      "path": "Tools/artworks/pure_run/enemies/concepts/tomb_maw_bat_hit_dr_semantic_mask_v04.png",
+      "sha256": "d29a5eb8c84f0e54f8fc8dbd7049545289d570f9caa3a33d8daff5113dc9cbad",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-semantic-mask"
+    },
+    {
+      "path": "Tools/artworks/pipeline/artifacts/job-6d22f48938cd05e4/job-6d22f48938cd05e4-a004/mask.png",
+      "sha256": "d29a5eb8c84f0e54f8fc8dbd7049545289d570f9caa3a33d8daff5113dc9cbad",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-semantic-mask"
+    },
+    {
+      "path": "Tools/artworks/pipeline/artifacts/job-6d22f48938cd05e4/job-6d22f48938cd05e4-a004/calibrated.png",
+      "sha256": "1dbed3f9fb257301d38be9304ef140e8d2ef9b07a930fb263fddb7bcea0bc9c8",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-deterministically-core-calibrated-artwork"
+    },
+    {
+      "path": "Tools/artworks/pipeline/artifacts/job-6d22f48938cd05e4/job-6d22f48938cd05e4-a004/calibrated-mask.png",
+      "sha256": "aaa95463e2a31828ecf034255935fc14bbb8e8b7f06b135e05f4fe46260f2e2e",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-deterministically-core-calibrated-artwork"
+    },
+    {
+      "path": "Tools/artworks/pipeline/artifacts/job-6d22f48938cd05e4/job-6d22f48938cd05e4-a005/raw.png",
+      "sha256": "457dd7ce64840b4e5c45a8705d164b32de3f3b5ab20902beb5c5e19f6e5e2f56",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-gpt-generated"
+    },
+    {
+      "path": "Tools/artworks/pipeline/artifacts/job-6d22f48938cd05e4/job-6d22f48938cd05e4-a005/prepared.png",
+      "sha256": "80221e7a98ae64eeeb326931106f9d38cb976d59e5852343fb4dd3087ad1fa0d",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-derived-artwork"
+    },
+    {
+      "path": "Tools/artworks/pure_run/enemies/concepts/tomb_maw_bat_hit_dr_semantic_mask_v05.png",
+      "sha256": "e0a08f6c8d058997a2533071f8182ed4a08fa0e93fb72dfa9768518a0dae7322",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-semantic-mask"
+    },
+    {
+      "path": "Tools/artworks/pipeline/artifacts/job-6d22f48938cd05e4/job-6d22f48938cd05e4-a005/mask.png",
+      "sha256": "e0a08f6c8d058997a2533071f8182ed4a08fa0e93fb72dfa9768518a0dae7322",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-semantic-mask"
+    },
+    {
+      "path": "Tools/artworks/pipeline/artifacts/job-6d22f48938cd05e4/job-6d22f48938cd05e4-a005/calibrated.png",
+      "sha256": "1dbed3f9fb257301d38be9304ef140e8d2ef9b07a930fb263fddb7bcea0bc9c8",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-deterministically-core-calibrated-artwork"
+    },
+    {
+      "path": "Tools/artworks/pipeline/artifacts/job-6d22f48938cd05e4/job-6d22f48938cd05e4-a005/calibrated-mask.png",
+      "sha256": "31efcc04ce4a167c9bed98856306c98748258f785e11eac5ba63f595c0eb12d9",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-deterministically-core-calibrated-artwork"
+    },
+    {
+      "path": "Tools/artworks/pipeline/artifacts/job-6d22f48938cd05e4/job-6d22f48938cd05e4-a006/raw.png",
+      "sha256": "457dd7ce64840b4e5c45a8705d164b32de3f3b5ab20902beb5c5e19f6e5e2f56",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-gpt-generated"
+    },
+    {
+      "path": "Tools/artworks/pipeline/artifacts/job-6d22f48938cd05e4/job-6d22f48938cd05e4-a006/prepared.png",
+      "sha256": "80221e7a98ae64eeeb326931106f9d38cb976d59e5852343fb4dd3087ad1fa0d",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-derived-artwork"
+    },
+    {
+      "path": "Tools/artworks/pure_run/enemies/concepts/tomb_maw_bat_hit_dr_semantic_mask_v06.png",
+      "sha256": "43d7b9e99f82374873648914543e6068beeb8e042bcd2a39482d514415272ea4",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-semantic-mask"
+    },
+    {
+      "path": "Tools/artworks/pipeline/artifacts/job-6d22f48938cd05e4/job-6d22f48938cd05e4-a006/mask.png",
+      "sha256": "43d7b9e99f82374873648914543e6068beeb8e042bcd2a39482d514415272ea4",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-semantic-mask"
+    },
+    {
+      "path": "Tools/artworks/pipeline/artifacts/job-6d22f48938cd05e4/job-6d22f48938cd05e4-a006/calibrated.png",
+      "sha256": "adea10124f22a6a6187ad97f7442d9477ee965fdad88c3b12f279c2645e804b9",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-deterministically-core-calibrated-artwork"
+    },
+    {
+      "path": "Tools/artworks/pipeline/artifacts/job-6d22f48938cd05e4/job-6d22f48938cd05e4-a006/calibrated-mask.png",
+      "sha256": "3ea31808f690a8d47461631cd63235f364e8a0d7b2e34444cf7e36766cb023e2",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-deterministically-core-calibrated-artwork"
+    },
+    {
+      "path": "Tools/artworks/pipeline/artifacts/job-6d22f48938cd05e4/job-6d22f48938cd05e4-a007/raw.png",
+      "sha256": "457dd7ce64840b4e5c45a8705d164b32de3f3b5ab20902beb5c5e19f6e5e2f56",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-gpt-generated"
+    },
+    {
+      "path": "Tools/artworks/pipeline/artifacts/job-6d22f48938cd05e4/job-6d22f48938cd05e4-a007/prepared.png",
+      "sha256": "80221e7a98ae64eeeb326931106f9d38cb976d59e5852343fb4dd3087ad1fa0d",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-derived-artwork"
+    },
+    {
+      "path": "Tools/artworks/pure_run/enemies/concepts/tomb_maw_bat_hit_dr_semantic_mask_v07.png",
+      "sha256": "995fe36c8dff14d22e04553f569b6faf46ca82142a73c20c8f59703db160835e",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-semantic-mask"
+    },
+    {
+      "path": "Tools/artworks/pipeline/artifacts/job-6d22f48938cd05e4/job-6d22f48938cd05e4-a007/mask.png",
+      "sha256": "995fe36c8dff14d22e04553f569b6faf46ca82142a73c20c8f59703db160835e",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-semantic-mask"
+    },
+    {
+      "path": "Tools/artworks/pipeline/artifacts/job-6d22f48938cd05e4/job-6d22f48938cd05e4-a007/calibrated.png",
+      "sha256": "a62bef402f80a4eb30957e2f6884ac0f3c29db7fd51e1faa375a83abc8c43f5a",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-deterministically-core-calibrated-artwork"
+    },
+    {
+      "path": "Tools/artworks/pipeline/artifacts/job-6d22f48938cd05e4/job-6d22f48938cd05e4-a007/calibrated-mask.png",
+      "sha256": "8c7f712199cd778830eaf290db2de83020219b13052474969c0b3d71e5c001f8",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-deterministically-core-calibrated-artwork"
+    },
+    {
+      "path": "Tools/artworks/pipeline/reviews/job-6d22f48938cd05e4-a007/overlay.png",
+      "sha256": "2ecaee8d4136d4830ff6a298f81c3788c43163660d9f69815e3f461248d40cdf",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-artwork-review"
+    },
+    {
+      "path": "Tools/artworks/pipeline/reviews/job-6d22f48938cd05e4-a007/preview128.png",
+      "sha256": "899eaf954ecc94862c58d9ed33273c04fec1f4cc6781f418bffe1864fc6979d4",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-artwork-review"
+    },
+    {
+      "path": "Tools/artworks/pipeline/reviews/job-6d22f48938cd05e4-a007/tile64x32.png",
+      "sha256": "0f35ab0006c0a0031375965ede76960de2eb02199a782111ea18a317dad4ea6c",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-artwork-review"
+    },
+    {
+      "path": "Tools/artworks/pure_run/enemies/reviews/tomb_maw_bat_hit_dr_tilemap_red_shiba_amazon_compare_v01.png",
+      "sha256": "c5883458a146aa36596962af2f0262bea4257178e422322243a2ac519d0617e1",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-artwork-review"
+    },
+    {
+      "path": "Tools/artworks/pure_run/enemies/approved/tomb_maw_bat_hit_dr_v01.png",
+      "sha256": "a62bef402f80a4eb30957e2f6884ac0f3c29db7fd51e1faa375a83abc8c43f5a",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "project-owned",
+      "provenance": "project-owned-gpt-generated"
+    },
+    {
+      "path": "Tools/artworks/pure_run/enemies/approved/tomb_maw_bat_hit_dr_v01_128.png",
+      "sha256": "899eaf954ecc94862c58d9ed33273c04fec1f4cc6781f418bffe1864fc6979d4",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "project-owned",
+      "provenance": "project-owned-gpt-generated"
+    },
+    {
+      "path": "Tools/artworks/pure_run/enemies/reviews/tomb_maw_bat_hit_ul_pose_guide_v01.png",
+      "sha256": "c52606eb6304171134562fbba51512f9dbc8f8f529931d6231ec78ddd8e0bc63",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-supporting-derived"
+    },
+    {
+      "path": "Tools/artworks/pure_run/enemies/concepts/tomb_maw_bat_hit_ul_chroma_source_v01.png",
+      "sha256": "024bc34be51aa673a87f8ad1965b4f489ea0dbf31db1653725c63851319c49ae",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-gpt-generated"
+    },
+    {
+      "path": "Tools/artworks/pipeline/artifacts/job-348d71e797321e77/job-348d71e797321e77-a001/raw.png",
+      "sha256": "024bc34be51aa673a87f8ad1965b4f489ea0dbf31db1653725c63851319c49ae",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-gpt-generated"
+    },
+    {
+      "path": "Tools/artworks/pipeline/artifacts/job-348d71e797321e77/job-348d71e797321e77-a001/prepared.png",
+      "sha256": "60d4a1a80d109e558d86ccf79898044bf1e6dd3b2cc870c5ee33c3db5c9fb659",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-derived-artwork"
+    },
+    {
+      "path": "Tools/artworks/pure_run/enemies/concepts/tomb_maw_bat_hit_ul_semantic_mask_v01.png",
+      "sha256": "3c0d11870e363b518af8633f7a2cd093152b440479ecb2e09ec899f6b34bfe23",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-semantic-mask"
+    },
+    {
+      "path": "Tools/artworks/pipeline/artifacts/job-348d71e797321e77/job-348d71e797321e77-a001/mask.png",
+      "sha256": "3c0d11870e363b518af8633f7a2cd093152b440479ecb2e09ec899f6b34bfe23",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-semantic-mask"
+    },
+    {
+      "path": "Tools/artworks/pipeline/artifacts/job-348d71e797321e77/job-348d71e797321e77-a001/calibrated.png",
+      "sha256": "4ce2c5d7a0bd4d4e0c6d66022a6d250a5dce67f1de8c1545f71d0ff0afdbb3f2",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-deterministically-core-calibrated-artwork"
+    },
+    {
+      "path": "Tools/artworks/pipeline/artifacts/job-348d71e797321e77/job-348d71e797321e77-a001/calibrated-mask.png",
+      "sha256": "d5c8b5cb68cccc48d5a59b22076914b232d6e4d4da02e5fb8a895fa44d70fe2f",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-deterministically-core-calibrated-artwork"
+    },
+    {
+      "path": "Tools/artworks/pipeline/artifacts/job-348d71e797321e77/job-348d71e797321e77-a002/raw.png",
+      "sha256": "024bc34be51aa673a87f8ad1965b4f489ea0dbf31db1653725c63851319c49ae",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-gpt-generated"
+    },
+    {
+      "path": "Tools/artworks/pipeline/artifacts/job-348d71e797321e77/job-348d71e797321e77-a002/prepared.png",
+      "sha256": "60d4a1a80d109e558d86ccf79898044bf1e6dd3b2cc870c5ee33c3db5c9fb659",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-derived-artwork"
+    },
+    {
+      "path": "Tools/artworks/pure_run/enemies/concepts/tomb_maw_bat_hit_ul_semantic_mask_v02.png",
+      "sha256": "9d98a0e55a7d490b367f52d02b73abfef67bf4e15f5c3e1953e56278adb11d8e",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-semantic-mask"
+    },
+    {
+      "path": "Tools/artworks/pipeline/artifacts/job-348d71e797321e77/job-348d71e797321e77-a002/mask.png",
+      "sha256": "9d98a0e55a7d490b367f52d02b73abfef67bf4e15f5c3e1953e56278adb11d8e",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-semantic-mask"
+    },
+    {
+      "path": "Tools/artworks/pipeline/artifacts/job-348d71e797321e77/job-348d71e797321e77-a002/calibrated.png",
+      "sha256": "7759ee609ee9e66cb68511e5dd253287ebf3c3ce04608bc18a507145872776d3",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-deterministically-core-calibrated-artwork"
+    },
+    {
+      "path": "Tools/artworks/pipeline/artifacts/job-348d71e797321e77/job-348d71e797321e77-a002/calibrated-mask.png",
+      "sha256": "191f85e6e030c32d5743026c2c7d77772269ef88ddc8f153d6703b71b0729ca0",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-deterministically-core-calibrated-artwork"
+    },
+    {
+      "path": "Tools/artworks/pipeline/reviews/job-348d71e797321e77-a002/overlay.png",
+      "sha256": "581b3a4410451588edb9dc89ff68c06d282244ef2d81e3ffe4e867db58daeb14",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-artwork-review"
+    },
+    {
+      "path": "Tools/artworks/pipeline/reviews/job-348d71e797321e77-a002/preview128.png",
+      "sha256": "79d4c2c423375226dcacecc619c50a4f3076f0630d3cf220339779da751cc1a0",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-artwork-review"
+    },
+    {
+      "path": "Tools/artworks/pipeline/reviews/job-348d71e797321e77-a002/tile64x32.png",
+      "sha256": "655747a058fd0519ce44949179522c5ef1977847d9799b9b178276ea8c7347a4",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-artwork-review"
+    },
+    {
+      "path": "Tools/artworks/pure_run/enemies/reviews/tomb_maw_bat_hit_ul_tilemap_red_shiba_amazon_compare_v01.png",
+      "sha256": "6b8b0fe5e8070692b3302c8759208ff09bd8001e83b0a18ed23a4a2b08582f3f",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-artwork-review"
+    },
+    {
+      "path": "Tools/artworks/pure_run/enemies/approved/tomb_maw_bat_hit_ul_v01.png",
+      "sha256": "7759ee609ee9e66cb68511e5dd253287ebf3c3ce04608bc18a507145872776d3",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "project-owned",
+      "provenance": "project-owned-gpt-generated"
+    },
+    {
+      "path": "Tools/artworks/pure_run/enemies/approved/tomb_maw_bat_hit_ul_v01_128.png",
+      "sha256": "79d4c2c423375226dcacecc619c50a4f3076f0630d3cf220339779da751cc1a0",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "project-owned",
+      "provenance": "project-owned-gpt-generated"
+    },
+    {
+      "path": "Tools/artworks/pure_run/enemies/reviews/tomb_maw_bat_ranged_color_dr_core_mask_v01.png",
+      "sha256": "5738ba31198d798b5902f79d18e2bb3ccd0d8d7233d1e94dc9c4a39d6a918511",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-supporting-derived"
+    },
+    {
+      "path": "Tools/artworks/pure_run/enemies/reviews/tomb_maw_bat_ranged_color_ul_core_mask_v01.png",
+      "sha256": "5ef1d6cf485e94fad64d5558fbc99f9e4197fb54a2ba4aee4fb231ef61ccd6d5",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-supporting-derived"
+    },
+    {
+      "path": "Tools/artworks/pure_run/enemies/reviews/tomb_maw_bat_ranged_color_ul_core_mask_overlay_v01.png",
+      "sha256": "7d1ac75ede31a37415b937f3660e0cdc2212da3a4ec0040f13ee02f5aac12445",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-supporting-derived"
     }
   ]
 }

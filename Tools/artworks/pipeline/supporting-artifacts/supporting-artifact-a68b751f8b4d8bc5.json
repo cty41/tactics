@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 2,
+  "supportingArtifactId": "supporting-artifact-a68b751f8b4d8bc5",
+  "artifact": {
+    "path": "Tools/artworks/pure_run/enemies/reviews/tomb_maw_bat_death_tilemap_compare_v04.png",
+    "sha256": "47ec491e0f6d29999733689c4db5b9178a4c1b90656909eff1f59cd15b0b6cb0"
+  },
+  "role": "tilemap-review",
+  "note": "Death v01/v02 use full visible AABB center on identical 64x32 tiles; Idle DR uses the approved virtual landing anchor."
+}

@@ -1,0 +1,39 @@
+{
+  "schemaVersion": 2,
+  "contractId": "contract-c29307506225dcc6",
+  "assetId": "tomb-maw-bat-death-dr-v02",
+  "approvedAssetId": "tomb-maw-bat",
+  "kind": "death_pose",
+  "direction": "down-right",
+  "pose": "death",
+  "anchor": {
+    "path": "Tools/artworks/pure_run/enemies/approved/tomb_maw_bat_ranged_color_v06.png",
+    "sha256": "d71bd44be7dec83f116133ce8ab03394930dd3ade61cd21ea68fbb463464bc8a"
+  },
+  "maskRequired": false,
+  "noArms": false,
+  "handSides": {
+    "near_hand": null,
+    "far_hand": null
+  },
+  "occlusion": null,
+  "compositionSpec": {
+    "compositionId": "composition-8720ce5484bcd2df",
+    "sha256": "f7a2c99defc54a1d37c4a85962f23d05df33fd35ec1ba5e3ed3157218a1c0aee"
+  },
+  "identitySpec": null,
+  "requiresInvocation": true,
+  "tolerances": {
+    "sizePx": 8,
+    "centerPx": 2
+  },
+  "outputs": {
+    "master": "Tools/artworks/pure_run/enemies/approved/tomb_maw_bat_ranged_death_color_v02.png",
+    "preview": "Tools/artworks/pure_run/enemies/approved/tomb_maw_bat_ranged_death_color_v02_128.png"
+  },
+  "rights": {
+    "rightsHolder": "cty41",
+    "license": "project-owned",
+    "provenance": "project-owned-gpt-generated"
+  }
+}

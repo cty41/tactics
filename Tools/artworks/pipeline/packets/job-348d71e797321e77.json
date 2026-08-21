@@ -1,0 +1,40 @@
+{
+  "schemaVersion": 2,
+  "jobId": "job-348d71e797321e77",
+  "state": "ready",
+  "contractId": "contract-39ade55b8e77f3e8",
+  "contractSha256": "449aec57b4a71b3937c516d919244305a0b71a353dbcce66189c5ae4b94496a8",
+  "prompt": {
+    "path": "Tools/artworks/pure_run/enemies/tomb_maw_bat_hit_ul_prompt_v01.md",
+    "sha256": "30342bcc242a3bb27721203cf5da8164a3ce407d471c0de6d73a2d138926268d"
+  },
+  "inputs": [
+    {
+      "role": "action",
+      "path": "Tools/artworks/pure_run/enemies/approved/tomb_maw_bat_hit_dr_v01.png",
+      "sha256": "a62bef402f80a4eb30957e2f6884ac0f3c29db7fd51e1faa375a83abc8c43f5a"
+    },
+    {
+      "role": "hit_pose",
+      "path": "godot/assets/units/actions/doge_hunter_hit_ul.png",
+      "sha256": "0eb88380ebee80e99d1208b0adf5dca6b91ed368c94039ae298b9c4bb0c297af"
+    },
+    {
+      "role": "identity",
+      "path": "Tools/artworks/pure_run/enemies/approved/tomb_maw_bat_ranged_color_ul_v01.png",
+      "sha256": "d8c0037bd029f6f59049d846a4698e0fed63d1d139fb6fde0642cc944c12facb"
+    }
+  ],
+  "target": {
+    "direction": "up-left",
+    "pose": "hit"
+  },
+  "series": null,
+  "conceptOnly": false,
+  "contractRequirements": null,
+  "requiresInvocation": true,
+  "poseGuide": {
+    "poseGuideId": "pose-guide-76a53840c9efaf65",
+    "sha256": "cb96281feb368cf8913e1651085a900cdee9bb2a0cf4d576f1d32ef142da0c6f"
+  }
+}

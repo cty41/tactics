@@ -1,0 +1,21 @@
+{
+  "schemaVersion": 2,
+  "approvalId": "approval-78d940937fc8a28c",
+  "attemptId": "job-348d71e797321e77-a002",
+  "candidateSha256": "7759ee609ee9e66cb68511e5dd253287ebf3c3ce04608bc18a507145872776d3",
+  "maskSha256": "191f85e6e030c32d5743026c2c7d77772269ef88ddc8f153d6703b71b0729ca0",
+  "reviewer": "cty41",
+  "reviewSha256": {
+    "overlay": "581b3a4410451588edb9dc89ff68c06d282244ef2d81e3ffe4e867db58daeb14",
+    "preview128": "79d4c2c423375226dcacecc619c50a4f3076f0630d3cf220339779da751cc1a0",
+    "tile64x32": "655747a058fd0519ce44949179522c5ef1977847d9799b9b178276ea8c7347a4"
+  },
+  "decision": "approved",
+  "reason": "User confirmed both Hit directions for formal promotion; UL passed deterministic artwork validation and comparison review.",
+  "decidedAt": "2026-08-21T14:36:35.0911331+08:00",
+  "annotation": {
+    "annotationId": "annotations-2afae7a1514d61f0",
+    "sha256": "12548c004c7e6405a5abe51d33582f1b4c09d11056bf58ac687210082cffe068"
+  },
+  "reportSha256": "729bf6fe740f9080da24155b162f31c29756ec10547838077b43a49da14659fa"
+}

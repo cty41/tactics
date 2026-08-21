@@ -1,0 +1,27 @@
+{
+  "schemaVersion": 2,
+  "feedbackId": "feedback-5baae321e1d7e6b7",
+  "attemptId": "job-d8c37ffa3a568007-a002",
+  "candidateSha256": "871a683e2a7ae2601f65de93902cc3047e5ef8691661d8492c7d716437fb5dbd",
+  "reviewer": "cty41",
+  "verdict": "retry",
+  "strengths": [
+    "User confirmed overall size and scale are acceptable."
+  ],
+  "defects": [
+    "The wings read as a static horizontal spread or glide rather than an active forceful flap."
+  ],
+  "nextPromptDelta": "Change only the wing action silhouette from static spread to an unmistakable forceful flap peak; preserve size and identity.",
+  "recordedAt": "2026-08-21T10:21:32.2048886+08:00",
+  "authorType": "human",
+  "categories": [
+    "pose_axis"
+  ],
+  "disposition": "retry",
+  "frozenInvariants": [
+    "Preserve UL identity, spherical core size, center, hovering height, palette, and safe canvas occupancy."
+  ],
+  "pendingFixes": [
+    "Create a clear flap peak: near wing drives forward-down, far wing remains back-up, with strong root-to-tip depth and both wings participating in one wind-blade release."
+  ]
+}

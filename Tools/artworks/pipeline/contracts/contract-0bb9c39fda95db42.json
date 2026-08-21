@@ -1,0 +1,39 @@
+{
+  "schemaVersion": 2,
+  "contractId": "contract-0bb9c39fda95db42",
+  "assetId": "tomb-maw-bat-melee-bite-dr-v01",
+  "approvedAssetId": "tomb-maw-bat",
+  "kind": "action_pose",
+  "direction": "down-right",
+  "pose": "melee",
+  "anchor": {
+    "path": "Tools/artworks/pure_run/enemies/approved/tomb_maw_bat_ranged_color_v06.png",
+    "sha256": "d71bd44be7dec83f116133ce8ab03394930dd3ade61cd21ea68fbb463464bc8a"
+  },
+  "maskRequired": false,
+  "noArms": false,
+  "handSides": {
+    "near_hand": null,
+    "far_hand": null
+  },
+  "occlusion": null,
+  "compositionSpec": {
+    "compositionId": "composition-e7108c2d6fe699d9",
+    "sha256": "756b7b4a580452f80b74f3ac7722efc0e4f94d1b6a55204b59267c9af793fe1a"
+  },
+  "identitySpec": null,
+  "requiresInvocation": true,
+  "tolerances": {
+    "sizePx": 8,
+    "centerPx": 2
+  },
+  "outputs": {
+    "master": "Tools/artworks/pure_run/enemies/approved/tomb_maw_bat_melee_bite_attack_dr_v01.png",
+    "preview": "Tools/artworks/pure_run/enemies/approved/tomb_maw_bat_melee_bite_attack_dr_v01_128.png"
+  },
+  "rights": {
+    "rightsHolder": "cty41",
+    "license": "project-owned",
+    "provenance": "project-owned-gpt-generated"
+  }
+}

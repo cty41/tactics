@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 2,
+  "supportingArtifactId": "supporting-artifact-d35dfb1713c77141",
+  "artifact": {
+    "path": "Tools/artworks/pure_run/enemies/reviews/tomb_maw_bat_wind_blade_tilemap_compare_v05.png",
+    "sha256": "a39c8658666f1b382497f9b1707e020907a49b191e0aee12a3d6408f3fa14fa9"
+  },
+  "role": "tilemap-comparison",
+  "note": "Idle UL, approved Wind Blade DR, and candidate Wind Blade UL v03 share the same virtual landing anchor on 64x32 isometric tiles."
+}

@@ -1,0 +1,19 @@
+{
+  "canvas": [256, 256],
+  "coreAxis": {
+    "bottom": [128, 174],
+    "top": [128, 108],
+    "tiltDegrees": [-8.0, 8.0]
+  },
+  "footCenter": [128, 236],
+  "weapon": {
+    "hiddenGrip": [128, 142],
+    "exitWindow": [28, 96, 228, 184],
+    "tipRegion": [18, 92, 238, 190]
+  },
+  "forbiddenRegions": [],
+  "equipmentState": {
+    "scabbard": "absent",
+    "staticEffects": "absent"
+  }
+}

@@ -1,0 +1,34 @@
+{
+  "schemaVersion": 2,
+  "annotationId": "annotations-9b9c963227a0aa03",
+  "attemptId": "job-d8c37ffa3a568007-a005",
+  "candidateSha256": "58832df28847fae29f75309b8574a104860f4fa9befa04c2de9357806013d43e",
+  "maskSha256": "e7d934db42d3382db464f06d360865777e8b5cc578f71f22d273d41856d34988",
+  "source": {
+    "path": "Tools/artworks/pure_run/enemies/concepts/tomb_maw_bat_wind_blade_attack_ul_v03_annotations.json",
+    "sha256": "7eab08efc644504af2f0297b89575b31ad23af1c24b51b571e9e02ac8f038e4e"
+  },
+  "regions": {
+    "eyeRegion": [
+      88,
+      112,
+      99,
+      128
+    ],
+    "weaponExit": [
+      165,
+      116,
+      187,
+      151
+    ],
+    "weaponTip": [
+      201,
+      112,
+      224,
+      143
+    ],
+    "gemRegion": null,
+    "scabbard": null,
+    "staticEffect": null
+  }
+}

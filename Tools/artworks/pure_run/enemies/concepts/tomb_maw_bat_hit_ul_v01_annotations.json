@@ -1,0 +1,11 @@
+{
+  "schemaVersion": 2,
+  "regions": {
+    "eyeRegion": [89, 115, 110, 137],
+    "weaponExit": [88, 120, 116, 137],
+    "weaponTip": [84, 117, 120, 141],
+    "gemRegion": null,
+    "scabbard": null,
+    "staticEffect": null
+  }
+}

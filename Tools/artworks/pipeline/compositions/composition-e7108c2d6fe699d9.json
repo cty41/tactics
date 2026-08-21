@@ -1,0 +1,60 @@
+{
+  "schemaVersion": 2,
+  "compositionId": "composition-e7108c2d6fe699d9",
+  "assetId": "tomb-maw-bat-melee-bite-dr-v01",
+  "spec": {
+    "canvas": [
+      256,
+      256
+    ],
+    "coreAxis": {
+      "top": [
+        124,
+        92
+      ],
+      "bottom": [
+        132,
+        178
+      ],
+      "tiltDegrees": [
+        -8.0,
+        8.0
+      ]
+    },
+    "footCenter": [
+      128,
+      236
+    ],
+    "weapon": {
+      "hiddenGrip": [
+        128,
+        145
+      ],
+      "exitWindow": [
+        102,
+        126,
+        154,
+        181
+      ],
+      "tipRegion": [
+        101,
+        132,
+        155,
+        188
+      ]
+    },
+    "forbiddenRegions": [],
+    "equipmentState": {
+      "scabbard": "absent",
+      "staticEffects": "absent"
+    }
+  },
+  "source": {
+    "path": "Tools/artworks/pure_run/enemies/tomb_maw_bat_melee_bite_dr_composition_v01.json",
+    "sha256": "b78aea4a6073f52926d73bb0f85344c15be1e2deae0afdbcac715424ead7defb"
+  },
+  "anchor": {
+    "path": "Tools/artworks/pure_run/enemies/approved/tomb_maw_bat_ranged_color_v06.png",
+    "sha256": "d71bd44be7dec83f116133ce8ab03394930dd3ade61cd21ea68fbb463464bc8a"
+  }
+}

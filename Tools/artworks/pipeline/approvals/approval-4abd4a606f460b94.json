@@ -1,0 +1,42 @@
+{
+  "schemaVersion": 2,
+  "approvalId": "approval-4abd4a606f460b94",
+  "attemptId": "job-6d22f48938cd05e4-a007",
+  "candidateSha256": "a62bef402f80a4eb30957e2f6884ac0f3c29db7fd51e1faa375a83abc8c43f5a",
+  "maskSha256": "8c7f712199cd778830eaf290db2de83020219b13052474969c0b3d71e5c001f8",
+  "reportSha256": "998bec34ec161cb6068f44038c4862ecf504437bb96b68f3c7f93ae1274a2287",
+  "contractId": "contract-c1474ae745934a6b",
+  "contractSha256": "ca456e2303e76b4901f8dc52158cfc30bcf93c4f6b3b613ca9fdfd56be730484",
+  "reviewSha256": {
+    "overlay": "2ecaee8d4136d4830ff6a298f81c3788c43163660d9f69815e3f461248d40cdf",
+    "preview128": "899eaf954ecc94862c58d9ed33273c04fec1f4cc6781f418bffe1864fc6979d4",
+    "tile64x32": "0f35ab0006c0a0031375965ede76960de2eb02199a782111ea18a317dad4ea6c"
+  },
+  "annotation": {
+    "annotationId": "annotations-357ca88e78105e34",
+    "sha256": "5082111def83fa4bbf4d781e32fab921cccca9860ba512efcf2049a2dd9811e5"
+  },
+  "reviewer": "cty41",
+  "decision": "approved",
+  "approvalMode": "gate-exception",
+  "waivedIssues": [
+    {
+      "code": "core_size_out_of_tolerance",
+      "candidateCoreSize": [
+        62,
+        78
+      ],
+      "anchorCoreSize": [
+        78,
+        78
+      ],
+      "delta": [
+        -16,
+        0
+      ],
+      "tolerancePx": 8
+    }
+  ],
+  "reason": "User approved the Hit pose and the comparison shows a 90x45 full silhouette versus 94x46 Idle; the conservative tilted core mask excludes wing and facial attachments and is narrower than the legacy idle core mask.",
+  "decidedAt": "2026-08-21T14:14:48.8759489+08:00"
+}

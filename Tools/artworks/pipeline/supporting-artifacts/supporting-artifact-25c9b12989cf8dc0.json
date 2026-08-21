@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 2,
+  "supportingArtifactId": "supporting-artifact-25c9b12989cf8dc0",
+  "artifact": {
+    "path": "Tools/artworks/pure_run/enemies/reviews/tomb_maw_bat_hit_ul_tilemap_red_shiba_amazon_compare_v01.png",
+    "sha256": "6b8b0fe5e8070692b3302c8759208ff09bd8001e83b0a18ed23a4a2b08582f3f"
+  },
+  "role": "review-comparison",
+  "note": "Tomb Maw Bat Hit UL comparison against approved UL idle, approved DR Hit, and formal red-shiba Amazon Hit UL."
+}

@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 2,
+  "reviewedImportId": "reviewed-import-ecbf6cc0c2fe3166",
+  "contractId": "contract-c29307506225dcc6",
+  "source": {
+    "path": "Tools/artworks/pure_run/enemies/candidates/tomb_maw_bat_ranged_death_color_v02.png",
+    "sha256": "8ddc4f85c3d98967fd28acf7239797f7b8ea24db9a207a64150e6c16413082db"
+  },
+  "candidate": {
+    "path": "Tools/artworks/pure_run/enemies/candidates/tomb_maw_bat_ranged_death_color_v02.png",
+    "sha256": "8ddc4f85c3d98967fd28acf7239797f7b8ea24db9a207a64150e6c16413082db"
+  },
+  "preview": {
+    "path": "Tools/artworks/pure_run/enemies/candidates/tomb_maw_bat_ranged_death_color_v02_128.png",
+    "sha256": "11e1068230f846c50dba9073a63fc9d4e865947a7dc68f8f13befe78a0e1f81a"
+  },
+  "sizeComparison": {
+    "path": "Tools/artworks/pure_run/enemies/reviews/tomb_maw_bat_death_size_compare_v03.png",
+    "sha256": "f059d2c6ab769c660def00954ae2a2b6369013999c1365006adbe1ff795aa869"
+  },
+  "reviewer": "cty41",
+  "reason": "User approved Death v02 after AABB-centered 64x32 Tilemap comparison; ball core, head direction, grounded wings, and tile placement accepted.",
+  "acceptedAt": "2026-08-21T10:12:34.1083826+08:00",
+  "sourceMode": "reviewed_import"
+}

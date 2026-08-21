@@ -1,0 +1,92 @@
+{
+  "schemaVersion": 1,
+  "sizeComparisonId": "size-comparison-c3f24a2379330189",
+  "inputs": [
+    {
+      "label": "Identity",
+      "artifact": {
+        "path": "Tools/artworks/pure_run/enemies/approved/tomb_maw_bat_ranged_color_v06.png",
+        "sha256": "d71bd44be7dec83f116133ce8ab03394930dd3ade61cd21ea68fbb463464bc8a"
+      }
+    },
+    {
+      "label": "Previous",
+      "artifact": {
+        "path": "Tools/artworks/pure_run/enemies/candidates/tomb_maw_bat_ranged_death_color_v01.png",
+        "sha256": "1fc751603d961de80f8fe588304bc5473a980c1a62a5012c0b858c1d8b8512f2"
+      }
+    },
+    {
+      "label": "Pose reference",
+      "artifact": {
+        "path": "Tools/artworks/doge/calibrated/doge_capsule_hunter_death_color_v04.png",
+        "sha256": "f5997651edd71cc78b926d5824ef4ac178f28604f5d7c9846f5a81ee0a2b3d19"
+      }
+    },
+    {
+      "label": "Candidate",
+      "artifact": {
+        "path": "Tools/artworks/pure_run/enemies/candidates/tomb_maw_bat_ranged_death_color_v02.png",
+        "sha256": "8ddc4f85c3d98967fd28acf7239797f7b8ea24db9a207a64150e6c16413082db"
+      }
+    }
+  ],
+  "measurements": [
+    {
+      "label": "Identity",
+      "bbox": [
+        10,
+        50,
+        103,
+        96
+      ],
+      "bboxSize": [
+        93,
+        46
+      ]
+    },
+    {
+      "label": "Previous",
+      "bbox": [
+        17,
+        77,
+        111,
+        119
+      ],
+      "bboxSize": [
+        94,
+        42
+      ]
+    },
+    {
+      "label": "Pose reference",
+      "bbox": [
+        36,
+        43,
+        92,
+        85
+      ],
+      "bboxSize": [
+        56,
+        42
+      ]
+    },
+    {
+      "label": "Candidate",
+      "bbox": [
+        31,
+        80,
+        97,
+        119
+      ],
+      "bboxSize": [
+        66,
+        39
+      ]
+    }
+  ],
+  "artifact": {
+    "path": "Tools/artworks/pure_run/enemies/reviews/tomb_maw_bat_death_size_compare_v03.png",
+    "sha256": "f059d2c6ab769c660def00954ae2a2b6369013999c1365006adbe1ff795aa869"
+  }
+}

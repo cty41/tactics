@@ -1,0 +1,34 @@
+{
+  "schemaVersion": 2,
+  "annotationId": "annotations-8322dc1839536d7e",
+  "attemptId": "job-b00e513c68225856-a002",
+  "candidateSha256": "18bff2932d149cef756e3dc7d5df4a683f90bf77739da8f66275e1a19655e20d",
+  "maskSha256": "2d071cf64248bd3d3c3264a1ddd2d0fa9dd37bd5d59845a88a64ea5fbda386fd",
+  "source": {
+    "path": "Tools/artworks/pure_run/enemies/concepts/tomb_maw_bat_melee_bite_attack_ul_v01_annotations.json",
+    "sha256": "2309033cab1fac79b59b2524df4113133a42525fff2d47acf434ac14cc8580df"
+  },
+  "regions": {
+    "eyeRegion": [
+      96,
+      100,
+      109,
+      111
+    ],
+    "weaponExit": [
+      84,
+      115,
+      103,
+      132
+    ],
+    "weaponTip": [
+      82,
+      121,
+      99,
+      136
+    ],
+    "gemRegion": null,
+    "scabbard": null,
+    "staticEffect": null
+  }
+}

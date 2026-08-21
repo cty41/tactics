@@ -1,0 +1,49 @@
+{
+  "schemaVersion": 2,
+  "attemptId": "job-d6faeff8c2b8b737-a001",
+  "jobId": "job-d6faeff8c2b8b737",
+  "ordinal": 1,
+  "parentAttemptId": null,
+  "retryFeedbackId": null,
+  "promptDelta": null,
+  "technicalRemediation": false,
+  "state": "promoted",
+  "sourceMode": "reviewed_import",
+  "reviewedImportId": "reviewed-import-ecbf6cc0c2fe3166",
+  "artifacts": {
+    "source": {
+      "path": "Tools/artworks/pure_run/enemies/candidates/tomb_maw_bat_ranged_death_color_v02.png",
+      "sha256": "8ddc4f85c3d98967fd28acf7239797f7b8ea24db9a207a64150e6c16413082db"
+    },
+    "prepared": {
+      "path": "Tools/artworks/pure_run/enemies/candidates/tomb_maw_bat_ranged_death_color_v02.png",
+      "sha256": "8ddc4f85c3d98967fd28acf7239797f7b8ea24db9a207a64150e6c16413082db"
+    },
+    "importedPreview": {
+      "path": "Tools/artworks/pure_run/enemies/candidates/tomb_maw_bat_ranged_death_color_v02_128.png",
+      "sha256": "11e1068230f846c50dba9073a63fc9d4e865947a7dc68f8f13befe78a0e1f81a"
+    },
+    "review": {
+      "sizeComparison": {
+        "path": "Tools/artworks/pure_run/enemies/reviews/tomb_maw_bat_death_size_compare_v03.png",
+        "sha256": "f059d2c6ab769c660def00954ae2a2b6369013999c1365006adbe1ff795aa869"
+      }
+    },
+    "promoted": {
+      "master": {
+        "path": "Tools/artworks/pure_run/enemies/approved/tomb_maw_bat_ranged_death_color_v02.png",
+        "sha256": "8ddc4f85c3d98967fd28acf7239797f7b8ea24db9a207a64150e6c16413082db"
+      },
+      "preview": {
+        "path": "Tools/artworks/pure_run/enemies/approved/tomb_maw_bat_ranged_death_color_v02_128.png",
+        "sha256": "11e1068230f846c50dba9073a63fc9d4e865947a7dc68f8f13befe78a0e1f81a"
+      }
+    }
+  },
+  "report": {
+    "path": "Tools/artworks/pipeline/reports/report-787b9b33a0b21bc5.json",
+    "sha256": "b21815727a49218dee663c8fafb58f5442226a281e2d281a0fc6082fa21c5a99"
+  },
+  "approvalId": "approval-10a40dc26fac0e22",
+  "feedbackId": null
+}

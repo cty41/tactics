@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 2,
+  "supportingArtifactId": "supporting-artifact-2d40b93ffd059ae6",
+  "artifact": {
+    "path": "Tools/artworks/pure_run/enemies/reviews/tomb_maw_bat_ranged_color_dr_core_mask_review_v01.png",
+    "sha256": "d46c2bd84a3ced05553392084f0708a3599ff05410fcbed4d2dfb0fc58fde53c"
+  },
+  "role": "anchor-mask-review",
+  "note": "Tomb Maw Bat approved DR Idle core-mask overlay; red is spherical core, cyan is ears, mouth protrusion, and wings excluded from scale calibration."
+}

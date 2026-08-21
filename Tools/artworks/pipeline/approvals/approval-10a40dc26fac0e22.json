@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 2,
+  "approvalId": "approval-10a40dc26fac0e22",
+  "attemptId": "job-d6faeff8c2b8b737-a001",
+  "candidateSha256": "8ddc4f85c3d98967fd28acf7239797f7b8ea24db9a207a64150e6c16413082db",
+  "maskSha256": null,
+  "reviewer": "cty41",
+  "reviewSha256": {
+    "sizeComparison": "f059d2c6ab769c660def00954ae2a2b6369013999c1365006adbe1ff795aa869"
+  },
+  "decision": "approved",
+  "reason": "User explicitly approved Death v02 after Tilemap placement comparison.",
+  "decidedAt": "2026-08-21T10:12:41.9341767+08:00",
+  "annotation": null,
+  "reportSha256": "b21815727a49218dee663c8fafb58f5442226a281e2d281a0fc6082fa21c5a99"
+}

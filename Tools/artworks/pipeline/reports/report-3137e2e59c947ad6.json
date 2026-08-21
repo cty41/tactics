@@ -1,0 +1,69 @@
+{
+  "schemaVersion": 1,
+  "attemptId": "job-d8c37ffa3a568007-a003",
+  "inputSha256": "dcb720038c8d0e8187f7579bc161c39049ae67080c6acd4f1dfdb689489c62f1",
+  "maskSha256": "9c500fdba5b2bf3142754092cd745e39393fc9c4490c6a43c89e4ec2cdefc885",
+  "technical": {
+    "size": [
+      256,
+      256
+    ],
+    "alphaBbox": [
+      42,
+      31,
+      251,
+      256
+    ]
+  },
+  "geometry": {
+    "boxes": {
+      "core": [
+        87,
+        88,
+        177,
+        177
+      ],
+      "head_appendage": null,
+      "near_hand": null,
+      "far_hand": null,
+      "near_foot": null,
+      "far_foot": null,
+      "equipment": null,
+      "wings": [
+        45,
+        33,
+        247,
+        255
+      ],
+      "effect": null,
+      "near_arm": null,
+      "far_arm": null,
+      "near_leg": null,
+      "far_leg": null
+    },
+    "core": {
+      "bbox": [
+        87,
+        88,
+        177,
+        177
+      ],
+      "center": [
+        132.0,
+        132.5
+      ],
+      "bandMaxWidths": [
+        85,
+        91,
+        85
+      ]
+    }
+  },
+  "issues": [
+    "anchor_mask_missing",
+    "annotations_missing",
+    "semantic_mask_outside_subject",
+    "semantic_mask_unknown_color"
+  ],
+  "passed": false
+}

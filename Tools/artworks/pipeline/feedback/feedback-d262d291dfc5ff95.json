@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 2,
+  "feedbackId": "feedback-d262d291dfc5ff95",
+  "attemptId": "job-fcd2010d14e8bee6-a002",
+  "candidateSha256": "fd0019c1a30fbb46af9f89f1f13ce7a6e1e921cddf6307bb9e4491decb399f1c",
+  "reviewer": "codex",
+  "verdict": "technical_failed",
+  "strengths": [
+    "Pose and calibrated silhouette preserve the accepted bite lunge, clear fangs, and backward wing sweep."
+  ],
+  "defects": [
+    "Semantic core mask has a disconnected top row after clipping the measuring ellipse to subject alpha."
+  ],
+  "nextPromptDelta": "No ImageGen change; technical remediation uses a continuous full spherical-core ellipse.",
+  "recordedAt": "2026-08-21T03:30:59Z",
+  "authorType": "agent",
+  "categories": [],
+  "disposition": "technical_failed",
+  "frozenInvariants": [],
+  "pendingFixes": [
+    "Replace only the semantic core mask with a continuous ellipse and rerun deterministic calibration."
+  ]
+}

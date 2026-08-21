@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 2,
+  "poseGuideId": "pose-guide-d1cd32ae7fc53d3c",
+  "compositionId": "composition-37a6ef03dbd54f1a",
+  "compositionSha256": "454e3b03272ab9ad9025cf19f930ebf17f134af21554484af61feece203bc4d9",
+  "anchorSha256": "d8c0037bd029f6f59049d846a4698e0fed63d1d139fb6fde0642cc944c12facb",
+  "artifact": {
+    "path": "Tools/artworks/pure_run/enemies/reviews/tomb_maw_bat_wind_blade_ul_pose_guide_v01.png",
+    "sha256": "0ff1f88bd5e4c07e38696d0b1a990fe254084b86bd19ca69735221831ae32aab"
+  },
+  "role": "supporting-derived"
+}
