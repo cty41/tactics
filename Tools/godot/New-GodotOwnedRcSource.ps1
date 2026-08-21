@@ -63,7 +63,7 @@ foreach ($relativePath in $trackedFiles) {
     })
 }
 
-foreach ($forbidden in @('Assets', 'Packages', 'ProjectSettings', 'src\Tactics.UnityOracle.Tests', '.codex', 'godot\addons\godot_ai')) {
+foreach ($forbidden in @('Assets', 'Packages', 'ProjectSettings', 'src\Tactics.UnityOracle.Tests', '.codex')) {
     if (Test-Path -LiteralPath (Join-Path $destination $forbidden)) {
         throw "Unity or local tooling path leaked into RC source: $forbidden"
     }

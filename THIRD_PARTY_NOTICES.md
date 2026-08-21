@@ -7,6 +7,7 @@ Apache-2.0 or CC BY 4.0 grants.
 | Component | Version range or locked version | License | Use |
 |---|---:|---|---|
 | Godot Engine / GodotSharp / Godot.NET.Sdk | 4.7.1 | MIT | Engine and C# SDK |
+| Godot AI EditorPlugin | 3.1.2 (`678b16a6`) | MIT | Project-scoped Editor automation and MCP Attach integration; source vendored under `godot/addons/godot_ai` |
 | .NET SDK | 9.0.312 | MIT and component notices | Build/runtime toolchain |
 | NUnit | 4.3.2 | MIT | Core/Application/Oracle tests |
 | NUnit3TestAdapter | 4.6.0 | MIT | Test discovery |
@@ -25,5 +26,9 @@ The authoritative versions are the checked-in NuGet and npm lockfiles. The
 public-release verifier emits a machine-readable dependency report and fails
 when an undeclared direct dependency is introduced.
 
-Godot, .NET, NUnit, GdUnit4, Node.js, TypeScript, PyYAML, and their respective
+The complete Godot AI MIT license is preserved at
+`godot/addons/godot_ai/LICENSE`. Godot AI is shipped in the public source tree
+but remains excluded from exported game PCKs and Windows runtime artifacts.
+
+Godot, Godot AI, .NET, NUnit, GdUnit4, Node.js, TypeScript, PyYAML, and their respective
 names and logos are the property of their respective owners.

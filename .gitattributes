@@ -18,6 +18,9 @@
 *.uid      text eol=lf
 *.cfg      text eol=lf
 
+# Preserve the reviewed upstream vendor snapshot without rewriting its two trailing blank lines.
+godot/addons/godot_ai/** whitespace=-blank-at-eof
+
 # Generated Godot gameplay plans are byte-compared against Node output.
 Tests/gameplay-specs/godot/*.plan.json text eol=lf
 

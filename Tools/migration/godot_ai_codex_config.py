@@ -12,6 +12,7 @@ import argparse
 import json
 import os
 import re
+import shutil
 import subprocess
 import sys
 import tomllib
@@ -70,6 +71,12 @@ class SyncResult:
     project_changed: bool
     user_changed: bool
     enabled_tools: tuple[str, ...]
+
+
+_WINDOWS_NO_CONSOLE_BOOTSTRAP = (
+    "import subprocess,sys;"
+    "sys.exit(subprocess.call(sys.argv[1:], creationflags=0x08000000))"
+)
 
 
 def load_policy(root: Path) -> CodexMcpPolicy:
@@ -249,6 +256,58 @@ def apply_profile(
     )
     rendered = render_project_server(server, policy, enabled_tools)
     new_payload = replace_or_append_server(text, block, rendered).encode("utf-8")
+    changed = original != new_payload
+    if changed:
+        _atomic_write(project_config_path, new_payload)
+    return SyncResult(profile, changed, False, enabled_tools)
+
+
+def bootstrap_configuration(
+    root: Path,
+    user_config_path: Path,
+    profile: str,
+    *,
+    python_executable: Path | None = None,
+    uvx_executable: Path | None = None,
+    check_command_exists: bool = True,
+) -> SyncResult:
+    """Create the project-scoped Attach entry without a one-off Dock export."""
+    root, policy, project_config_path = _resolve_context(root)
+    enabled_tools = resolve_profile_tools(policy, profile)
+    _assert_project_config_is_local(root, project_config_path)
+    user_text = _decode_config(_read_optional_bytes(user_config_path), user_config_path)
+    if find_server_block(user_text) is not None:
+        raise CodexGodotAiConfigError(
+            "a user-level godot-ai entry exists; import it before bootstrapping project config"
+        )
+
+    python_source = (python_executable or Path(sys.executable)).resolve()
+    pythonw = python_source if python_source.name.lower() == "pythonw.exe" else python_source.with_name("pythonw.exe")
+    uvx_value = uvx_executable or (Path(found).resolve() if (found := shutil.which("uvx")) else None)
+    if check_command_exists and not pythonw.is_file():
+        raise CodexGodotAiConfigError(f"pythonw.exe was not found beside Python: {pythonw}")
+    if uvx_value is None or (check_command_exists and not uvx_value.is_file()):
+        raise CodexGodotAiConfigError("uvx executable was not found on PATH")
+
+    launch_source = {
+        "command": str(pythonw),
+        "args": [
+            "-c", _WINDOWS_NO_CONSOLE_BOOTSTRAP, str(uvx_value),
+            "--from", f"godot-ai=={policy.version}", "godot-ai", "attach",
+            "--port", str(policy.http_port), "--ws-port", str(policy.websocket_port),
+        ],
+    }
+    _validate_launch(launch_source, policy, check_command_exists=check_command_exists)
+    original = _read_optional_bytes(project_config_path)
+    text = _decode_config(original, project_config_path)
+    block = find_server_block(text)
+    if block is not None:
+        existing = parse_server_table(block.text)
+        _validate_project_server(existing, policy, enabled_tools=None, check_command_exists=check_command_exists)
+        launch_source = existing
+    new_payload = replace_or_append_server(
+        text, block, render_project_server(launch_source, policy, enabled_tools)
+    ).encode("utf-8")
     changed = original != new_payload
     if changed:
         _atomic_write(project_config_path, new_payload)
@@ -609,11 +668,16 @@ def main(argv: Sequence[str] | None = None) -> int:
     mode = parser.add_mutually_exclusive_group()
     mode.add_argument("--import-from-user", action="store_true")
     mode.add_argument("--check", action="store_true")
+    mode.add_argument("--bootstrap", action="store_true")
     arguments = parser.parse_args(argv)
 
     try:
         policy = load_policy(arguments.root.resolve())
-        if arguments.import_from_user:
+        if arguments.bootstrap:
+            profile = arguments.profile or policy.default_profile
+            result = bootstrap_configuration(arguments.root, arguments.user_config, profile)
+            selected_mode = "bootstrap"
+        elif arguments.import_from_user:
             profile = arguments.profile or policy.default_profile
             result = import_generated_user_entry(arguments.root, arguments.user_config, profile)
             selected_mode = "import"

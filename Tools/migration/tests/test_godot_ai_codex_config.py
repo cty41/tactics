@@ -11,6 +11,7 @@ from pathlib import Path
 from Tools.migration.godot_ai_codex_config import (
     CodexGodotAiConfigError,
     apply_profile,
+    bootstrap_configuration,
     check_configuration,
     find_server_block,
     import_generated_user_entry,
@@ -200,6 +201,35 @@ class GodotAiCodexConfigTests(unittest.TestCase):
                 self.root, self.user_config, "phase3-observe", check_command_exists=False
             )
 
+    def test_bootstrap_creates_project_entry_without_user_export(self) -> None:
+        result = bootstrap_configuration(
+            self.root,
+            self.user_config,
+            "phase3-observe",
+            python_executable=Path(r"C:\Tools\python.exe"),
+            uvx_executable=Path(r"C:\Tools\uvx.exe"),
+            check_command_exists=False,
+        )
+
+        self.assertTrue(result.project_changed)
+        server = self._project_server()
+        self.assertEqual(server["command"], r"C:\Tools\pythonw.exe")
+        self.assertIn("creationflags=0x08000000", server["args"][1])
+        self.assertIn("godot-ai==3.1.2", server["args"])
+        self.assertEqual(server["enabled_tools"], sorted(self._observe_tools()))
+
+    def test_bootstrap_rejects_user_level_entry(self) -> None:
+        self.user_config.write_text(self._generated_block(), encoding="utf-8")
+        with self.assertRaisesRegex(CodexGodotAiConfigError, "user-level"):
+            bootstrap_configuration(
+                self.root,
+                self.user_config,
+                "phase3-observe",
+                python_executable=Path(r"C:\Tools\python.exe"),
+                uvx_executable=Path(r"C:\Tools\uvx.exe"),
+                check_command_exists=False,
+            )
+
     def test_manifest_profile_cycle_is_rejected(self) -> None:
         manifest = self._manifest()
         profiles = manifest["godotAi"]["codexMcp"]["profiles"]
@@ -385,14 +415,16 @@ class GodotAiCodexRepositoryPolicyTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
             migration = root / "Tools" / "migration"
+            godot_tools = root / "Tools" / "godot"
             manifest = migration / "manifest"
             manifest.mkdir(parents=True)
+            godot_tools.mkdir(parents=True)
             (root / "godot").mkdir()
             (root / "godot" / "project.godot").write_text("[application]\n", encoding="utf-8")
             (root / ".gitignore").write_text("/.codex/config.toml\n", encoding="utf-8")
             shutil.copy2(
-                self.root / "Tools" / "migration" / "Sync-GodotAiCodexConfig.ps1",
-                migration / "Sync-GodotAiCodexConfig.ps1",
+                self.root / "Tools" / "godot" / "Sync-GodotAiCodexConfig.ps1",
+                godot_tools / "Sync-GodotAiCodexConfig.ps1",
             )
             shutil.copy2(
                 self.root / "Tools" / "migration" / "godot_ai_codex_config.py",
@@ -422,7 +454,7 @@ class GodotAiCodexRepositoryPolicyTests(unittest.TestCase):
                     "-ExecutionPolicy",
                     "Bypass",
                     "-File",
-                    str(migration / "Sync-GodotAiCodexConfig.ps1"),
+                    str(godot_tools / "Sync-GodotAiCodexConfig.ps1"),
                     "-Check",
                     "-UserConfig",
                     str(user_config),

@@ -1,6 +1,7 @@
 [CmdletBinding()]
 param(
     [switch]$ImportFromUser,
+    [switch]$Bootstrap,
     [switch]$Check,
     [ValidateSet('phase3-observe', 'content-authoring', 'ui-input', 'presentation')]
     [string]$Profile = 'phase3-observe',
@@ -15,8 +16,9 @@ if ([string]::IsNullOrWhiteSpace($ProjectRoot)) {
 if ([string]::IsNullOrWhiteSpace($UserConfig)) {
     $UserConfig = Join-Path $env:USERPROFILE '.codex\config.toml'
 }
-if ($ImportFromUser -and $Check) {
-    throw '-ImportFromUser and -Check are mutually exclusive.'
+$selectedModes = [int][bool]$ImportFromUser + [int][bool]$Bootstrap + [int][bool]$Check
+if ($selectedModes -gt 1) {
+    throw '-ImportFromUser, -Bootstrap and -Check are mutually exclusive.'
 }
 
 $resolvedRoot = (Resolve-Path -LiteralPath $ProjectRoot).Path
@@ -32,6 +34,9 @@ if (-not $Check -or $PSBoundParameters.ContainsKey('Profile')) {
 if ($ImportFromUser) {
     $arguments += '--import-from-user'
 }
+elseif ($Bootstrap) {
+    $arguments += '--bootstrap'
+}
 elseif ($Check) {
     $arguments += '--check'
 }
@@ -41,6 +46,6 @@ if ($LASTEXITCODE -ne 0) {
     throw "Godot AI Codex configuration failed with exit code $LASTEXITCODE."
 }
 
-if ($ImportFromUser) {
-    Write-Output 'Restart Codex from D:\codes\tactics-worktrees\godot so the project-scoped MCP entry is discovered.'
+if ($ImportFromUser -or $Bootstrap) {
+    Write-Output "CODEX_RESTART_REQUIRED: restart the Codex task from $resolvedRoot so the project-scoped MCP entry is discovered."
 }

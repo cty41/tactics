@@ -4,6 +4,18 @@ This is the current cross-project manual acceptance state. Stable IDs are author
 
 ## Pending
 
+### MQA-GODOT-AGENT-FIRST-EDITOR — Clean worktree Editor and Godot AI Dock startup
+
+- Status: `pending`
+- Source: Unified multi-worktree Godot development launcher
+- Action: In a fresh worktree, start with `Tools/godot/Open-GodotDev.ps1`; after the first `CODEX_RESTART_REQUIRED`, restart Codex once, rerun the entry, and inspect the Editor and Godot AI Dock. Repeat while another Godot worktree Editor is open.
+- Expected: The correct project opens without manually running `dotnet build`; both C# EditorPlugins remain enabled; the Godot AI Dock is visible; the Agent session routes only to this worktree; the other worktree Editor remains running and unchanged.
+- Observe: Editor title/project path, Project Settings plugin list, Godot AI Dock/session list, `.godot/tactics-dev-session.json`, and Output errors.
+- Preserve on failure: Launcher output, both worktree paths/PIDs, plugin state, Dock screenshot, session listing, and first Godot error.
+- Save boundary: Use worktree-isolated user data; do not use `SharedManualQA` for Agent acceptance.
+- Automated evidence: Vendor hash, launcher policy, Codex bootstrap/profile, production assembly identity, release exclusion and same-worktree mutex checks are automated. Real Dock visibility, Editor reload and two-window routing remain human-only.
+- User verdict: none.
+
 ### MQA-GODOT-DEMONBOUND-HUD — Active-unit card, corruption meter and hover tooltip
 
 - Status: `pending`

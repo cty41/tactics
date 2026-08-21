@@ -29,7 +29,6 @@
     "Tools/ToastNotify/**",
     "Tools/sprite_preview/**",
     "Tools/checkpoint-hash-temp/**",
-    "godot/addons/godot_ai/**",
     "artifacts/**",
     "Build/**",
     "godot.godot/**"

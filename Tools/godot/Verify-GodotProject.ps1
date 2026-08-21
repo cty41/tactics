@@ -12,11 +12,14 @@ $projectRootWithSeparator = $projectRoot.TrimEnd([System.IO.Path]::DirectorySepa
 $projectFile = Join-Path $projectRoot 'project.godot'
 $adapterProject = Join-Path $projectRoot 'Tactics.Godot.Adapter.csproj'
 $testHostProject = Join-Path $projectRoot 'tests\Tactics.Godot.TestHost.csproj'
+$testHostAssembly = Join-Path $projectRoot '.godot\mono\temp\bin\Debug\Tactics.Godot.Adapter.dll'
 $solution = Join-Path $repoRoot 'Tactics.Godot.slnx'
 $runSettings = Join-Path $repoRoot 'Tactics.Godot.runsettings'
 $gdUnitRunnerTemplate = Join-Path $projectRoot 'tests\GdUnit4TestRunnerScene.cs.txt'
 $gdUnitRunnerSource = Join-Path $projectRoot 'gdunit4_testadapter_v5\GdUnit4TestRunnerScene.cs'
 $createdGdUnitRunnerSource = $false
+$operationLock = $null
+$testHostMayOwnGodotAssembly = $false
 $poisonExport = Join-Path $repoRoot 'Tools\migration\out\poison-spear-lv1.unity.json'
 $poisonDraft = Join-Path $repoRoot 'Tools\migration\out\poison-spear-lv1.draft.json'
 $poisonSpecification = Join-Path $repoRoot 'Tools\migration\manifest\export-batches\poison-spear-lv1.json'
@@ -139,6 +142,14 @@ function Invoke-IsolatedGdUnitSuite {
     )
 
     for ($attempt = 1; $attempt -le 2; $attempt++) {
+        # A native GdUnit host can remove Godot's temp assembly when it exits. Rebuild only when
+        # that isolated output disappeared so the next suite never consumes a missing/stale host.
+        if (-not (Test-Path -LiteralPath $testHostAssembly -PathType Leaf)) {
+            Invoke-Checked "Rebuild isolated GdUnit4Net test host for $Description" {
+                dotnet build $testHostProject -c Debug --no-restore --no-incremental -m:1 `
+                    -p:GodotProjectDir=$projectRootWithSeparator
+            }
+        }
         Write-Host "== $Description (attempt $attempt/2) =="
         $previousErrorActionPreference = $ErrorActionPreference
         $ErrorActionPreference = 'Continue'
@@ -171,6 +182,16 @@ function Invoke-IsolatedGdUnitSuite {
     }
 }
 
+$sessionModule = Join-Path $PSScriptRoot 'GodotDevSession.psm1'
+Import-Module $sessionModule -Force
+$operationLock = Enter-TacticsGodotOperationLock -RepoRoot $repoRoot
+$openEditors = @(Get-TacticsGodotEditorProcess -ProjectRoot $projectRoot)
+if ($openEditors.Count -gt 0) {
+    Exit-TacticsGodotOperationLock -Lock $operationLock
+    $operationLock = $null
+    throw "Close the Godot Editor for this worktree before verification. PIDs: $($openEditors.ProcessId -join ', ')"
+}
+
 Push-Location $repoRoot
 try {
     $env:GODOT_BIN = $GodotExecutable
@@ -183,6 +204,10 @@ try {
     }
     else {
         Write-Host '== Skip project-scoped godot-ai Codex configuration: local config is not present =='
+    }
+
+    Invoke-Checked 'Validate pinned Godot AI vendor tree' {
+        python 'Tools/migration/godot_ai_vendor.py' --root $repoRoot
     }
 
     if ($GodotOwned) {
@@ -328,6 +353,7 @@ try {
         dotnet build $testHostProject -c Debug --no-restore --no-incremental -m:1 `
             -p:GodotProjectDir=$projectRootWithSeparator
     }
+    $testHostMayOwnGodotAssembly = $true
 
     # GdUnit4Net owns one native Godot runtime per dotnet test invocation. Discover the test suites from
     # their version-controlled declarations and run each in a fresh host; a single long-lived Windows host can retain
@@ -410,6 +436,7 @@ try {
     Invoke-Checked 'Restore production Godot Debug assembly after GdUnit' {
         dotnet build $adapterProject -c Debug --no-restore --no-incremental -m:1
     }
+    $testHostMayOwnGodotAssembly = $false
 
     if (-not $GodotOwned) {
     if (Test-Path -LiteralPath $poisonExport -PathType Leaf) {
@@ -1111,6 +1138,13 @@ try {
     Write-Host "Godot project verification passed. Canonical project: $projectRoot"
 }
 finally {
+    if ($testHostMayOwnGodotAssembly) {
+        Write-Host '== Restore production Godot Debug assembly after interrupted GdUnit =='
+        dotnet build $adapterProject -c Debug --no-restore --no-incremental -m:1
+        if ($LASTEXITCODE -ne 0) {
+            Write-Warning "Production Adapter recovery failed with exit code $LASTEXITCODE; run Tools/godot/Open-GodotDev.ps1 -NoLaunch before opening the Editor."
+        }
+    }
     if ($createdGdUnitRunnerSource -and (Test-Path -LiteralPath $gdUnitRunnerSource -PathType Leaf)) {
         Remove-Item -LiteralPath $gdUnitRunnerSource -Force
     }
@@ -1118,4 +1152,5 @@ finally {
         [System.IO.Directory]::Delete($releaseVerificationDirectory, $true)
     }
     Pop-Location
+    Exit-TacticsGodotOperationLock -Lock $operationLock
 }
