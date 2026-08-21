@@ -1838,6 +1838,46 @@ def register_public_artifacts(store: Store, paths: list[dict[str, str]], provena
     write_json_idempotent(manifest_path, manifest)
 
 
+def relicense_public_artifacts(store: Store, args: argparse.Namespace) -> dict[str, Any]:
+    _iso_timestamp(args.decided_at, "--decided-at")
+    if args.reviewer != "cty41":
+        raise PipelineError("public artifact relicensing requires reviewer cty41")
+    if args.from_license != "project-owned" or args.to_license != "CC-BY-4.0":
+        raise PipelineError("only project-owned to CC-BY-4.0 relicensing is supported")
+    manifest_path = store.root / "Tools/public-release/asset-provenance.json"
+    manifest = load_json(manifest_path)
+    by_path = {entry["path"]: entry for entry in manifest["entries"]}
+    artifacts: list[dict[str, str]] = []
+    for value in sorted(set(args.path)):
+        rel = store.relative(value, must_exist=True)
+        entry = by_path.get(rel)
+        if entry is None:
+            raise PipelineError(f"provenance entry is missing: {rel}")
+        digest = sha256_file(store.absolute(rel))
+        if entry.get("sha256") != digest:
+            raise PipelineError(f"provenance hash mismatch: {rel}")
+        if entry.get("status") != "approved" or entry.get("rightsHolder") != "cty41":
+            raise PipelineError(f"artifact is not approved project-owned work: {rel}")
+        if entry.get("license") not in {args.from_license, args.to_license}:
+            raise PipelineError(f"artifact has unexpected license: {rel}")
+        artifacts.append({"path": rel, "sha256": digest})
+    payload = {
+        "artifacts": artifacts,
+        "fromLicense": args.from_license,
+        "toLicense": args.to_license,
+        "reviewer": args.reviewer,
+        "reason": args.reason,
+        "decidedAt": args.decided_at,
+    }
+    receipt_id = stable_id("public-artifact-license", payload)
+    receipt = {"schemaVersion": 1, "licenseReceiptId": receipt_id, **payload}
+    write_json_idempotent(store.record("license-receipts", receipt_id), receipt, immutable=True)
+    for artifact in artifacts:
+        by_path[artifact["path"]]["license"] = args.to_license
+    write_json_idempotent(manifest_path, manifest)
+    return receipt
+
+
 def _iso_timestamp(value: str, option: str) -> None:
     try:
         parsed = datetime.fromisoformat(value)
@@ -3305,6 +3345,12 @@ def build_parser() -> argparse.ArgumentParser:
     normalize_import_p.add_argument("--preview", required=True)
     runtime_copy_p = commands.add_parser("register-runtime-copy")
     runtime_copy_p.add_argument("--source", required=True); runtime_copy_p.add_argument("--target", required=True)
+    relicense_p = commands.add_parser("relicense-public-artifact")
+    relicense_p.add_argument("--path", action="append", required=True)
+    relicense_p.add_argument("--from-license", default="project-owned")
+    relicense_p.add_argument("--to-license", default="CC-BY-4.0")
+    relicense_p.add_argument("--reviewer", required=True); relicense_p.add_argument("--reason", required=True)
+    relicense_p.add_argument("--decided-at", required=True)
     adopt_p = commands.add_parser("adopt-reviewed-sprite")
     adopt_p.add_argument("--contract-id", required=True); adopt_p.add_argument("--source", required=True)
     adopt_p.add_argument("--candidate", required=True); adopt_p.add_argument("--preview", required=True)
@@ -3352,6 +3398,7 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
         "render-size-comparison": render_size_comparison,
         "normalize-reviewed-sprite": normalize_reviewed_sprite,
         "register-runtime-copy": register_runtime_copy,
+        "relicense-public-artifact": relicense_public_artifacts,
         "adopt-reviewed-sprite": adopt_reviewed_sprite,
         "migrate-component": migrate_component, "derive-component": derive_component,
         "create-assembly": create_assembly, "render-assembly": render_assembly,
