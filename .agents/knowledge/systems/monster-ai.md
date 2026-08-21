@@ -4,7 +4,7 @@ resource: https://github.com/cty41/tactics/tree/main/src/Tactics.Core/AI
 title: Monster AI
 description: Godot Pure Run 中基于合法候选、规则门禁、稳定评分和确定性执行的怪物决策系统。
 tags: [gameplay, ai, combat, godot]
-timestamp: "2026-08-20T20:45:05+08:00"
+timestamp: "2026-08-21T19:10:14+08:00"
 status: active
 catalog_scope: monster-ai
 repo_paths:
@@ -13,8 +13,9 @@ repo_paths:
   - src/Tactics.Core.Tests/AiEncounterRuntimeTests.cs
   - godot/src/Tactics.Godot.Adapter/Runtime/AiEncounterBatchValidator.cs
   - godot/content
+  - .agents/docs/maw-bat-enemy-slice-design.md
 verified_revision: c56d71ad4ebd
-source_fingerprint: sha256:cb1b779eac7f2b24ac7a65047eb96e06318dcd373db89861115a9e2013127ab5
+source_fingerprint: sha256:e136fd2af75bd027b9394445ab2bb6a39b3858772eb203c5838d065b43e2a89b
 ---
 
 # Current State
@@ -24,6 +25,10 @@ Monster AI 以 Core 战斗状态构建候选，复用正式移动、技能目标
 Godot Adapter 负责从 typed Resource/Catalog 装载 AI 配置，并通过正式运行时执行决策。配置作者链使用 Application 的 typed authoring contract 与 Tactics Authoring MCP；不得恢复旧编辑器资产或任意序列化字段 patch。
 
 固定 Seed 与 AI-vs-AI 结果只用于诊断候选、回合推进和清理，不作为平衡或玩家体验通过证据。人工体验结论继续由试玩协议和验收账本记录。
+
+大嘴蝠使用 `PredatoryDiver`：在本回合存在合法咬击时，按真实 Transition 是否致死、当前 HP、移动成本、
+稳定实例 ID 选择目标；无咬击候选时接近当前 HP 最低目标，低血量不会切入通用撤退。可击杀判断重放同一
+确定性移动与技能 Transition，因此包含护盾、最终伤害和暴击状态，而不是只比较技能面板伤害。
 
 # Relationships
 

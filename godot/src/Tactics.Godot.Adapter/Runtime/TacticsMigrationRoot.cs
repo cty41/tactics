@@ -70,8 +70,9 @@ public partial class TacticsMigrationRoot : Node
             var playable = new GodotPlayableRunMain();
             AddChild(playable);
             if (!playable.IsReadyForInput)
-                throw new InvalidOperationException("Playable Run UI failed its startup contract.");
-            GD.Print("Playable Run UI validation OK: canvas=1600x900, catalog=162, map=ready");
+                throw new InvalidOperationException(
+                    $"Playable Run UI failed its startup contract: {playable.StartupContractSummary}.");
+            GD.Print("Playable Run UI validation OK: canvas=1600x900, catalog=166, map=ready");
             GetTree().Quit();
             return;
         }
@@ -157,7 +158,7 @@ public partial class TacticsMigrationRoot : Node
         Node galleryInstance = galleryScene.Instantiate();
         bool validGallery = galleryInstance is GodotUnitGallery;
         galleryInstance.Free();
-        if (!validGallery || states.Count != 12)
+        if (!validGallery || states.Count != 13)
             throw new InvalidOperationException("Pure Run Unit validation fixtures are incomplete.");
         GD.Print(
             $"Pure Run Unit validation OK: entries={validation.CatalogEntryCount}, " +

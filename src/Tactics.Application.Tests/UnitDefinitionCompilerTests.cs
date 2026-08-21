@@ -64,7 +64,7 @@ public sealed class UnitDefinitionCompilerTests
             valid with { ContentId = "Unit.Bad" },
             valid with { Speed = float.NaN },
             valid with { AttackFactor = -1 },
-            valid with { MovementKind = "swim" },
+            valid with { MovementKind = "hover" },
             valid with { ActorContentId = string.Empty },
             valid with { DownRightTexture = string.Empty }
         };

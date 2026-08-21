@@ -74,6 +74,51 @@ public sealed class BoardAndRulesTests
     }
 
     [Test]
+    public void MovementPolicy_ChargesLandForShallowWaterAndLetsAirFlyOverButNotStopOnOccupiers()
+    {
+        var cells = Enumerable.Range(0, BoardSpec.Width)
+            .SelectMany(x => Enumerable.Range(0, BoardSpec.Height)
+                .Select(y => new KeyValuePair<GridPoint, CellState>(new GridPoint(x, y), new CellState())))
+            .ToDictionary(pair => pair.Key, pair => pair.Value);
+        cells[new GridPoint(1, 0)] = new CellState(terrain: TerrainKind.ShallowWater);
+        BoardSnapshot board = new BoardSnapshot(cells).WithOccupancy(new[] { new GridPoint(2, 0) });
+        var pathfinder = new DeterministicDijkstraPathfinder();
+
+        IReadOnlyList<GridPoint> land = pathfinder.FindPath(board, new GridPoint(0, 0), new GridPoint(1, 0), movementKind: UnitMovementKind.Land);
+        IReadOnlyList<GridPoint> air = pathfinder.FindPath(board, new GridPoint(0, 0), new GridPoint(3, 0), movementKind: UnitMovementKind.Air);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(DeterministicDijkstraPathfinder.MovementPointCost(board, land, UnitMovementKind.Land), Is.EqualTo(2));
+            Assert.That(air, Does.Contain(new GridPoint(2, 0)));
+            Assert.That(board.GetCell(new GridPoint(2, 0)).CanStop(UnitMovementKind.Air), Is.False);
+            Assert.That(board.GetCell(new GridPoint(1, 0)).MovementPointCost(UnitMovementKind.Swim), Is.EqualTo(1));
+        });
+    }
+
+    [Test]
+    public void Pathfinder_AllowOccupiedDestinationDoesNotAllowObstacleDestination()
+    {
+        var cells = Enumerable.Range(0, BoardSpec.Width)
+            .SelectMany(x => Enumerable.Range(0, BoardSpec.Height)
+                .Select(y => new KeyValuePair<GridPoint, CellState>(new GridPoint(x, y), new CellState())))
+            .ToDictionary(pair => pair.Key, pair => pair.Value);
+        GridPoint occupiedDestination = new(1, 0);
+        GridPoint obstacleDestination = new(0, 1);
+        cells[obstacleDestination] = new CellState(obstacle: MovementObstacleKind.Absolute);
+        BoardSnapshot board = new BoardSnapshot(cells).WithOccupancy([occupiedDestination]);
+        var pathfinder = new DeterministicDijkstraPathfinder();
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(pathfinder.FindPath(board, new GridPoint(0, 0), occupiedDestination,
+                allowOccupiedDestination: true), Is.EqualTo(new[] { occupiedDestination }));
+            Assert.That(pathfinder.FindPath(board, new GridPoint(0, 0), obstacleDestination,
+                allowOccupiedDestination: true, movementKind: UnitMovementKind.Air), Is.Empty);
+        });
+    }
+
+    [Test]
     public void ShadowConeLos_AllowsDiagonalTerrainCornerTangency()
     {
         var cells = Enumerable.Range(0, BoardSpec.Width)

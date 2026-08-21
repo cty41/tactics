@@ -123,7 +123,19 @@ public sealed class SkillRuntimeService
             int beforeHealth = target.CurrentHealth;
             int health = Math.Max(0, beforeHealth - damage);
             target = target.WithHealth(health);
-            events.Add(new DamageAppliedEvent(actor.Unit.InstanceId, target.Unit.InstanceId, skill.ContentId, beforeHealth - health, health));
+            int actualDamage = beforeHealth - health;
+            events.Add(new DamageAppliedEvent(actor.Unit.InstanceId, target.Unit.InstanceId, skill.ContentId, actualDamage, health));
+            next = next.WithUnit(target);
+            if (skill.ExecutionProfile.LifeStealPercent > 0)
+            {
+                BattleUnitState currentActor = next.Units[actor.Unit.InstanceId];
+                int requested = actualDamage * skill.ExecutionProfile.LifeStealPercent / 100;
+                BattleUnitState restored = currentActor.WithHealth(currentActor.CurrentHealth + requested);
+                int restoredAmount = restored.CurrentHealth - currentActor.CurrentHealth;
+                next = next.WithUnit(restored);
+                events.Add(new HealthRestoredEvent(actor.Unit.InstanceId, actor.Unit.InstanceId,
+                    skill.ContentId, restoredAmount, restored.CurrentHealth));
+            }
             if (!target.IsAlive && beforeHealth > 0 && actor.DemonboundState?.IsPossessed == true &&
                 target.Unit.PlayerNumber == actor.Unit.PlayerNumber)
             {
@@ -282,7 +294,10 @@ public sealed class SkillRuntimeService
         bool requiresCorpse = command.Definition.ExecutionKind is SkillExecutionKind.SummonSkeleton or SkillExecutionKind.SummonSkeletonMage || command.Definition.ExecutionProfile.RequiresCorpse;
         if (requiresCorpse && !state.Corpses.Contains(cell)) return Reject(state, actor, "corpse_not_found");
         if (!requiresCorpse && (!state.Board.Contains(cell) || Manhattan(actor.Unit.Position, cell) > command.Definition.MaxRange)) return Reject(state, actor, "summon_cell_out_of_range");
-        if (state.Units.Values.Any(unit => unit.IsAlive && unit.Unit.Position == cell)) return Reject(state, actor, "corpse_cell_occupied");
+        bool occupied = state.Units.Values.Any(unit => unit.IsAlive && unit.Unit.Position == cell) ||
+            state.DroppedSpears.Values.Contains(cell) || (!requiresCorpse && state.Corpses.Contains(cell));
+        if (!state.Board.Contains(cell) || !state.Board.GetCell(cell).CanStop(UnitMovementKind.Land) || occupied)
+            return Reject(state, actor, "corpse_cell_occupied");
         if (actor.CurrentMana < command.Definition.ManaCost) return Reject(state, actor, "insufficient_mana");
         int ordinal = state.Units.Values.Where(unit => unit.SummonOwnerId == actor.Unit.InstanceId).Select(unit => unit.Unit.SpawnOrdinal).DefaultIfEmpty(-1).Max() + 1;
         ContentId definitionId = command.Definition.ExecutionProfile.SummonDefinitionId ?? command.Definition.ExecutionKind switch
@@ -343,7 +358,8 @@ public sealed class SkillRuntimeService
         GridPoint destination = command.TargetCell;
         int distance = Manhattan(actor.Unit.Position, destination);
         if (!state.Board.Contains(destination) || distance < skill.MinRange || distance > skill.MaxRange) return Reject(state, actor, "destination_out_of_range");
-        if (state.Units.Values.Any(unit => unit.IsAlive && unit.Unit.Position == destination)) return Reject(state, actor, "destination_occupied");
+        BoardSnapshot relocationBoard = state.CreateMovementBoard(actor.Unit.InstanceId);
+        if (!relocationBoard.GetCell(destination).CanStop(actor.Unit.MovementKind)) return Reject(state, actor, "destination_occupied");
         if (skill.RequiresLineOfSight && !_lineOfSight.Trace(state.Board, actor.Unit.Position, destination,
                 LivingBlockers(state, actor.Unit.InstanceId, destination, skill.ExecutionKind)).IsClear) return Reject(state, actor, "line_of_sight_blocked");
         GridPoint origin = actor.Unit.Position;

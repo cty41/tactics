@@ -401,6 +401,7 @@ export function validateScenarioDraft(draft: unknown): ValidationResult {
   const spec: ScenarioSpec = {
     feature: draftData.feature,
     scenario: draftData.scenario,
+    contractIds: draftData.contractIds ?? [],
     tags: draftData.tags,
     requiredAdapters: draftData.requiredAdapters,
     setup: draftData.setup.map(s => ({ kind: s.kind, parameters: s.parameters })),

@@ -1,7 +1,7 @@
 [gd_resource type="Resource" script_class="GodotResourceCatalog" format=3 uid="uid://kw1noc3hf72l"]
 
-[ext_resource type="Script" path="res://src/Tactics.Godot.Adapter/Runtime/GodotResourceEntry.cs" id="1_47ob6"]
-[ext_resource type="Script" path="res://src/Tactics.Godot.Adapter/Runtime/GodotResourceCatalog.cs" id="2_gnkqo"]
+[ext_resource type="Script" uid="uid://dix7vmspmklr8" path="res://src/Tactics.Godot.Adapter/Runtime/GodotResourceEntry.cs" id="1_47ob6"]
+[ext_resource type="Script" uid="uid://bl3a3x13uuyqo" path="res://src/Tactics.Godot.Adapter/Runtime/GodotResourceCatalog.cs" id="2_gnkqo"]
 
 [sub_resource type="Resource" id="Resource_47ob6"]
 script = ExtResource("1_47ob6")
@@ -94,6 +94,15 @@ ReferenceContentIds = PackedStringArray("packed-scene.unit-actor")
 
 [sub_resource type="Resource" id="Resource_nw7xw"]
 script = ExtResource("1_47ob6")
+ContentIdValue = "unit.pure-run.maw-bat"
+ResourceTypeIdValue = "unit"
+ResourceUidValue = "uid://qrqjaq5engdr"
+DiagnosticPathValue = "res://content/units/PureRunMawBat.tres"
+SchemaVersion = 1
+ReferenceContentIds = PackedStringArray("packed-scene.unit-actor")
+
+[sub_resource type="Resource" id="Resource_2y5cx"]
+script = ExtResource("1_47ob6")
 ContentIdValue = "unit.pure-run.necromancer"
 ResourceTypeIdValue = "unit"
 ResourceUidValue = "uid://chihlradw121e"
@@ -101,7 +110,7 @@ DiagnosticPathValue = "res://content/units/PureRunNecromancer.tres"
 SchemaVersion = 1
 ReferenceContentIds = PackedStringArray("packed-scene.unit-actor")
 
-[sub_resource type="Resource" id="Resource_2y5cx"]
+[sub_resource type="Resource" id="Resource_veidf"]
 script = ExtResource("1_47ob6")
 ContentIdValue = "unit.pure-run.skeleton-mage"
 ResourceTypeIdValue = "unit"
@@ -110,7 +119,7 @@ DiagnosticPathValue = "res://content/units/PureRunSkeletonMage.tres"
 SchemaVersion = 1
 ReferenceContentIds = PackedStringArray("packed-scene.unit-actor")
 
-[sub_resource type="Resource" id="Resource_veidf"]
+[sub_resource type="Resource" id="Resource_astgr"]
 script = ExtResource("1_47ob6")
 ContentIdValue = "unit.pure-run.skeleton-warrior"
 ResourceTypeIdValue = "unit"
@@ -121,4 +130,4 @@ ReferenceContentIds = PackedStringArray("packed-scene.unit-actor")
 
 [resource]
 script = ExtResource("2_gnkqo")
-Entries = [SubResource("Resource_47ob6"), SubResource("Resource_gnkqo"), SubResource("Resource_hwtti"), SubResource("Resource_2kyyw"), SubResource("Resource_f6ntw"), SubResource("Resource_s4ylw"), SubResource("Resource_rmy2p"), SubResource("Resource_2cwuf"), SubResource("Resource_krs78"), SubResource("Resource_gpq2p"), SubResource("Resource_nw7xw"), SubResource("Resource_2y5cx"), SubResource("Resource_veidf")]
+Entries = [SubResource("Resource_47ob6"), SubResource("Resource_gnkqo"), SubResource("Resource_hwtti"), SubResource("Resource_2kyyw"), SubResource("Resource_f6ntw"), SubResource("Resource_s4ylw"), SubResource("Resource_rmy2p"), SubResource("Resource_2cwuf"), SubResource("Resource_krs78"), SubResource("Resource_gpq2p"), SubResource("Resource_nw7xw"), SubResource("Resource_2y5cx"), SubResource("Resource_veidf"), SubResource("Resource_astgr")]

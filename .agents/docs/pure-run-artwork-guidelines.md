@@ -28,9 +28,9 @@ verified_revision: c68dbebe
 - 发布母版为 `256×256 RGBA`，完整可见轮廓高 `122 px`，底部基线为 `y=236`。游戏预览为 `128×128 RGBA`，按等比缩小后目标轮廓约 `62 px`，基线为 `y=118`。
 - `64×32` 是 Tile Review 的参考占用，不是角色母版尺寸。武器、耳朵、翅膀或法术等外部轮廓可以改变横向包围盒，但不能借此缩放或漂移胶囊身体；未校准外部轮廓只能进入候选目录。
 
-## Unity 运行时导入映射
+## Godot 运行时映射
 
-- `Assets/Tactics/Arts/PureRun/Textures` 中用于标准胶囊角色的 `256×256` 纹理使用 `128 Pixels Per Unit`；以 `122 px` 可见轮廓计算，角色世界高度约为 `0.95`，即约两格 Tile 高。
+- `godot/assets/units` 中用于标准胶囊角色的 `256×256` 纹理保持统一尺寸，并由 Unit Resource 的脚底锚点与显示比例校准；以 `122 px` 可见轮廓计算，角色约为两格 Tile 高。
 - `64×32` 地面 Tile 继续使用 `64 Pixels Per Unit`，对应 Grid 的 `(1, 0.5, 1)` Cell Size。不要为了匹配角色而改变 Tile PPU、Grid 或相机。
 - 角色纹理保持底部 pivot `(0.5, 0.078125)`；单位 Prefab 根节点与 Sprite 子节点保持 `localScale = (1, 1, 1)`。新角色在接入 Prefab 前先设置 PPU，不用 Prefab 缩放补救导入比例。
 - 单位状态不使用角色子节点上的方形 `Marker`。待命、选中、已行动和可攻击状态由 `ProceduralTileHighlightRenderer` 在 `CurrentCell` 的等距 Tile 面上绘制；友方为低饱和蓝灰，选中为柔和琥珀金，已行动为弱灰蓝，敌对/攻击范围为暖红。
@@ -48,7 +48,7 @@ verified_revision: c68dbebe
 | North | up-left | `false` |
 | South | down-right | `false` |
 
-- 逻辑方向沿 Unity 等距网格轴解释：East 在屏幕上朝右上，West 朝左下，North 朝左上，South 朝右下。水平镜像方向明确接受矛、盾、匕首、鬼火、法杖和斧头的视觉换手；不得借此改变移动、技能、AI 或 `FacingResolver` 的语义。未配置该组件的旧单位继续使用原有 East/West 全 Renderer 翻转逻辑。
+- 逻辑方向沿 Godot 等距网格轴解释：East 在屏幕上朝右上，West 朝左下，North 朝左上，South 朝右下。水平镜像方向明确接受矛、盾、匕首、鬼火、法杖和斧头的视觉换手；不得借此改变移动、技能、AI 或 Core 朝向语义。
 - 运行时两张原生纹理均为 `256×256`、Single Sprite、`128 PPU`、底部 Pivot `(0.5, 0.078125)`。已有 down-right 纹理保留 `.meta` 与 GUID，仅更新像素内容；新增 up-left 纹理单独导入。
 
 ## Tile 表面契约
@@ -60,19 +60,19 @@ verified_revision: c68dbebe
 
 ## 单格单位脚底阴影契约
 
-- Pure Run 单格单位统一使用等距视角下的屏幕水平软椭圆阴影；阴影本身不带方向性投影，不随角色朝向翻转。批准源为 `Tools/artworks/pure_run/shadows/approved/pure_run_unit_shadow_1x1_v01.png`，运行时副本为 `Assets/Tactics/Arts/PureRun/Textures/pure_run_unit_shadow_1x1_v01.png`，两者必须保持原字节一致。
+- Pure Run 单格单位统一使用等距视角下的屏幕水平软椭圆阴影；阴影本身不带方向性投影，不随角色朝向翻转。批准源为 `Tools/artworks/pure_run/shadows/approved/pure_run_unit_shadow_1x1_v01.png`，运行时副本为 `godot/assets/units/pure_run_unit_shadow_1x1_v01.png`，两者必须保持原字节一致。
 - 纹理固定为 `64×32 RGBA`、Single Sprite、`64 PPU`、中心 Pivot、Full Rect、Bilinear、Clamp，关闭 Mipmap、压缩、Read/Write 与 fallback physics shape，并启用 Alpha Is Transparency。Sprite 世界尺寸为 `(1, 0.5)`，与单格等距 Tile 几何一致。
 - 地面单位的 `Shadow` 保持 `localScale = (1, 1, 1)`、Renderer RGB 白色且 alpha `1.0`；飞行单位使用同一 PNG，固定 `localScale = (0.75, 0.75, 0.75)`、Renderer RGB 白色且 alpha `0.60`。两者的虚拟落点都是单位所在 `64×32` Tile 几何中心，飞行阴影不随可见身体下沿或悬浮高度移动。
-- `TilemapUnit` 根节点只表示 Tile Ground Center；Pure Run `VisualRoot/Sprite` 的作者根空间基线为零，地面 `Shadow` 由 Prefab 明确保存 `localY=-0.03`。运行时不再提供 `_visualYOffset` 或 `_shadowFootOffset` 二次写入，`UnitTweenVisual` 只捕获并恢复 Prefab 基线。阴影位置不得从会被 Idle/动作 Tween 改写的 Sprite 姿态推导。完整网格术语与禁止补偿规则见[等距战场网格与视觉锚点契约](isometric-grid-anchor-contract.md)。当前仓库没有使用 `AirUnitMovementRules` 的单位 Prefab，飞行参数是可执行的作者契约，不代表蝙蝠已接入运行时。
+- Unit actor 根节点只表示 Tile Ground Center；`Sprite2D` 与 Shadow 的局部基线由 Godot Unit Resource 和运行时 actor 合同共同确定。阴影位置不得从会被 Idle/动作表现改写的 Sprite 姿态推导；飞行参数是可执行的作者契约，不代表蝙蝠已接入运行时。
 - 当前共享 `Fighter.prefab` 的阴影供其 Pure Run 派生链及接受该共享变更的其他派生单位使用；`PureRunGoatSupport`、`PureRunSkeletonMage` 与 `PureRunSkeletonWarrior` 直接保存同一新 Sprite 引用。12 个 Pure Run 单位的 Shadow 都必须默认激活；`PureRunNecromancer` 不得保留禁用覆盖。独立 legacy `Skeleton.prefab`、GroundTiles Palette 和第三方示例继续保留历史资源。
-- 所有 Pure Run `Shadow` 必须使用静态材质 `Assets/Tactics/Arts/PureRun/Materials/PureRunUnitShadow.mat`（`Sprites/Default`）。禁止复用第三方 `HeliSprite.mat` 或 `Custom/FloatingUnitShader`：该 Shader 会按世界坐标与时间摆动顶点，并忽略 `SpriteRenderer` 的颜色与 alpha，无法满足固定格心以及地面/飞行透明度契约。
+- 所有 Pure Run 阴影必须使用 Godot 项目自有的静态 CanvasItem 表现，并由 Unit Resource/运行时设置颜色与透明度；不得引入会摆动顶点或忽略节点 modulation 的旧第三方 Shader。
 
 ## 母图、参考图与候选
 
 - 母图（source/mother image）锁定角色身份、身体比例、脚位、盾牌和已确认的构图。局部编辑必须声明“保持不变”的区域，不得让 ImageGen 重新发明整个人物。
 - 参考图只提供犬种特征、武器结构、姿态骨架或色彩启发，不迁移对方的固定比例、装备、材质、地图或画风。提示词中应明确每张输入图片的职责。
 - 候选图用于比较和复盘；失败图必须隔离，不能被后续任务误当作母图或可用 Sprite。一次只生成一个角色或一个变体，先确认身体再迭代脸部、武器和层级。
-- `Tools/artworks/amazon` 下的黑白亚马逊图只属于造型设定集和早期风格探索，不是 Pure Run 正式单位稿、尺寸基准或方向图母图；正式四方向生产仅面向已确认的胶囊体信徒与胶囊规则下的怪物。
+- `Tools/artworks/amazon` 整个旧人形/像素亚马逊家族已废弃，仅保留历史 provenance 与审计用途，不得再作为身份母图、姿态/尺寸参考、Tilemap 对比或运行时资产。当前 Pure Run 亚马逊视觉权威是 `Tools/artworks/doge/calibrated` 下已批准的赤柴猎人 DR/UL；怪物对比引用赤柴版本，但仍不能把跨角色参考当作怪物身份或校准锚点。
 
 ## 死亡状态静态图
 
@@ -128,7 +128,7 @@ verified_revision: c68dbebe
 
 | 目录 | 语义 | 是否可作为运行时 Sprite |
 | --- | --- | --- |
-| `Tools/artworks/amazon` | 亚马逊黑白造型设定集与提示词探索记录 | 否，不作为正式单位稿或方向图母图 |
+| `Tools/artworks/amazon` | 已废弃的人形/像素亚马逊探索；仅历史 provenance 与审计 | 否，不得作为身份、姿态、尺寸、Tilemap 或运行时参考 |
 | `Tools/artworks/doge/concepts` | 角色设计锚点和未发布变体 | 否 |
 | `Tools/artworks/doge/calibrated` | 已按统一尺寸契约校准的 Doge 发布集 | 是设计层面的可用 Sprite |
 | `Tools/artworks/doge/rejected/superseded` | 已被正式版本替代的 Doge 历史失败稿 | 否，只供复盘 |
@@ -167,4 +167,4 @@ verified_revision: c68dbebe
 
 ## 边界与关联
 
-默认的生成与校准流程不修改 Unity Prefab、AI、遭遇配置或运行时代码。只有用户明确授权运行时美术接入时，才按“两个原生图 + 水平镜像”的固定映射更新纹理和 Prefab；该接入不得改变玩法朝向、AI 或遭遇语义。可复用提示词文档仍由 `artworks-prompt-library` skill 负责；本项目的 [Pure Run Artwork Pipeline skill](../skills/pure-run-artwork-pipeline/SKILL.md) 负责执行、验收、案例归档和提交准备。详细提示词继续保存在 `Tools/artworks/amazon` 等实际资源目录，不在 OKF 页面重复。
+默认的生成与校准流程不修改 Godot Resource、AI、遭遇配置或运行时代码。只有用户明确授权运行时美术接入时，才按“两个原生图 + 水平镜像”的固定映射更新纹理和 Unit Resource；该接入不得改变玩法朝向、AI 或遭遇语义。可复用提示词文档仍由 `artworks-prompt-library` skill 负责；本项目的 [Pure Run Artwork Pipeline skill](../skills/pure-run-artwork-pipeline/SKILL.md) 负责执行、验收、案例归档和提交准备。详细提示词继续保存在 `Tools/artworks/amazon` 等实际资源目录，不在 OKF 页面重复。

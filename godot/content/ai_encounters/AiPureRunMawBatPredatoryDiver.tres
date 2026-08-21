@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="AiDefinitionResource" format=3 uid="uid://1reahnavd6pf"]
+
+[ext_resource type="Script" uid="uid://dos8jvlbncca3" path="res://src/Tactics.Godot.Adapter/Runtime/AiDefinitionResource.cs" id="1_u1ndf"]
+
+[resource]
+script = ExtResource("1_u1ndf")
+ContentIdValue = "ai.pure-run.maw-bat-predatory-diver"
+ArchetypeValue = "PredatoryDiver"
+SkillContentIds = PackedStringArray("skill.enemy.maw-bat-bite.lv1")
+DecisionGraphHash = "godot.maw-bat-predatory-diver.v1"
+DecisionGraphJson = "{
+  \"dependencyHash\": \"godot.maw-bat-predatory-diver.v1\",
+  \"nodes\": [
+    { \"nodeId\": \"1\", \"kind\": \"intent\", \"type\": \"BasicAttack\", \"enabled\": true, \"basePriority\": 25.0 },
+    { \"nodeId\": \"2\", \"kind\": \"intent\", \"type\": \"Engage\", \"enabled\": true, \"basePriority\": 15.0 },
+    { \"nodeId\": \"3\", \"kind\": \"intent\", \"type\": \"HoldPosition\", \"enabled\": true, \"basePriority\": 1.0 }
+  ],
+  \"edges\": []
+}"

@@ -175,9 +175,9 @@ public class UnitBatchGodotTests
             AssertThat(state.CurrentMana).IsEqual(definition.StartingMana);
         }
 
-        AssertThat(validation.CatalogEntryCount).IsEqual(13);
-        AssertThat(validation.UnitCount).IsEqual(12);
-        AssertThat(validation.SpawnedStates.Count).IsEqual(12);
+        AssertThat(validation.CatalogEntryCount).IsEqual(14);
+        AssertThat(validation.UnitCount).IsEqual(13);
+        AssertThat(validation.SpawnedStates.Count).IsEqual(13);
     }
 
     [TestCase]
@@ -326,16 +326,16 @@ public class UnitBatchGodotTests
         if (gallery is GodotUnitGallery typedGallery)
         {
             typedGallery.BuildGallery();
-            AssertThat(typedGallery.Actors.Count).IsEqual(12);
-            AssertThat(typedGallery.Actors[0].Position).IsEqual(new Vector2(212.5f, 193.75f));
-            AssertThat(typedGallery.Actors[11].Position).IsEqual(new Vector2(1375f, 768.75f));
+            AssertThat(typedGallery.Actors.Count).IsEqual(13);
+            AssertThat(typedGallery.Actors[0].Position).IsEqual(new Vector2(160f, 190f));
+            AssertThat(typedGallery.Actors[12].Position).IsEqual(new Vector2(800f, 750f));
             AssertThat(typedGallery.Actors.All(actor =>
-                actor.Scale.IsEqualApprox(new Vector2(0.725f, 0.725f)))).IsTrue();
+                actor.Scale.IsEqualApprox(new Vector2(0.65f, 0.65f)))).IsTrue();
             Label amazonLabel = typedGallery.GetChildren()
                 .OfType<Label>()
                 .Single(label => label.Text == "Amazon");
-            AssertThat(amazonLabel.Position).IsEqual(new Vector2(81.25f, 246.25f));
-            AssertThat(amazonLabel.Size).IsEqual(new Vector2(262.5f, 42.5f));
+            AssertThat(amazonLabel.Position).IsEqual(new Vector2(50f, 242.5f));
+            AssertThat(amazonLabel.Size).IsEqual(new Vector2(220f, 42.5f));
             AssertThat(amazonLabel.GetThemeFontSize("font_size")).IsEqual(20);
             Label instructions = typedGallery.GetChildren()
                 .OfType<Label>()
@@ -353,7 +353,7 @@ public class UnitBatchGodotTests
             AssertThat(typedGallery.Actors.All(actor => actor.Body!.FlipH)).IsTrue();
             AssertThat(typedGallery.Actors.All(actor => !actor.Shadow!.FlipH)).IsTrue();
             typedGallery.SetAllDeath(true);
-            AssertThat(typedGallery.Actors.Count(actor => actor.IsShowingDeath)).IsEqual(9);
+            AssertThat(typedGallery.Actors.Count(actor => actor.IsShowingDeath)).IsEqual(10);
             typedGallery.SetGoatTintEnabled(false);
             AssertThat(typedGallery.Actors.Where(actor => actor.UsesGoatBodyMaskTint)
                 .All(actor => actor.Body!.Material is null)).IsTrue();
@@ -369,8 +369,8 @@ public class UnitBatchGodotTests
         if (fixture is GodotUnitSpawnFixture typedFixture)
         {
             IReadOnlyList<Tactics.Core.Battle.BattleUnitState> states = typedFixture.CreateStates();
-            AssertThat(states.Count).IsEqual(12);
-            AssertThat(states.Select(state => state.Unit.Position).Distinct().Count()).IsEqual(12);
+            AssertThat(states.Count).IsEqual(13);
+            AssertThat(states.Select(state => state.Unit.Position).Distinct().Count()).IsEqual(13);
             AssertThat(states.All(state =>
                 state.Unit.Position.X >= 0 && state.Unit.Position.X < 10 &&
                 state.Unit.Position.Y >= 0 && state.Unit.Position.Y < 10)).IsTrue();
@@ -379,7 +379,7 @@ public class UnitBatchGodotTests
                 state.Unit.Position.Y >= 1 && state.Unit.Position.Y <= 8)).IsTrue();
             typedFixture.BuildPreview();
             GodotUnitActor[] actors = typedFixture.GetChildren().OfType<GodotUnitActor>().ToArray();
-            AssertThat(actors.Length).IsEqual(12);
+            AssertThat(actors.Length).IsEqual(13);
             AssertThat(actors.All(actor =>
                 actor.Scale.IsEqualApprox(new Vector2(0.375f, 0.375f)))).IsTrue();
             for (int index = 0; index < actors.Length; index++)

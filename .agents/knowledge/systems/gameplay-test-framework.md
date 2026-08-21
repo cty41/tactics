@@ -4,7 +4,7 @@ resource: https://github.com/cty41/tactics/tree/main/Tools/gameplay-test-spec
 title: Gameplay Test Framework
 description: 将受控 gameplay spec 编译为 Godot runtime runner 可执行的确定性计划。
 tags: [testing, gameplay, automation, godot]
-timestamp: "2026-08-20T21:53:49+08:00"
+timestamp: "2026-08-21T19:10:12+08:00"
 status: active
 catalog_scope: gameplay-test-framework
 repo_paths:
@@ -16,12 +16,21 @@ repo_paths:
   - godot/src/Tactics.Godot.Adapter/Runtime/GodotPlayableRunMain.cs
   - Tests/gameplay-specs
 verified_revision: c56d71ad4ebd
-source_fingerprint: sha256:4c1b21b5a182a1445076047e5c3dcfdc56722daa04a17f4b0ba920584b50ec27
+source_fingerprint: sha256:223142cdf82e6ad89921a2a7ba4041f5d47908359bfefb7b12f72e899071495a
 ---
 
 # Current State
 
 维护对象是 `.gameplay-test.md`/`ScenarioSpec`；TypeScript validator/compiler 生成声明 Godot runtime、capability、adapter、checkpoint、隔离存档和 watchdog 的 plan。目标 runtime 不支持的步骤、错误 adapter 与被篡改的 capability/checkpoint 均 fail-closed，生成 plan 不手改。
+
+设计文档中的明确 `gameplay-contract` block 可注册稳定 Contract ID，ScenarioDraft/ScenarioSpec/plan 保留 `contractIds`，并由批量覆盖报告检查缺失 spec 或 DSL 不支持。LLM provider 层默认从仓库外用户配置调用 OpenCode Go `deepseek-v4-flash`，每次进程执行模型发现且失败不回退；Ollama 仅为显式本地选项。模型输出不具权威性，仍由 schema、逐字证据与 capability/compiler 确定性拒绝漂移。
+
+作者编译器支持 `EnemySliceDraft`，可把一个受约束敌人纵切确定性投影为 Unit、Skill、AI、Layout 与 Encounter
+Authoring V2 batch，并以 Catalog revision fence 区分 create/update。模型只能填充严格 Draft；素材路径必须命中
+显式批准清单，Resource 写入仍交给受测 Godot 作者服务与 ResourceSaver。本轮大嘴蝠的三份在线输出仅作为
+provider/schema/compiler smoke 候选，因使用占位 checkpoint 未晋升为正式 gameplay spec。
+
+OpenCode Go Key 与普通 provider 配置分离，secrets ACL 只允许当前用户、SYSTEM 或 Administrators。doctor 只发送固定 JSON 探针；项目文档仅由显式 extract/generate 命令发送，确定性 validate/compile 命令不联网。审计输出不包含 Key、Authorization、prompt 或原始响应。
 
 `GodotGameplayRuntimeRunner` 加载正式 `Main.tscn`，并通过 `Viewport.PushInput` 驱动生产 GUI/Input 链。每个场景使用隔离 `user://qa-runner/<scenario>/<attempt>/`，执行前后验证生产主档与 backup 未变化，并在退出时释放 Main、临时节点和隔离目录。
 

@@ -106,7 +106,8 @@ public sealed class PlayableBattleSessionFactory
                                  Math.Abs(cell.Y - protectedNpc.PreferredCell.Y))
                 .ThenBy(cell => cell.Y).ThenBy(cell => cell.X).First();
             UnitState facts = new(protectedNpcUnitId.Value, npcDefinition.ContentId, spawn,
-                npcDefinition.DerivedStats.MoveRange, npcDefinition.DerivedStats.Initiative, 0, request.Party.Count, true);
+                npcDefinition.DerivedStats.MoveRange, npcDefinition.DerivedStats.Initiative, 0, request.Party.Count, true,
+                npcDefinition.MovementKind);
             BattleUnitState npc = new(facts, npcDefinition.DerivedStats.MaxHealth, npcDefinition.DerivedStats.MaxHealth,
                 baseSpeed: npcDefinition.Speed,
                 physicalAttack: 0, magicalAttack: 0, canProduceCorpse: false);
@@ -123,7 +124,8 @@ public sealed class PlayableBattleSessionFactory
         {
             var cell = new GridPoint(x, y);
             bool blocked = layout.BlockedCells.Contains(cell);
-            cells[cell] = new CellState(blocksMovement: blocked, blocksLineOfSight: blocked);
+            cells[cell] = new CellState(blocksMovement: blocked, blocksLineOfSight: blocked,
+                terrain: layout.ShallowWater.Contains(cell) ? TerrainKind.ShallowWater : TerrainKind.Ground);
         }
         UnitInstanceId[] order = InitiativeOrder.Sort(states.Select(state => new InitiativeEntry(
             state.Unit.InstanceId, state.Unit.Initiative, state.Unit.PlayerNumber, state.Unit.SpawnOrdinal)))
@@ -145,7 +147,7 @@ public sealed class PlayableBattleSessionFactory
         };
         return new PlayableBattleSessionService(new PlayableBattleSessionContext(
             battle, 0, skillsByUnit, aiByUnit, playableSkills, request, characterIds, layout.BlockedCells,
-            summonControllers, protectedNpcUnitId));
+            summonControllers, protectedNpcUnitId, layout.ShallowWater));
     }
 
     private static IReadOnlyDictionary<int, SkillDefinition> Levels(
@@ -171,7 +173,7 @@ public sealed class PlayableBattleSessionFactory
         UnitDerivedStats battleDerived = ResolvePartyDerivedStats(definition, projection);
         var facts = new UnitState(
             instanceId, definition.ContentId, cell, battleDerived.MoveRange,
-            battleDerived.Initiative, 0, spawnOrdinal, !character.IsDead);
+            battleDerived.Initiative, 0, spawnOrdinal, !character.IsDead, definition.MovementKind);
         IReadOnlyDictionary<ItemInstanceId, BattleConsumableState> consumables = character.CarriedConsumables
             .ToDictionary(item => item.InstanceId);
         (int physical, int magical) = balance?.Attacks(definition.ContentId) ?? (2, 2);

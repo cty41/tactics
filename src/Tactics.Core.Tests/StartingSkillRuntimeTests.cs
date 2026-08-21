@@ -10,6 +10,49 @@ namespace Tactics.Core.Tests;
 public sealed class StartingSkillRuntimeTests
 {
     [Test]
+    public void DirectAttackLifeStealUsesFinalHealthDamageAndPrecedesDefeatResolution()
+    {
+        BattleState state = State(new GridPoint(1, 1), new[] { ("enemy.target", new GridPoint(2, 1)) });
+        state = state.WithUnit(state.Units[state.ActiveUnitId].WithHealth(10));
+        UnitInstanceId targetId = new("enemy.target");
+        state = state.WithUnit(state.Units[targetId].WithHealth(3));
+        var skill = new SkillDefinition(new ContentId("skill.enemy.maw-bat-bite.lv1"), "maw_bat_bite",
+            SkillRole.Any, SkillKind.Active, 1, 0, 1, 1, SkillExecutionKind.DirectAttack, 4,
+            SkillDamageKind.Physical, maxUsesPerTurn: 1,
+            executionProfile: new SkillExecutionProfile(LifeStealPercent: 50), canCrit: false);
+
+        BattleTransition result = new BattleTransitionService().Apply(state,
+            new UseSkillCommand(state.ActiveUnitId, targetId, new GridPoint(2, 1), skill));
+        BattleEvent[] ordered = result.Events
+            .Where(value => value is DamageAppliedEvent or HealthRestoredEvent or UnitDefeatedEvent).ToArray();
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(result.State.Units[state.ActiveUnitId].CurrentHealth, Is.EqualTo(11));
+            Assert.That(result.State.Units[targetId].CurrentHealth, Is.Zero);
+            Assert.That(ordered[0], Is.TypeOf<DamageAppliedEvent>());
+            Assert.That(ordered[1], Is.TypeOf<HealthRestoredEvent>());
+            Assert.That(((HealthRestoredEvent)ordered[1]).Amount, Is.EqualTo(1));
+            Assert.That(ordered[2], Is.TypeOf<UnitDefeatedEvent>());
+        });
+    }
+
+    [Test]
+    public void DirectAttackLifeStealEmitsZeroRestoreAtFullHealth()
+    {
+        BattleState state = State(new GridPoint(1, 1), new[] { ("enemy.target", new GridPoint(2, 1)) });
+        var skill = new SkillDefinition(new ContentId("skill.enemy.maw-bat-bite.lv1"), "maw_bat_bite",
+            SkillRole.Any, SkillKind.Active, 1, 0, 1, 1, SkillExecutionKind.DirectAttack, 4,
+            SkillDamageKind.Physical, maxUsesPerTurn: 1,
+            executionProfile: new SkillExecutionProfile(LifeStealPercent: 50), canCrit: false);
+
+        BattleTransition result = new BattleTransitionService().Apply(state,
+            new UseSkillCommand(state.ActiveUnitId, new UnitInstanceId("enemy.target"), new GridPoint(2, 1), skill));
+
+        Assert.That(result.Events.OfType<HealthRestoredEvent>().Single().Amount, Is.Zero);
+    }
+
+    [Test]
     public void FireballHitsSelectedUnblockedEnemyAndAppliesBurning()
     {
         BattleState state = State(new GridPoint(1, 1), new[] { ("enemy.near.0", new GridPoint(3, 1)), ("enemy.far.0", new GridPoint(4, 1)) });
@@ -145,6 +188,23 @@ public sealed class StartingSkillRuntimeTests
             Assert.That(result.Events.OfType<UnitSummonedEvent>(), Has.Exactly(1).Items);
             Assert.That(result.Events.OfType<DamageAppliedEvent>(), Is.Empty);
         });
+    }
+
+    [Test]
+    public void SummonCannotStopOnFlyoverObstacle()
+    {
+        GridPoint corpse = new(3, 1);
+        BattleState original = State(new GridPoint(1, 1), Array.Empty<(string, GridPoint)>()).WithCorpse(corpse);
+        var cells = original.Board.Cells.ToDictionary(value => value.Key, value => value.Value);
+        cells[corpse] = new CellState(obstacle: MovementObstacleKind.Flyover);
+        BattleState state = new(new BoardSnapshot(cells), original.Units.Values, original.TurnOrder,
+            original.Round, original.ActiveIndex, original.RandomState, original.DroppedSpears, original.Corpses);
+        SkillDefinition summon = Skill("skill.necromancer.summon-skeleton.lv1", SkillExecutionKind.SummonSkeleton, 3, 999, 0);
+
+        BattleTransition result = new BattleTransitionService().Apply(state,
+            new UseSkillCommand(state.ActiveUnitId, null, corpse, summon));
+
+        Assert.That(result.Events.OfType<CommandRejectedEvent>().Single().Reason, Is.EqualTo("corpse_cell_occupied"));
     }
 
     [Test]

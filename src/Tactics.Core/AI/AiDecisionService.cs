@@ -1,6 +1,7 @@
 using Tactics.Core.Battle;
 using Tactics.Core.Board;
 using Tactics.Core.Content;
+using Tactics.Core.Pathfinding;
 using Tactics.Core.Skills;
 using Tactics.Core.Units;
 
@@ -103,6 +104,9 @@ public sealed class AiDecisionService
         candidates.Add(new AiIntentCandidate(AiIntentKind.HoldPosition, null, actor.Unit.Position, null, actor.Unit.Position, 0, 0, 0, 0, true, string.Empty,
             IntentPriority(definition, "HoldPosition", 1)));
 
+        if (definition.Archetype == AiArchetype.PredatoryDiver)
+            return SelectPredatoryDiver(state, actor, skills, enemies, candidates, patternIndex);
+
         IOrderedEnumerable<AiIntentCandidate> ranked = candidates.OrderByDescending(item => item.TotalScore).ThenBy(item => item.Intent)
             .ThenBy(item => item.SkillId?.Value ?? string.Empty, StringComparer.Ordinal).ThenBy(item => item.Destination.X).ThenBy(item => item.Destination.Y)
             .ThenBy(item => item.TargetId?.Value ?? string.Empty, StringComparer.Ordinal);
@@ -110,6 +114,56 @@ public sealed class AiDecisionService
         AiIntentCandidate? patternCandidate = patternSkill is null ? null : ranked.FirstOrDefault(item => item.SkillId == patternSkill);
         AiIntentCandidate selected = patternCandidate ?? ranked.First();
         return new AiTurnPlan(actor.Unit.InstanceId, selected, candidates, patternIndex, patternCandidate is not null);
+    }
+
+    private AiTurnPlan SelectPredatoryDiver(BattleState state, BattleUnitState actor,
+        IReadOnlyDictionary<ContentId, SkillDefinition> skills, IReadOnlyList<BattleUnitState> enemies,
+        IReadOnlyList<AiIntentCandidate> candidates, int patternIndex)
+    {
+        var pathfinder = new DeterministicDijkstraPathfinder();
+        int Cost(AiIntentCandidate candidate)
+        {
+            IReadOnlyList<GridPoint> path = pathfinder.FindPath(state.CreateMovementBoard(actor.Unit.InstanceId),
+                actor.Unit.Position, candidate.Destination, movementKind: actor.Unit.MovementKind);
+            return DeterministicDijkstraPathfinder.MovementPointCost(state.Board, path, actor.Unit.MovementKind);
+        }
+
+        bool IsKillable(AiIntentCandidate candidate)
+        {
+            BattleState probeState = state;
+            if (candidate.Destination != actor.Unit.Position)
+            {
+                BattleTransition move = _transitions.Apply(state,
+                    new MoveUnitCommand(actor.Unit.InstanceId, candidate.Destination));
+                if (!move.Succeeded) return false;
+                probeState = move.State;
+            }
+            SkillDefinition skill = skills[candidate.SkillId!.Value];
+            BattleTransition attack = _transitions.Apply(probeState,
+                new UseSkillCommand(actor.Unit.InstanceId, candidate.TargetId, candidate.TargetCell, skill));
+            return attack.Succeeded && !attack.State.Units[candidate.TargetId!.Value].IsAlive;
+        }
+
+        AiIntentCandidate? attack = candidates
+            .Where(candidate => candidate.SkillId is ContentId id &&
+                skills[id].ExecutionKind == SkillExecutionKind.DirectAttack && candidate.TargetId is not null)
+            .OrderByDescending(IsKillable)
+            .ThenBy(candidate => state.Units[candidate.TargetId!.Value].CurrentHealth)
+            .ThenBy(Cost)
+            .ThenBy(candidate => candidate.TargetId!.Value.Value, StringComparer.Ordinal)
+            .FirstOrDefault();
+        if (attack is not null)
+            return new AiTurnPlan(actor.Unit.InstanceId, attack, candidates, patternIndex, false);
+
+        UnitInstanceId? prey = enemies.OrderBy(enemy => enemy.CurrentHealth)
+            .ThenBy(enemy => enemy.Unit.InstanceId.Value, StringComparer.Ordinal)
+            .Select(enemy => (UnitInstanceId?)enemy.Unit.InstanceId).FirstOrDefault();
+        AiIntentCandidate selected = candidates.Where(candidate => candidate.Intent == AiIntentKind.Engage &&
+                candidate.TargetId == prey)
+            .OrderBy(candidate => Manhattan(candidate.Destination, candidate.TargetCell))
+            .ThenBy(Cost).ThenBy(candidate => candidate.Destination.X).ThenBy(candidate => candidate.Destination.Y)
+            .FirstOrDefault() ?? candidates.Single(candidate => candidate.Intent == AiIntentKind.HoldPosition);
+        return new AiTurnPlan(actor.Unit.InstanceId, selected, candidates, patternIndex, false);
     }
 
     private static float PreferredRangeBonus(AiDefinition definition, GridPoint current, GridPoint destination, GridPoint target)

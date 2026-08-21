@@ -1,5 +1,7 @@
 # Amazon Output Spec
 
+> **Deprecated:** This specification belongs to the retired human/pixel Amazon exploration and must not guide current Pure Run production. See [`DEPRECATED.md`](DEPRECATED.md).
+
 ## Summary
 
 This spec targets a `60fps` 2D isometric tilemap game, while keeping character animation authored as low-frame sprite animation.

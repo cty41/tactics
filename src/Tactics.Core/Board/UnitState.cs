@@ -16,7 +16,8 @@ public readonly record struct UnitState
         float initiative,
         int playerNumber,
         int spawnOrdinal,
-        bool isAlive = true)
+        bool isAlive = true,
+        UnitMovementKind movementKind = UnitMovementKind.Land)
     {
         if (!float.IsFinite(initiative))
             throw new ArgumentOutOfRangeException(nameof(initiative));
@@ -33,6 +34,7 @@ public readonly record struct UnitState
         PlayerNumber = playerNumber;
         SpawnOrdinal = spawnOrdinal;
         IsAlive = isAlive;
+        MovementKind = movementKind;
     }
 
     public UnitInstanceId InstanceId { get; init; }
@@ -43,6 +45,7 @@ public readonly record struct UnitState
     public int PlayerNumber { get; init; }
     public int SpawnOrdinal { get; init; }
     public bool IsAlive { get; init; }
+    public UnitMovementKind MovementKind { get; init; }
 
     private static int ValidateMoveRange(int moveRange) =>
         moveRange < 0 ? throw new ArgumentOutOfRangeException(nameof(moveRange)) : moveRange;

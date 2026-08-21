@@ -4,7 +4,7 @@ resource: https://github.com/cty41/tactics
 title: Godot agent workflow
 description: Godot 4.7 C# 主线的项目、分层、Editor 生命周期、验证和发布边界。
 tags: [godot, agent, workflow, testing]
-timestamp: "2026-08-21T07:56:18+08:00"
+timestamp: "2026-08-21T19:10:13+08:00"
 status: active
 catalog_scope: godot-agent-workflow
 repo_paths:
@@ -18,7 +18,7 @@ repo_paths:
   - Tools/godot/Build-GodotWindows.ps1
   - Tools/migration/manifest/godot-tooling.json
 verified_revision: d092a955
-source_fingerprint: sha256:66bafe5824de1b4ab07382b841a671e2d0c74e72c2cacaf6bedc23d95a72026e
+source_fingerprint: sha256:65dcd4e2bc5f1bfa802de1dadf4a74b9f99d64667da1a9d844d4b7de19fd7af0
 ---
 
 # Current State

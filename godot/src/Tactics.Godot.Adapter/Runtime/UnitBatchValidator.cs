@@ -21,7 +21,7 @@ public static class UnitBatchValidator
     {
         ArgumentNullException.ThrowIfNull(catalog);
         GodotCatalogCompilation compilation = GodotCatalogCompiler.Compile(catalog);
-        if (catalog.Entries.Length != 13 || compilation.Snapshot.Entries.Count != 13)
+        if (catalog.Entries.Length != 14 || compilation.Snapshot.Entries.Count != 14)
             throw new InvalidOperationException("Pure Run Unit Catalog must contain 12 Units and one actor scene.");
 
         GodotResourceEntry actorEntry = catalog.Entries.Single(
@@ -42,7 +42,7 @@ public static class UnitBatchValidator
             .Where(entry => entry.ResourceTypeIdValue == "unit")
             .OrderBy(entry => entry.ContentIdValue, StringComparer.Ordinal)
             .ToArray();
-        if (unitEntries.Length != 12)
+        if (unitEntries.Length != 13)
             throw new InvalidOperationException("Pure Run Unit Catalog must contain exactly 12 Unit entries.");
         var spawned = new List<BattleUnitState>();
         for (int index = 0; index < unitEntries.Length; index++)

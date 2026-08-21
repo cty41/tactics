@@ -1,7 +1,32 @@
 # Tactics Knowledge Update Log
 
+## 2026-08-21
+* **Sync**: `pure-run-artwork` 已同步到来源指纹 `sha256:592d4e5c2f75a084cc13dc92c694f2e50f5341c295be0c05fd7fe0a86e22ef29`。
+* **Sync**: `monster-ai` 已同步到来源指纹 `sha256:e136fd2af75bd027b9394445ab2bb6a39b3858772eb203c5838d065b43e2a89b`。
+* **Sync**: `gameplay-test-framework` 已同步到来源指纹 `sha256:223142cdf82e6ad89921a2a7ba4041f5d47908359bfefb7b12f72e899071495a`。
+* **Sync**: `battle-system` 已同步到来源指纹 `sha256:808091427d0d6de9384f3894733319b531dbfe6ab8df74b6fa5cd4e9814d6fd7`。
+* **Sync**: `skill-graph` 已同步到来源指纹 `sha256:16beecab79f52cc6178fa8e5b749d0f94df2db1e3a1f7caf19e33953df3b857b`。
+* **Sync**: `roguelike-run` 已同步到来源指纹 `sha256:6ab6d33dd58ca081eea50841a588d1a8e30562e32a8e20e1bbd7c235b14a3327`。
+* **Sync**: `project-documentation` 已同步到来源指纹 `sha256:261b07dfd600d97bb2256426f6c2f0004aacdbaa5f10335754c99437bc671a48`。
+* **Sync**: `project-architecture` 已同步到来源指纹 `sha256:4f88a72524bd4b87356a566ab85a2d7134193aa3128567e78ec6a10b35904f0a`。
+* **Sync**: `godot-migration` 已同步到来源指纹 `sha256:add567652e2da6f1da0dc370ed2c2ede22e8536de3e174ea9f31df58ec2adb2e`。
+* **Sync**: `godot-agent-workflow` 已同步到来源指纹 `sha256:65dcd4e2bc5f1bfa802de1dadf4a74b9f99d64667da1a9d844d4b7de19fd7af0`。
+* **Sync**: `project-known-gaps` 已同步到来源指纹 `sha256:def1db21930fb114da1c7eb337b308b1e9402f1c3103699258962dfc12276142`。
+* **Sync**: `okf-maintenance` 已同步到来源指纹 `sha256:7ae67a55a8e833c677fcd7678f954920bde2a61b7eedf69ed728e9d30bf0db0b`。
+
 ## 2026-08-20
-* **Sync**: `project-documentation` 已同步到来源指纹 `sha256:dc586a945d30e1a510523dc8fe1c7f8d9316bea4f7960a203ad7df108f67c4a2`。
+* **Sync**: `project-documentation` 已同步到来源指纹 `sha256:cf0593ec3778b55769633372e193afb4d31a80086bf03ee84580a222d86cdf5e`。
+* **Sync**: `pure-run-artwork` 已同步到来源指纹 `sha256:d45dc216aa248551aaf0fa6daa8ab04ab70dd2c495986ab5158a6be938da3242`。
+* **Sync**: `battle-system` 已同步到来源指纹 `sha256:dee26f824678dca26326af1671648d82eab204eabd422fe7d6f84ae59d9b2fcf`。
+* **Sync**: `project-architecture` 已同步到来源指纹 `sha256:88b1a8f0290f7bf0eceaf1b7bc9a92065a075cf120c81cfc7ef54d340cc3ddb0`。
+* **Sync**: `godot-migration` 已同步到来源指纹 `sha256:25f6f331892c89d8e4d8aa649445c30347318d293a5c178d8bf5dc78bf7cbbef`。
+* **Sync**: `godot-agent-workflow` 已同步到来源指纹 `sha256:5b2304686c2c152f3a136251d595e2a2b2e50eeb46b305301285f698a4251b22`。
+* **Sync**: `gameplay-test-framework` 已同步到来源指纹 `sha256:4c1b21b5a182a1445076047e5c3dcfdc56722daa04a17f4b0ba920584b50ec27`。
+* **Sync**: `roguelike-run` 已同步到来源指纹 `sha256:5013a83ab4003fda349c0fdf48d5fe93ad46afd4a8c82c0ffcd9d385dc1a38a6`。
+* **Sync**: `skill-graph` 已同步到来源指纹 `sha256:69eda98326054e598fd0caafa3a78f89bb6aeaa0fb3444ef0d698861cd902cba`。
+* **Sync**: `monster-ai` 已同步到来源指纹 `sha256:cb1b779eac7f2b24ac7a65047eb96e06318dcd373db89861115a9e2013127ab5`。
+* **Sync**: `project-known-gaps` 已同步到来源指纹 `sha256:9a56955e257b12317fc4a22fc47e1ad553c4f42340bc2978bb6e62e32db938dc`。
+* **Sync**: `okf-maintenance` 已同步到来源指纹 `sha256:52bdffb738498c697d7b19305698be4ca41ca0340153364e580e2616a4d0ce65`。
 
 ## 2026-08-19
 * **Sync**: `godot-agent-workflow` 已同步到来源指纹 `sha256:ce1d1722a4189c47786bdce4ad2e6c98f2ecd42e2b2a010bcf553e6a4ce53939`。
@@ -392,4 +417,9 @@
 * **Update (2026-08-18)**: Pure Run Artwork schema v1 增加有序 series、每姿态最多五个不同 ImageGen 输出、逐版不可变 feedback 与 provisional concept-only 门禁；Demonbound 九姿态作为首个持续验证 Goal，Hunter bootstrap 蒙版等待人工 receipt。
 * **Update (2026-08-18)**: Artwork 状态机增加 behind-core 遮挡合同、可见面积上限、核心行连续性、确定性 `calibrate-core` 与 `depthReview`；Demonbound Idle UL v1/v2 保留为已反馈失败稿，v3 前先补齐机器门禁。
 * **Update (2026-08-18)**: Pure Run Artwork series 的五版硬上限改为可选预算：`maxUniqueOutputs: null` 表示不限版，正整数才启用有限预算；预算变更必须通过 `set-series-output-limit` 生成不可变审计记录。Demonbound 九姿态 series 已由 5 版改为不限版，仍保留逐版反馈与人工审核门禁。
+* **Update (2026-08-20)**: Pure Run Artwork schema v3 收口为胶囊角色固定六层混合组件 Assembly；派生、独立生成与旧组件迁入分别绑定来源、人工 approval 或 migration receipt，逐层 Review 同时展示单层与累积合成。Demonbound Cast UL 因缺少正式手爪、装备组件而保持 WIP，不伪造完整 Assembly 或人工通过。
+* **Update (2026-08-20)**: Demonbound Cast UL v08 的脚、隐藏手爪和复用 DR 剑遮挡关系获用户人工通过；Assembly 从固定近远层序修正为固定六 role、姿态专属深度计划，运行时接入仍未授权。
+* **Update (2026-08-20)**: Pure Run Artwork 新增 death-only 参考驱动整形 recipe：核心按参考主轴与长宽比变换，附件仅重投影、装备独立，X 眼以限定眼区 expression overlay 合成；Demonbound Death v03 仅为待人工 Review 候选。
 * **Update (2026-08-20)**: Pure Run 移除开局两组路线预提交，所有节点 Tile 场景只开放当前直接后继出口；战斗胜利返回同一 resolved 场景，Rogue Map 只读，存档升级 V10，20 个正式 Main.tscn journeys 全量通过且人工体验项保持 pending。
+* **Update (2026-08-21)**: 恢复属性、状态、朝向、等距投影与 SkillGraph 的跨引擎设计规则并改写为 Godot 权威 Contract ID；Gameplay Test Spec 增加合同追踪、覆盖报告及可选本地 Ollama 候选前端，确定性校验仍为唯一门禁。
+* **Update (2026-08-21)**: Gameplay Test Spec 将 LLM 候选前端升级为 provider 架构，默认使用仓库外配置的 OpenCode Go DeepSeek V4 Flash，保留显式 Ollama；模型发现、ACL、脱敏审计、逐字证据与确定性 compiler 均 fail-closed。

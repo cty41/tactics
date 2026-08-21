@@ -1,5 +1,7 @@
 # Amazon Reference Notes
 
+> **Deprecated:** This human/pixel Amazon exploration is audit-only. Current Pure Run Amazon references are the approved red-shiba hunter assets listed in [`DEPRECATED.md`](DEPRECATED.md).
+
 ## Input
 
 - Character name: `amazon`

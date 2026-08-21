@@ -97,7 +97,8 @@ public sealed record BattleUiSnapshot(
     IReadOnlyList<BattleUiSkillAvailability>? SkillAvailability = null,
     BattleUiMoveAvailability MoveAvailability = null!,
     bool TerminalPending = false,
-    BattleUiSkillAvailability? MeditationAvailability = null);
+    BattleUiSkillAvailability? MeditationAvailability = null,
+    IReadOnlyCollection<GridPoint>? ShallowWaterCells = null);
 
 public sealed record PlayableBattleSessionContext(
     BattleState InitialState,
@@ -109,7 +110,8 @@ public sealed record PlayableBattleSessionContext(
     IReadOnlyDictionary<UnitInstanceId, string>? CharacterIds = null,
     IReadOnlyCollection<GridPoint>? BlockedCells = null,
     IReadOnlyDictionary<ContentId, SummonControllerDefinition>? SummonControllers = null,
-    UnitInstanceId? ProtectedNpcUnitId = null);
+    UnitInstanceId? ProtectedNpcUnitId = null,
+    IReadOnlyCollection<GridPoint>? ShallowWaterCells = null);
 
 public sealed record SummonControllerDefinition(
     AiDefinition Ai,
@@ -241,7 +243,8 @@ public sealed class PlayableBattleSessionService
             skills.Select(skill => Availability(view, active, skill)).ToArray(),
             MoveAvailability(view, active),
             _battleResult is not null,
-            MeditationAvailability(view, active));
+            MeditationAvailability(view, active),
+            _context.ShallowWaterCells ?? Array.Empty<GridPoint>());
     }
 
     public IReadOnlyList<GridPoint> PreviewMovePath(GridPoint destination)

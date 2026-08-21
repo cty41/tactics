@@ -2,13 +2,13 @@
   "schemaVersion": 1,
   "receiptId": "godot-content-ownership-v1",
   "ownership": "GodotOwned",
-  "catalogCount": 162,
-  "catalogSha256": "sha256:b34689a3a5d9ad63a65a360820b6c2fa2bbc38d596c322dbae510cc0c9660ec6",
-  "catalogSemanticSha256": "sha256:d1b4f07895dfd3eb5594a1e06475a97ba75a89dbcbb790f29d3267504837e083",
+  "catalogCount": 166,
+  "catalogSha256": "sha256:c9a58e5ae0277482624e49d4a33d9db01c900f2087f833c5679b723e9cfe102f",
+  "catalogSemanticSha256": "sha256:8b872b52c38daa15edcbf825601c039c725b59790dbe53469218ed9888043450",
   "resourceTypeCounts": {
-    "ai": 8,
+    "ai": 9,
     "battle-board": 1,
-    "battle-layout": 4,
+    "battle-layout": 5,
     "buff": 15,
     "encounter": 10,
     "event": 3,
@@ -18,10 +18,10 @@
     "rest": 1,
     "run": 1,
     "run-map": 1,
-    "skill": 74,
+    "skill": 75,
     "store": 1,
     "treasure": 1,
-    "unit": 13
+    "unit": 14
   },
   "categories": [
     {

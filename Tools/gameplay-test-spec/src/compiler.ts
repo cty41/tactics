@@ -342,6 +342,7 @@ function compileSpecToPlan(spec: ScenarioSpec, diagnostics: ExpectationDiagnosti
         assertion.kind === "partyResourceSummaryEquals") ? 3 as const : 2 as const,
       runtime: "Godot" as const,
       scenarioName: `${spec.feature}.${spec.scenario}`,
+      ...(spec.contractIds?.length ? { contractIds: spec.contractIds } : {}),
       requiredAdapters: spec.requiredAdapters,
       requiredCapabilities: requiredCapabilities(spec.setup, spec.actions, spec.assertions),
       setupActions: spec.setup.map(step => ({ ...step, adapter: resolveAdapter(step, setupKindToAdapter, fallbackAdapter) })),
@@ -368,6 +369,7 @@ function compileSpecToPlan(spec: ScenarioSpec, diagnostics: ExpectationDiagnosti
   const plan: ExecutableScenarioPlan = {
     schemaVersion: 1,
     scenarioName: `${spec.feature}.${spec.scenario}`,
+    ...(spec.contractIds?.length ? { contractIds: spec.contractIds } : {}),
     requiredAdapters: spec.requiredAdapters,
     setupActions: spec.setup.map(step => ({ ...step, adapter: resolveAdapter(step, setupKindToAdapter, fallbackAdapter) })),
     runtimeActions: spec.actions.map(step => ({ ...step, adapter: resolveAdapter(step, actionKindToAdapter, fallbackAdapter) })),

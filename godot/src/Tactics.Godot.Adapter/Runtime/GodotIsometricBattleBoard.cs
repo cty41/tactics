@@ -9,6 +9,7 @@ public partial class GodotIsometricBattleBoard : Control
 {
     private readonly Dictionary<GridPoint, Color> _colors = new();
     private readonly HashSet<GridPoint> _blocked = new();
+    private readonly HashSet<GridPoint> _shallowWater = new();
     private GridPoint? _hovered;
     private GodotUnitActor? _activeActor;
     private Vector2? _lastActivePosition;
@@ -35,12 +36,15 @@ public partial class GodotIsometricBattleBoard : Control
         QueueRedraw();
     }
 
-    public void SetVisuals(IReadOnlyDictionary<GridPoint, Color> colors, IEnumerable<GridPoint> blocked)
+    public void SetVisuals(IReadOnlyDictionary<GridPoint, Color> colors, IEnumerable<GridPoint> blocked,
+        IEnumerable<GridPoint>? shallowWater = null)
     {
         _colors.Clear();
         foreach ((GridPoint cell, Color color) in colors) _colors[cell] = color;
         _blocked.Clear();
         foreach (GridPoint cell in blocked) _blocked.Add(cell);
+        _shallowWater.Clear();
+        foreach (GridPoint cell in shallowWater ?? Array.Empty<GridPoint>()) _shallowWater.Add(cell);
         QueueRedraw();
     }
 
@@ -95,10 +99,14 @@ public partial class GodotIsometricBattleBoard : Control
             if (y < 0 || y >= IsometricBattleBoardLayout.GridSize) continue;
             GridPoint cell = new(x, y);
             Color baseColor = BaseTileColor(cell, _blocked.Contains(cell));
+            if (_shallowWater.Contains(cell)) baseColor = baseColor.Lerp(new Color(0.12f, 0.58f, 0.64f, 0.96f), 0.72f);
             Color fill = _colors.TryGetValue(cell, out Color overlay) ? baseColor.Lerp(overlay, Math.Clamp(overlay.A, 0f, 1f)) : baseColor;
             Vector2[] diamond = IsometricBattleBoardLayout.Diamond(cell);
             DrawColoredPolygon(diamond, fill);
             DrawPolyline([..diamond, diamond[0]], new Color(0.10f, 0.17f, 0.20f, 0.95f), 1.4f, true);
+            if (_shallowWater.Contains(cell))
+                DrawLine((diamond[3] + diamond[0]) / 2f + new Vector2(7, 3),
+                    (diamond[0] + diamond[1]) / 2f + new Vector2(-7, 3), new Color(.65f, .94f, .91f, .42f), 1.2f, true);
         }
         if (_lastActivePosition is Vector2 center)
         {

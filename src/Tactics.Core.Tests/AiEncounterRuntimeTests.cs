@@ -156,4 +156,35 @@ public sealed class AiEncounterRuntimeTests
         Assert.That(candidate.TargetId, Is.EqualTo(targetId));
         Assert.That(candidate.TargetCell, Is.EqualTo(new GridPoint(2, 1)));
     }
+
+    [Test]
+    public void PredatoryDiver_SelectsKillableThenLowestHealthAndDoesNotRetreatWhenWounded()
+    {
+        var cells = new Dictionary<GridPoint, CellState>();
+        for (int x = 0; x < 5; x++) for (int y = 0; y < 4; y++) cells[new GridPoint(x, y)] = new CellState();
+        UnitInstanceId batId = new("enemy.bat"), killableId = new("party.killable"), healthyId = new("party.healthy");
+        BattleUnitState bat = new(new UnitState(batId, new ContentId("unit.pure-run.maw-bat"),
+            new GridPoint(0, 1), 5, 24, 1, 0, movementKind: UnitMovementKind.Air), 14, 3);
+        BattleUnitState killable = new(new UnitState(killableId, new ContentId("unit.party.a"),
+            new GridPoint(3, 1), 3, 10, 0, 1), 20, 4);
+        BattleUnitState healthy = new(new UnitState(healthyId, new ContentId("unit.party.b"),
+            new GridPoint(1, 2), 3, 9, 0, 2), 20, 12);
+        BattleState state = new(new BoardSnapshot(cells), [bat, killable, healthy], [batId, killableId, healthyId]);
+        SkillDefinition bite = new(new ContentId("skill.enemy.maw-bat-bite.lv1"), "maw_bat_bite",
+            SkillRole.Any, SkillKind.Active, 1, 0, 1, 1, SkillExecutionKind.DirectAttack, 4,
+            SkillDamageKind.Physical, maxUsesPerTurn: 1,
+            executionProfile: new SkillExecutionProfile(LifeStealPercent: 50), canCrit: false);
+        AiDefinition definition = new(new ContentId("ai.pure-run.maw-bat-predatory-diver"),
+            AiArchetype.PredatoryDiver, new AiProfileDefinition(1, 1, 0, 0), [bite.ContentId], []);
+
+        AiTurnPlan plan = new AiDecisionService().Decide(state, definition,
+            new Dictionary<ContentId, SkillDefinition> { [bite.ContentId] = bite });
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(plan.Selected.TargetId, Is.EqualTo(killableId));
+            Assert.That(plan.Selected.SkillId, Is.EqualTo(bite.ContentId));
+            Assert.That(plan.Selected.Intent, Is.Not.EqualTo(AiIntentKind.Retreat));
+        });
+    }
 }

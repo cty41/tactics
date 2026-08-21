@@ -5,6 +5,8 @@ tags:
   - battle
   - assets
   - integration
+contractIds:
+  - SKILL-SHARED-LEGALITY-001
 requiredAdapters:
   - Battle
   - Skill

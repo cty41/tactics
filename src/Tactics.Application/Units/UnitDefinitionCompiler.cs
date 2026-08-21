@@ -72,9 +72,12 @@ public sealed class UnitDefinitionCompiler
 
             try
             {
-                UnitMovementKind movementKind = draft.MovementKind == "land"
-                    ? UnitMovementKind.Land
-                    : UnitMovementKind.Air;
+                UnitMovementKind movementKind = draft.MovementKind switch
+                {
+                    "land" => UnitMovementKind.Land,
+                    "air" => UnitMovementKind.Air,
+                    _ => UnitMovementKind.Swim
+                };
                 var attributes = new UnitAttributes(
                     draft.Strength,
                     draft.Agility,
@@ -198,7 +201,7 @@ public sealed class UnitDefinitionCompiler
         {
             diagnostics.Add(Error("unit.invalid_factor", "Attack and defence factors must be finite and non-negative.", contentId));
         }
-        if (draft.MovementKind is not ("land" or "air"))
+        if (draft.MovementKind is not ("land" or "air" or "swim"))
             diagnostics.Add(Error("unit.unknown_movement_kind", $"Unknown movement kind '{draft.MovementKind}'.", contentId));
 
         if (!TryContentId(draft.ActorContentId, out ContentId actorId))

@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { compileAuthoringSpec } from "../src/authoring/compiler.js";
+import { projectEnemySliceDraft } from "../src/authoring/enemy-slice.js";
 
 const kinds = ["run-map", "event", "treasure", "encounter", "battle-layout", "ai", "skill", "presentation"] as const;
 const documents: Record<(typeof kinds)[number], Record<string, unknown>> = {
@@ -21,6 +22,23 @@ test("compiles all supported authoring kinds without writing resources", () => {
   assert.equal(result.valid, true, JSON.stringify(result.diagnostics));
   assert.equal(result.batch?.lifecycle.length, 8);
   assert.ok(result.batch?.lifecycle.every(value => value.initialSnapshot));
+});
+
+test("projects EnemySliceDraft to revision-fenced Authoring V2 with approved assets only", () => {
+  const assets = ["idle-dr", "idle-ul", "death", "bite-dr", "bite-ul", "hit-dr", "hit-ul"];
+  const result = projectEnemySliceDraft({ schemaVersion: 1,
+    unit: { contentId: "unit.pure-run.maw-bat", sourceId: "godot.maw_bat", displayName: "大嘴蝠", familyId: "bat", roleId: "predatory-diver", maxHealth: 14, maxMana: 0, startingMana: 0, moveRange: 5, speed: 12, initiative: 24, movementKind: "air", canProduceCorpse: true,
+      assetRoles: { idleDownRight: assets[0], idleUpLeft: assets[1], death: assets[2], meleeDownRight: assets[3], meleeUpLeft: assets[4], hitDownRight: assets[5], hitUpLeft: assets[6] } },
+    skill: { contentId: "skill.enemy.maw-bat-bite.lv1", sourceId: "godot.maw_bat_bite", displayName: "咬击", description: "bite", damage: 4, minRange: 1, maxRange: 1, maxUsesPerTurn: 1, canCrit: true, lifeStealPercent: 50 },
+    ai: { contentId: "ai.pure-run.maw-bat-predatory-diver", archetype: "PredatoryDiver", skillContentIds: ["skill.enemy.maw-bat-bite.lv1"], maximumEngageCandidatesPerTarget: 3 },
+    layout: { contentId: "battle-layout.pure-run.n2-shallow-water", partySpawns: [{ x: 1, y: 4 }], enemySpawns: [{ x: 6, y: 4 }], blockedCells: [], shallowWaterCells: [{ x: 4, y: 4 }] },
+    encounter: { contentId: "encounter.pure-run.n2", monsterUnitContentIds: ["unit.pure-run.maw-bat"], monsterAiContentIds: ["ai.pure-run.maw-bat-predatory-diver"] }
+  }, [{ contentId: "encounter.pure-run.n2", revision: "rev-n2" }], assets);
+  assert.equal(result.batch?.schemaVersion, 2);
+  assert.deepEqual(result.preview.find(value => value.contentId === "encounter.pure-run.n2"),
+    { operation: "update", kind: "encounter", contentId: "encounter.pure-run.n2", expectedRevision: "rev-n2" });
+  assert.throws(() => projectEnemySliceDraft({ ...result.draft, unit: { ...result.draft.unit,
+    assetRoles: { ...result.draft.unit.assetRoles, death: "unapproved" } } }, [], assets), /approved allowlist/);
 });
 
 test("projects explicit Unity-style Event graph to the current flat runtime document", () => {

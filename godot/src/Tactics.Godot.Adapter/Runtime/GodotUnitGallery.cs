@@ -3,7 +3,7 @@ using Godot;
 namespace Tactics.Godot.Adapter.Runtime;
 
 /// <summary>
-/// Programmatic visual fixture displaying the full 12-Unit migration batch.
+/// Programmatic visual fixture displaying the complete current Unit catalog.
 /// </summary>
 [GlobalClass]
 public partial class GodotUnitGallery : Node2D
@@ -11,19 +11,19 @@ public partial class GodotUnitGallery : Node2D
     public static readonly Color PreviewBackgroundColor = new("596875");
 
     // Gallery rows use Actor ground/corpse anchors; texture centers are derived from sprite pivots.
-    internal const string LayoutContract = "ground-baseline-native-1600x900-v2";
-    internal const float ActorScale = 0.725f;
-    internal const float FirstColumnGroundX = 212.5f;
-    internal const float FirstRowGroundY = 193.75f;
-    internal const float ColumnSpacing = 387.5f;
-    internal const float RowSpacing = 287.5f;
-    internal const float LabelOffsetX = -131.25f;
+    internal const string LayoutContract = "ground-baseline-native-1600x900-v3";
+    internal const float ActorScale = 0.65f;
+    internal const float FirstColumnGroundX = 160f;
+    internal const float FirstRowGroundY = 190f;
+    internal const float ColumnSpacing = 320f;
+    internal const float RowSpacing = 280f;
+    internal const float LabelOffsetX = -110f;
     internal const float LabelOffsetY = 52.5f;
-    internal const float LabelWidth = 262.5f;
+    internal const float LabelWidth = 220f;
     internal const float LabelHeight = 42.5f;
     internal const int PreviewFontSize = 20;
 
-    private const int ColumnCount = 4;
+    private const int ColumnCount = 5;
 
     private readonly List<GodotUnitActor> _actors = [];
     private bool _showDeath;

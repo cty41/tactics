@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="SkillDefinitionResource" format=3 uid="uid://dutb52fxe8irs"]
+
+[ext_resource type="Script" uid="uid://cr8hynfl0xp3d" path="res://src/Tactics.Godot.Adapter/Runtime/SkillDefinitionResource.cs" id="1_fog33"]
+
+[resource]
+script = ExtResource("1_fog33")
+ContentIdValue = "skill.enemy.maw-bat-bite.lv1"
+SourceId = "godot.maw_bat_bite"
+DisplayName = "咬击"
+Description = "近身咬击，并按实际生命伤害的 50% 恢复自身生命。"
+RoleValue = "Any"
+KindValue = "Active"
+Level = 1
+MinRange = 1
+MaxRange = 1
+ExecutionKindValue = "DirectAttack"
+Damage = 4
+DamageKindValue = "Physical"
+MaxUsesPerTurn = 1
+BranchId = "enemy.maw-bat-bite"
+LifeStealPercent = 50
+AuthoringSourceKindValue = "GodotAuthored"
