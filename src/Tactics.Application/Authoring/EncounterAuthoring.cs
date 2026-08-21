@@ -10,30 +10,36 @@ public sealed record GridCellAuthoring(int X, int Y);
 public sealed class BattleLayoutAuthoringDocument : IAuthoringDocument
 {
     public BattleLayoutAuthoringDocument(string contentId, IEnumerable<GridCellAuthoring> partySpawns,
-        IEnumerable<GridCellAuthoring> enemySpawns, IEnumerable<GridCellAuthoring> blockedCells)
+        IEnumerable<GridCellAuthoring> enemySpawns, IEnumerable<GridCellAuthoring> blockedCells,
+        IEnumerable<GridCellAuthoring>? shallowWaterCells = null, int schemaVersion = 1)
     {
         ContentId = Require(contentId);
         PartySpawns = Read(partySpawns); EnemySpawns = Read(enemySpawns); BlockedCells = Read(blockedCells);
+        ShallowWaterCells = Read(shallowWaterCells ?? Array.Empty<GridCellAuthoring>());
+        SchemaVersion = schemaVersion;
         Validate();
     }
     public string ContentId { get; }
-    public int SchemaVersion => 1;
+    public int SchemaVersion { get; }
     public IReadOnlyList<GridCellAuthoring> PartySpawns { get; }
     public IReadOnlyList<GridCellAuthoring> EnemySpawns { get; }
     public IReadOnlyList<GridCellAuthoring> BlockedCells { get; }
+    public IReadOnlyList<GridCellAuthoring> ShallowWaterCells { get; }
     public IReadOnlyList<string> Dependencies => Array.Empty<string>();
-    public BattleLayoutDefinition ToCoreDefinition() => new(new ContentId(ContentId), Build(PartySpawns), Build(EnemySpawns), Build(BlockedCells));
+    public BattleLayoutDefinition ToCoreDefinition() => new(new ContentId(ContentId), Build(PartySpawns), Build(EnemySpawns), Build(BlockedCells), Build(ShallowWaterCells));
     public void Validate()
     {
         GridCellAuthoring[] all = PartySpawns.Concat(EnemySpawns).Concat(BlockedCells).ToArray();
         if (all.Any(value => value.X is < 0 or >= 10 || value.Y is < 0 or >= 10)) throw new ArgumentOutOfRangeException(nameof(all), "Battle layout cells must be inside the 10x10 board.");
         if (all.Distinct().Count() != all.Length) throw new ArgumentException("Battle layout cells cannot overlap.");
         if (PartySpawns.Count == 0 || EnemySpawns.Count == 0) throw new ArgumentException("Battle layouts require party and enemy spawns.");
+        if (SchemaVersion is not (1 or 2) || SchemaVersion == 1 && ShallowWaterCells.Count != 0) throw new ArgumentException("Shallow water requires battle-layout schema v2.");
+        if (ShallowWaterCells.Any(value => value.X is < 0 or >= 10 || value.Y is < 0 or >= 10) || ShallowWaterCells.Distinct().Count() != ShallowWaterCells.Count) throw new ArgumentException("Shallow-water cells must be unique and inside the board.");
     }
     public void WriteCanonical(Utf8JsonWriter writer)
     {
         writer.WriteStartObject(); writer.WriteString("contentId", ContentId); writer.WriteNumber("schemaVersion", SchemaVersion);
-        Write(writer, "partySpawns", PartySpawns); Write(writer, "enemySpawns", EnemySpawns); Write(writer, "blockedCells", BlockedCells); writer.WriteEndObject();
+        Write(writer, "partySpawns", PartySpawns); Write(writer, "enemySpawns", EnemySpawns); Write(writer, "blockedCells", BlockedCells); if (SchemaVersion >= 2) Write(writer, "shallowWaterCells", ShallowWaterCells); writer.WriteEndObject();
     }
     private static IReadOnlyList<GridCellAuthoring> Read(IEnumerable<GridCellAuthoring> values) => Array.AsReadOnly((values ?? throw new ArgumentNullException(nameof(values))).ToArray());
     private static GridPoint[] Build(IEnumerable<GridCellAuthoring> values) => values.Select(value => new GridPoint(value.X, value.Y)).ToArray();
@@ -99,7 +105,8 @@ public static class BattleLayoutAuthoringJson
     {
         using JsonDocument payload = JsonDocument.Parse(json); JsonElement root = payload.RootElement;
         static IEnumerable<GridCellAuthoring> Cells(JsonElement value, string name) => value.GetProperty(name).EnumerateArray().Select(cell => new GridCellAuthoring(cell.GetProperty("x").GetInt32(), cell.GetProperty("y").GetInt32()));
-        return new BattleLayoutAuthoringDocument(root.GetProperty("contentId").GetString()!, Cells(root, "partySpawns"), Cells(root, "enemySpawns"), Cells(root, "blockedCells"));
+        int schemaVersion = root.GetProperty("schemaVersion").GetInt32();
+        return new BattleLayoutAuthoringDocument(root.GetProperty("contentId").GetString()!, Cells(root, "partySpawns"), Cells(root, "enemySpawns"), Cells(root, "blockedCells"), schemaVersion >= 2 ? Cells(root, "shallowWaterCells") : null, schemaVersion);
     }
 }
 

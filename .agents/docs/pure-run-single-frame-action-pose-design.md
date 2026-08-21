@@ -71,7 +71,7 @@ Ability 显式指定姿态族时，解析顺序固定为：
 
 另复审并接入已有两张赤柴空手 idle。动作图只画身体与随身武器，不烘焙 VFX、投射物、阴影、文字或地面。生产规格为 `256×256 RGBA`、`128 PPU`、底部 Pivot `(0.5, 0.078125)`、脚底基线 `y=236`；`_128` 仅用于 Review。
 
-每次只推进一个角色的一个方向。必须先批准 `down-right`，再制作对应 `up-left`；未经明确批准，候选图不得进入 Unity `Assets`、Profile 或 Prefab。
+每次只推进一个角色的一个方向。必须先批准 `down-right`，再制作对应 `up-left`；未经明确批准，候选图不得进入 `godot/assets`、Unit Resource 或运行时 Profile。
 
 ### 真实战斗试玩闸门
 

@@ -10,7 +10,8 @@ namespace Tactics.Core.Units;
 public enum UnitMovementKind
 {
     Land,
-    Air
+    Air,
+    Swim
 }
 
 /// <summary>Declares whether serialized derived stats follow the frozen formula or an authored class contract.</summary>
@@ -109,7 +110,8 @@ public sealed class UnitDefinition
             DerivedStats.MoveRange,
             DerivedStats.Initiative,
             playerNumber,
-            spawnOrdinal);
+            spawnOrdinal,
+            movementKind: MovementKind);
         return new BattleUnitState(
             unit,
             DerivedStats.MaxHealth,

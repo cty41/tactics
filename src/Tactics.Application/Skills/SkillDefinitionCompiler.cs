@@ -45,6 +45,7 @@ public sealed record SkillDefinitionDraft
     public int SecondaryDamage { get; init; }
     public int CorruptionCost { get; init; }
     public string DamageScaling { get; init; } = nameof(SkillDamageScalingKind.None);
+    public int LifeStealPercent { get; init; }
 }
 
 public sealed record SkillDefinitionCompileResult(
@@ -86,7 +87,7 @@ public sealed class SkillDefinitionCompiler
             if (diagnostics.Any(item => item.ContentId == contentId && item.Severity == ContentDiagnosticSeverity.Error)) continue;
             try
             {
-                var profile = new SkillExecutionProfile(draft.AreaRadius, draft.OrderedTargetCount, summonId, draft.SummonCount, draft.SummonLimit, draft.SummonCategory, draft.RequiresCorpse, draft.IgnoreLineOfSight, draft.ShieldMultiplier, draft.ShieldAbsorbsAllDamage, draft.CleanseHarmful, draft.SecondaryDamage, CorruptionCost: draft.CorruptionCost, DamageScaling: damageScaling);
+                var profile = new SkillExecutionProfile(draft.AreaRadius, draft.OrderedTargetCount, summonId, draft.SummonCount, draft.SummonLimit, draft.SummonCategory, draft.RequiresCorpse, draft.IgnoreLineOfSight, draft.ShieldMultiplier, draft.ShieldAbsorbsAllDamage, draft.CleanseHarmful, draft.SecondaryDamage, CorruptionCost: draft.CorruptionCost, DamageScaling: damageScaling, LifeStealPercent: draft.LifeStealPercent);
                 var definition = new SkillDefinition(contentId, draft.SourceId, role, kind, draft.Level, draft.ManaCost, draft.MinRange, draft.MaxRange, execution, draft.Damage, damageKind, statusId, draft.StatusDuration, draft.Hidden, draft.ExternalDependency, draft.IsBasicAbility, draft.MaxUsesPerTurn, draft.BranchId, prerequisiteId, draft.GrowthVisible, profile, draft.RequiredAttribute, draft.MinimumAttribute, draft.PrerequisiteBranchId);
                 definitions.Add(contentId, definition);
                 contentDrafts.Add(new ContentDraft(contentId, "skill", 1, statusId is null ? null : new[] { statusId.Value }, new Dictionary<string, string>(StringComparer.Ordinal)

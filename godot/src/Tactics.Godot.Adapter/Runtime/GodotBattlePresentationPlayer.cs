@@ -89,6 +89,7 @@ public partial class GodotBattlePresentationPlayer : Node
             _activeTweens.Remove(sequence);
             foreach (GodotUnitActor actor in _animatedActors.Where(GodotObject.IsInstanceValid))
             {
+                actor.SetAirMoveOverlay(false);
                 actor.RestoreTransientBodyPose();
                 actor.SetActionPose(null);
             }
@@ -166,6 +167,7 @@ public partial class GodotBattlePresentationPlayer : Node
                 actor.Position = IsometricBattleBoardLayout.GridToScreen(cue.Origin);
                 actor.RestoreTransientBodyPose();
                 _animatedActors.Add(actor);
+                actor.SetAirMoveOverlay(true);
                 GridPoint stepOrigin=cue.Origin;
                 foreach (var cell in cue.Path)
                 {

@@ -41,7 +41,8 @@ public enum SkillExecutionKind
     Cleave,
     InfernalBlast,
     Hellfire,
-    DemonicRegeneration
+    DemonicRegeneration,
+    DirectAttack
 }
 
 /// <summary>Optional normalized parameters used by the complete Pure Run Lv1/Lv2 skill set.</summary>
@@ -68,7 +69,8 @@ public sealed record SkillExecutionProfile(
     int MovementDamagePerCell = 0,
     ContentId? SummonAttackContentId = null,
     int CorruptionCost = 0,
-    SkillDamageScalingKind DamageScaling = SkillDamageScalingKind.None);
+    SkillDamageScalingKind DamageScaling = SkillDamageScalingKind.None,
+    int LifeStealPercent = 0);
 
 /// <summary>Normalized engine-neutral execution contract for one migrated skill level.</summary>
 public sealed record SkillDefinition
@@ -128,6 +130,8 @@ public sealed record SkillDefinition
         if (ExecutionProfile.StatusChancePercent is < 0 or > 100 || ExecutionProfile.BounceRange < 0 ||
             ExecutionProfile.BounceCount < 0 || ExecutionProfile.MovementDamagePerCell < 0 ||
             ExecutionProfile.CorruptionCost < 0 || !Enum.IsDefined(ExecutionProfile.DamageScaling))
+            throw new ArgumentOutOfRangeException(nameof(executionProfile));
+        if (ExecutionProfile.LifeStealPercent is < 0 or > 100)
             throw new ArgumentOutOfRangeException(nameof(executionProfile));
         RequiredAttribute = requiredAttribute.Trim();
         MinimumAttribute = minimumAttribute;

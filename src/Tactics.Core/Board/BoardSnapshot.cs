@@ -63,7 +63,9 @@ public sealed class BoardSnapshot
                 isOccupied: true,
                 blocksMovement: cell.BlocksMovement,
                 blocksLineOfSight: cell.BlocksLineOfSight,
-                movementCost: cell.MovementCost);
+                movementCost: cell.MovementCost,
+                terrain: cell.Terrain,
+                obstacle: cell.Obstacle);
         }
 
         return new BoardSnapshot(cells);

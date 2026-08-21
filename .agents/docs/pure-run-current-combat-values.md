@@ -167,4 +167,4 @@ Prefab 只读快照显示六维均 5、最大 MP 派生为 15；`Unit.Initialize
 
 ## 可复核来源
 
-`PlayerAdventureStateStore.CreatePureRunState`、`CharacterDefinition`、`Unit`、`CombatComponent`、`EncounterConfig`/`EncounterCatalog`、`EncounterUnitRuntimeModifiers`、`PureRunAbilityCatalog`、三职业 SkillNodeExecutor、正式 `Test1` 地图与相关 BattleTest 配置、`Assets/Tactics/Battle/Abilities/SkillGraphAbilityConfigs/`、`Assets/Tactics/Arts/PureRun/Prefabs/Units/`、`Assets/Tactics/AI/Encounters/`。
+可复核来源为 `src/Tactics.Core`、`src/Tactics.Application`、`godot/content`、`godot/assets/units`、`godot/src/Tactics.Godot.Adapter/Runtime` 以及对应 Core/Application/GdUnit/Gameplay Spec 测试。

@@ -153,7 +153,9 @@ public partial class GodotAiEncounterFixture : Control
             index == 3 ? (new[] { "unit.pure-run.goat-elite-charger" }, new[] { "ai.pure-run.elite-charger" }) :
             (new[] { "unit.pure-run.goat-elite-poison-caster" }, new[] { "ai.pure-run.elite-poison-caster" });
         var cells = Enumerable.Range(0, BoardSpec.Width).SelectMany(x => Enumerable.Range(0, BoardSpec.Height).Select(y =>
-            new KeyValuePair<GridPoint, CellState>(new GridPoint(x, y), new CellState(blocksMovement: layout.BlockedCells.Contains(new GridPoint(x, y)))))).ToDictionary();
+            new KeyValuePair<GridPoint, CellState>(new GridPoint(x, y), new CellState(
+                blocksMovement: layout.BlockedCells.Contains(new GridPoint(x, y)),
+                terrain: layout.ShallowWater.Contains(new GridPoint(x, y)) ? TerrainKind.ShallowWater : TerrainKind.Ground)))).ToDictionary();
         var units = new List<BattleUnitState>();
         for (int i = 0; i < Math.Min(3, layout.PartySpawns.Count); i++)
         {

@@ -10721,6 +10721,62 @@
       "rightsHolder": "cty41",
       "license": "CC-BY-4.0",
       "provenance": "project-owned-supporting-derived"
+    },
+    {
+      "path": "godot/assets/units/tomb_maw_bat_ranged_color_v06.png",
+      "sha256": "d71bd44be7dec83f116133ce8ab03394930dd3ade61cd21ea68fbb463464bc8a",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-migrated-runtime-art"
+    },
+    {
+      "path": "godot/assets/units/tomb_maw_bat_ranged_color_ul_v01.png",
+      "sha256": "d8c0037bd029f6f59049d846a4698e0fed63d1d139fb6fde0642cc944c12facb",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-migrated-runtime-art"
+    },
+    {
+      "path": "godot/assets/units/tomb_maw_bat_ranged_death_color_v02.png",
+      "sha256": "8ddc4f85c3d98967fd28acf7239797f7b8ea24db9a207a64150e6c16413082db",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-migrated-runtime-art"
+    },
+    {
+      "path": "godot/assets/units/actions/tomb_maw_bat_melee_bite_attack_dr_v01.png",
+      "sha256": "275e36c12c1ff77f9c26d76cdebad6500a81419f56b8d50971053e17c1fbb585",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-migrated-runtime-art"
+    },
+    {
+      "path": "godot/assets/units/actions/tomb_maw_bat_melee_bite_attack_ul_v01.png",
+      "sha256": "b6998f498ac0b70fec797163d56b7f4d6f3c8df0e09f4302f7edec1173701245",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-migrated-runtime-art"
+    },
+    {
+      "path": "godot/assets/units/actions/tomb_maw_bat_hit_dr_v01.png",
+      "sha256": "a62bef402f80a4eb30957e2f6884ac0f3c29db7fd51e1faa375a83abc8c43f5a",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-migrated-runtime-art"
+    },
+    {
+      "path": "godot/assets/units/actions/tomb_maw_bat_hit_ul_v01.png",
+      "sha256": "7759ee609ee9e66cb68511e5dd253287ebf3c3ce04608bc18a507145872776d3",
+      "status": "approved",
+      "rightsHolder": "cty41",
+      "license": "CC-BY-4.0",
+      "provenance": "project-owned-migrated-runtime-art"
     }
   ]
 }

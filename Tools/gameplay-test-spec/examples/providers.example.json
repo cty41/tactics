@@ -1,0 +1,18 @@
+{
+  "version": 1,
+  "defaultProvider": "opencode-go",
+  "providers": {
+    "opencode-go": {
+      "baseUrl": "https://opencode.ai/zen/go/v1",
+      "model": "deepseek-v4-flash",
+      "timeoutMs": 120000,
+      "maxTokens": 768
+    },
+    "ollama": {
+      "host": "http://127.0.0.1:11434",
+      "model": "qwen3.5:2b",
+      "timeoutMs": 120000,
+      "maxTokens": 768
+    }
+  }
+}

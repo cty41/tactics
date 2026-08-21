@@ -18,7 +18,7 @@ export function compileAuthoringSpec(input: unknown): AuthoringCompileResult {
   let ordered: typeof parsed.data.assets;
   try { ordered = topological(parsed.data.assets); }
   catch (error) { return { valid: false, diagnostics: [...diagnostics, { code: "AuthoringDependencyCycle", severity: "error", message: error instanceof Error ? error.message : String(error), path: "assets" }] }; }
-  const batch: CompiledAuthoringBatchV1 = { schemaVersion: 1, changes: [], lifecycle: [] };
+  const batch: CompiledAuthoringBatchV1 = { schemaVersion: parsed.data.schemaVersion, changes: [], lifecycle: [] };
   for (const asset of ordered) {
     let document: Record<string, unknown> | undefined;
     try { document = asset.eventGraph ? compileEventGraph(asset.contentId, asset.eventGraph) : asset.document; }

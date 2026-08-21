@@ -16,6 +16,7 @@ description: "Use when generating, validating, compiling, or running gameplay au
 | 编译 | `compile-spec -s <spec> -o <plan>` |
 | 批处理 | `batch-validate -d <dir>` / `batch-compile -d <dir> -o <dir>` |
 | 执行 | Godot `GodotGameplayRuntimeRunner` |
+| 合同 | `validate-contracts -d <doc-or-dir>` / `contract-coverage --docs <dir> --specs <dir>` |
 
 ## When to use
 
@@ -47,7 +48,6 @@ description: "Use when generating, validating, compiling, or running gameplay au
 npm --prefix Tools/gameplay-test-spec test
 node Tools/gameplay-test-spec/dist/src/cli.js validate-spec -s <scenario.gameplay-test.md>
 node Tools/gameplay-test-spec/dist/src/cli.js compile-spec -s <scenario.gameplay-test.md> -o <scenario.plan.json>
-node Tools/gameplay-test-spec/dist/src/cli.js compile-spec -s <scenario.gameplay-test.md> -o <scenario.plan.json> --runtime godot
 ```
 
 批处理：
@@ -55,7 +55,41 @@ node Tools/gameplay-test-spec/dist/src/cli.js compile-spec -s <scenario.gameplay
 ```powershell
 node Tools/gameplay-test-spec/dist/src/cli.js batch-validate -d <spec-directory>
 node Tools/gameplay-test-spec/dist/src/cli.js batch-compile -d <spec-directory> -o <output-directory>
-node Tools/gameplay-test-spec/dist/src/cli.js batch-compile -d <spec-directory> -o <output-directory> --runtime godot
+```
+
+CLI 默认 runtime 为 Godot；`--runtime unity` 只保留给冻结兼容夹具，不用于新场景。
+
+### 3a. 设计合同与可选 Ollama
+
+```powershell
+node Tools/gameplay-test-spec/dist/src/cli.js validate-contracts -d .agents/docs
+node Tools/gameplay-test-spec/dist/src/cli.js contract-coverage --docs .agents/docs --specs Tests/gameplay-specs
+node Tools/gameplay-test-spec/dist/src/cli.js provider-doctor
+node Tools/gameplay-test-spec/dist/src/cli.js extract-contracts -d <design.md> -o <candidates.json>
+node Tools/gameplay-test-spec/dist/src/cli.js generate-drafts -d <design.md> -c <CONTRACT-ID> -o <draft.json>
+```
+
+- 只有 ``gameplay-contract`` fenced block 是权威合同；模型候选不是。
+- 默认 provider 从 `%LOCALAPPDATA%\Tactics\gameplay-test-spec\providers.json` 读取；当前正式目标为 OpenCode Go `deepseek-v4-flash`。
+- Key 只存在同目录的 `secrets.json`，该文件 ACL 只能授权当前用户、SYSTEM 或 Administrators；不得把 Key 放入仓库、命令参数、日志或对话。
+- 每次在线进程调用 `/models` 发现 exact model；缺模型、鉴权/配额、超时、截断或协议错误一律 fail-closed，不自动回退。
+- 本地调试可显式传 `--provider ollama --host http://127.0.0.1:11434 --model qwen3.5:2b`。
+- 模型输出必须继续执行 `validate-draft` / `compile-draft`，不得因 JSON 合法就视为 DSL 或玩法合法。
+- 新角色、技能、状态和机制设计先使用 `gameplay-design-constraints` Skill 确认相关 Contract ID。
+
+首次配置：复制 `Tools/gameplay-test-spec/examples/providers.example.json` 和 `secrets.example.json` 到上述用户目录，写入已重新生成且未暴露的 Key，然后用 PowerShell 为 secrets 撤销继承并仅授予当前用户 FullControl：
+
+```powershell
+$secretPath = Join-Path $env:LOCALAPPDATA 'Tactics\gameplay-test-spec\secrets.json'
+$acl = Get-Acl -LiteralPath $secretPath
+$acl.SetAccessRuleProtection($true, $false)
+$rule = [System.Security.AccessControl.FileSystemAccessRule]::new(
+  [System.Security.Principal.WindowsIdentity]::GetCurrent().Name,
+  [System.Security.AccessControl.FileSystemRights]::FullControl,
+  [System.Security.AccessControl.AccessControlType]::Allow)
+$acl.SetAccessRule($rule)
+Set-Acl -LiteralPath $secretPath -AclObject $acl
+node Tools/gameplay-test-spec/dist/src/cli.js provider-doctor
 ```
 
 修改 TypeScript 后先按 package scripts 构建。校验失败必须修复 Spec 或 schema，不跳过 validator 直接改生成计划。

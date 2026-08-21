@@ -31,7 +31,7 @@ class GodotContentOwnershipTests(unittest.TestCase):
         )
         receipt = json.loads(RECEIPT.read_text(encoding="utf-8"))
         self.assertEqual("GodotOwned", receipt["ownership"])
-        self.assertEqual(162, receipt["catalogCount"])
+        self.assertEqual(166, receipt["catalogCount"])
         self.assertEqual("pending_separate_quality_gate", receipt["manualAcceptance"])
         self.assertTrue(receipt["historicalExportReceiptsPreserved"])
         self.assertTrue(all(item["owner"] == "GodotOwned" for item in receipt["categories"]))

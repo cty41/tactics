@@ -4,6 +4,9 @@ scenario: StatusTurnSemantics
 tags:
   - battle
   - status
+contractIds:
+  - BUFF-REFRESH-STRATEGY-001
+  - BUFF-POISON-SOURCE-001
 requiredAdapters:
   - Skill
   - Battle

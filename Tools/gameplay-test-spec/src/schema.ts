@@ -2,6 +2,15 @@ import { z } from "zod";
 
 export const AdapterSchema = z.enum(["Battle", "Skill", "Map", "UI", "PlayerInput"]);
 export const RuntimeTargetSchema = z.enum(["Unity", "Godot"]);
+export const ContractIdSchema = z.string().regex(
+  /^[A-Z][A-Z0-9]*(?:-[A-Z0-9]+){2,}$/,
+  "Contract ID must use DOMAIN-SUBJECT-NNN uppercase segments."
+);
+const ContractIdsSchema = z.array(ContractIdSchema).superRefine((values, context) => {
+  if (new Set(values).size !== values.length) {
+    context.addIssue({ code: z.ZodIssueCode.custom, message: "contractIds must be unique." });
+  }
+});
 
 export const WatchdogSchema = z.object({
   stepTimeoutMs: z.number().int().positive().default(30000),
@@ -48,6 +57,7 @@ export const ScenarioAssertionSchema = z.object({
 export const ScenarioSpecSchema = z.object({
   feature: z.string().min(1),
   scenario: z.string().min(1),
+  contractIds: ContractIdsSchema.optional(),
   tags: z.array(z.string()).default([]),
   requiredAdapters: z.array(AdapterSchema).min(1),
   setup: z.array(ScenarioStepSchema).default([]),
@@ -77,6 +87,7 @@ export const ScenarioDraftAssertionSchema = z.object({
 export const ScenarioDraftSchema = z.object({
   feature: z.string().min(1),
   scenario: z.string().min(1),
+  contractIds: ContractIdsSchema.optional(),
   tags: z.array(z.string()).default([]),
   requiredAdapters: z.array(AdapterSchema).min(1),
   setup: z.array(ScenarioDraftSetupSchema).default([]),
@@ -103,6 +114,7 @@ export const ProbeRequestSchema = z.object({
 export const ExecutableScenarioPlanSchema = z.object({
   schemaVersion: z.literal(1),
   scenarioName: z.string().min(1),
+  contractIds: ContractIdsSchema.optional(),
   requiredAdapters: z.array(AdapterSchema).min(1),
   setupActions: z.array(ExecutableActionSchema),
   runtimeActions: z.array(ExecutableActionSchema),
@@ -162,6 +174,7 @@ export const GodotExecutableScenarioPlanSchema = z.object({
   schemaVersion: z.union([z.literal(2), z.literal(3)]),
   runtime: z.literal("Godot"),
   scenarioName: z.string().min(1),
+  contractIds: ContractIdsSchema.optional(),
   requiredAdapters: z.array(AdapterSchema).min(1),
   requiredCapabilities: z.array(z.string().min(1)),
   setupActions: z.array(ExecutableActionSchema),

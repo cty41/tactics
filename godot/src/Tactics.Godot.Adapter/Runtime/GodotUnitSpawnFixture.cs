@@ -27,7 +27,7 @@ public partial class GodotUnitSpawnFixture : Node2D
 		new(1, 1), new(3, 1), new(6, 1), new(8, 1),
 		new(1, 3), new(4, 3), new(7, 3),
 		new(2, 6), new(5, 6), new(8, 6),
-		new(3, 8), new(6, 8)
+		new(3, 8), new(6, 8), new(8, 8)
 	];
 
 	[Export] public GodotResourceCatalog? Catalog { get; set; }

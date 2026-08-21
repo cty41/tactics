@@ -75,6 +75,7 @@ public partial class UnitDefinitionResource : Resource
         {
             "land" => UnitMovementKind.Land,
             "air" => UnitMovementKind.Air,
+            "swim" => UnitMovementKind.Swim,
             _ => throw new InvalidOperationException(
                 $"Unit '{ContentIdValue}' has unknown movement kind '{MovementKindValue}'.")
         };

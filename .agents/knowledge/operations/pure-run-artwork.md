@@ -4,7 +4,7 @@ resource: https://github.com/cty41/tactics/tree/main/Tools/artworks
 title: Pure Run Artwork Pipeline
 description: Pure Run 角色美术的生成、去幕、尺寸校准、Review 与提交入口。
 tags: [operations, pure-run, artwork, sprite, godot]
-timestamp: "2026-08-21T00:38:31+08:00"
+timestamp: "2026-08-21T19:10:16+08:00"
 status: active
 catalog_scope: pure-run-artwork
 repo_paths:
@@ -14,7 +14,7 @@ repo_paths:
   - godot/assets
   - Tools/public-release/asset-provenance.json
 verified_revision: c68dbebe
-source_fingerprint: sha256:2c8c87d49baf400f393ca226ff2dc3069b0d992ba084c876ba6dc2ccf1f2749c
+source_fingerprint: sha256:592d4e5c2f75a084cc13dc92c694f2e50f5341c295be0c05fd7fe0a86e22ef29
 ---
 
 # Pure Run 角色美术流水线
@@ -34,7 +34,7 @@ source_fingerprint: sha256:2c8c87d49baf400f393ca226ff2dc3069b0d992ba084c876ba6dc
 - 已确认的单格单位通用阴影以 `Tools/artworks/pure_run/shadows/approved/pure_run_unit_shadow_1x1_v01.png` 为设计源，并进入 `godot/assets/units/pure_run_unit_shadow_1x1_v01.png`。它是屏幕水平的 `64×32` 等距软椭圆；正式 Unit Resource 统一引用该纹理，并以 Tile 几何中心和脚底锚点决定地面/飞行偏移，不从动作 Sprite 的临时位置反推落点。
 - 羊魔 `down-right v05 / up-left v01` 与蝙蝠 `down-right v06 / up-left v01` 已通过人工 Review，并从 `candidates` 升级到 `Tools/artworks/pure_run/enemies/approved`。小型蝙蝠按普通单位约 `75%` 的球核体量校准，球核中心在垂直方向对齐地面胶囊体上部圆帽中心，翅膀属于外部轮廓，球核中心、虚拟落点与 Tile 中心保持同轴。
 - 蝙蝠风刃攻击 `down-right` 单帧姿态 `tomb_maw_bat_wind_blade_attack_dr_v03` 已获人工批准并于 2026-08-06 从 `candidates` 升级到 `approved`，作为当前生成状态下的临时收尾：双翼同步横扫、球核仅轻微反向旋转，设计与验收契约见 `.agents/docs/2026-08-06-pure-run-bat-wind-blade-pose-design.md`。`up-left` 姿态、飞行单位专用 Tween/Profile 与运行时接入均未开始；`v01/v02/v04` 失败稿保留在 `rejected/superseded`，`v03` 的色幕源图保留在 `concepts`。
-- 亚马逊黑白资产只作为造型设定集保留，不进入正式四方向 Sprite 生产；方向变体从已确认的胶囊体信徒或胶囊规则怪物基础图开始。
+- `Tools/artworks/amazon` 的旧人形/像素亚马逊资产家族已整体废弃，仅保留历史 provenance 与审计；不得再用于身份母图、姿态/尺寸参考、Tilemap 对比或运行时。当前 Pure Run 亚马逊视觉权威是 `Tools/artworks/doge/calibrated` 的已批准赤柴猎人 DR/UL；跨角色对比仍只提供姿态或标准单位体量，不替代怪物身份锚点。
 - 方向变体以同角色已确认的 `down-right` 为唯一体量锚点；纯核心主体蒙版排除耳朵、口鼻、手脚、装备与特效，只用于测量和 QA，不参与成品合成。验收同时比较上下缘、中心、最大宽度与上中下三个截面，避免窄柱体或梨形下段。采用无手臂策略时，手掌必须以多像素接触面直接嵌入主体边缘，不能浮空或用细线连接。
 - 死亡状态必须先按核心拓扑分类。参考几何只提供完整姿态生成后的角度、压扁度与尺寸验收目标；身体、耳朵和相连四爪必须保持连续生成轮廓，禁止分层旋转、非等比压缩或重投影。只有真正脱手的装备和限定眼区 X 眼可独立合成。旧 `render-death-recipe` 因导致轮廓碎裂已从公开 CLI 退役，历史 recipe 仍可读取。对已逐轮人工确认但缺少生成前 invocation 的精确成图，只能以 `render-size-comparison` 冻结四栏证据，再用受限 `reviewed_import` 诚实收编，禁止倒填调用记录；详细复盘见 `.agents/docs/2026-08-20-death-pose-deterministic-shaping-design.md`。
 - 魔剑士死亡图 Round v04 已绑定身份源、256 候选、128 预览和四栏尺寸对比，由 `cty41` receipt 批准并以 `reviewed_import` 晋升为 `Tools/artworks/doge/calibrated/doge_capsule_demonbound_death_v01.png`；该事实不等于 Godot 运行时接入授权。

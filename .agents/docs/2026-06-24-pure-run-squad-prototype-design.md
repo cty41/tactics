@@ -126,4 +126,4 @@ Buff 只有 Beneficial/Harmful 两类。标准正向 HP 恢复统一检查 `CanR
 - 地图：`RoguelikeMapGenerator`、`RoguelikeMapRuntimeState`、`NodeStateManager`。
 - 状态：`PlayerAdventureStateStore`、`CharacterLoadoutService`、`PureRunProgression`。
 - UI：`RoguelikeMapUIController`、`InventoryUIController`、`BattleUIController`、各节点 handler。
-- 自动化：相关 Editor/PlayMode 测试，以及 `Tests/gameplay-specs/consumables/`、`Tests/gameplay-specs/map/`、`Tests/gameplay-specs/ui/`。`pure-run-player-input-route` 只通过生产鼠标/键盘输入完成 New Run、三场自然战斗、升级、Inventory、Store 与场景重入；`pure-run-real-player-route` 保留为快速跨系统 `journey-integration`，Boss、失败与事件团灭继续由独立集成路线覆盖。最终人工验收只检查视觉、动画和手感。
+- 自动化：Core/Application/GdUnit 与 `Tests/gameplay-specs/consumables/`、`Tests/gameplay-specs/map/`、`Tests/gameplay-specs/ui/`。`pure-run-player-input-route` 只通过生产输入链完成 New Run、三场自然战斗、升级、Inventory、Store 与场景重入；快速跨系统 journey 继续覆盖 Boss、失败与事件团灭。最终人工验收只检查视觉、动画和手感。

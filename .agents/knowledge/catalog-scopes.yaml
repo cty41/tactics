@@ -77,6 +77,12 @@ scopes:
     paths:
       - .agents/docs/battle-line-of-sight-rules.md
       - .agents/docs/three-class-skill-design.md
+      - .agents/docs/attribute-system-design.md
+      - .agents/docs/buff-system-rules.md
+      - .agents/docs/battle-facing-rules.md
+      - .agents/docs/isometric-grid-anchor-contract.md
+      - .agents/docs/skill-graph-system.md
+      - .agents/skills/gameplay-design-constraints
       - src/Tactics.Core/Battle
       - src/Tactics.Core/Board
       - src/Tactics.Core/Combat
@@ -177,11 +183,14 @@ scopes:
       - src/Tactics.Core/Skills
       - src/Tactics.Application/Authoring
       - godot/src/Tactics.Godot.Adapter/Authoring
+      - .agents/docs/skill-graph-system.md
+      - .agents/skills/gameplay-design-constraints
 
   gameplay-test-framework:
     concept: systems/gameplay-test-framework.md
     paths:
       - .agents/docs/gameplay-test-framework.md
       - .agents/skills/gameplay-test-framework
+      - .agents/skills/gameplay-design-constraints
       - Tools/gameplay-test-spec
       - Tests/gameplay-specs

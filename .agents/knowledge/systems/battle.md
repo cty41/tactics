@@ -4,12 +4,17 @@ resource: https://github.com/cty41/tactics
 title: Battle System
 description: Godot Pure Run 的棋盘、回合、技能、状态、AI 合法性、结算与表现投影主链。
 tags: [gameplay, battle, turn-based, godot]
-timestamp: "2026-08-20T21:53:52+08:00"
+timestamp: "2026-08-21T19:31:14+08:00"
 status: active
 catalog_scope: battle-system
 repo_paths:
   - .agents/docs/battle-line-of-sight-rules.md
   - .agents/docs/three-class-skill-design.md
+  - .agents/docs/attribute-system-design.md
+  - .agents/docs/buff-system-rules.md
+  - .agents/docs/battle-facing-rules.md
+  - .agents/docs/isometric-grid-anchor-contract.md
+  - .agents/docs/maw-bat-enemy-slice-design.md
   - src/Tactics.Core/Battle
   - src/Tactics.Core/Board
   - src/Tactics.Core/Pathfinding
@@ -20,7 +25,7 @@ repo_paths:
   - godot/src/Tactics.Godot.Adapter/Runtime/GodotPlayableRunMain.cs
   - godot/tests/CoreGoldenVectorGodotTests.cs
 verified_revision: 04c75ec4
-source_fingerprint: sha256:dee26f824678dca26326af1671648d82eab204eabd422fe7d6f84ae59d9b2fcf
+source_fingerprint: sha256:808091427d0d6de9384f3894733319b531dbfe6ab8df74b6fa5cd4e9814d6fd7
 ---
 
 # Current State
@@ -28,6 +33,8 @@ source_fingerprint: sha256:dee26f824678dca26326af1671648d82eab204eabd422fe7d6f84
 当前产品战斗主线分为三层：`Tactics.Core` 持有不可变战斗状态、命令、事件、技能解释、回合、路径和视线；
 `Tactics.Application` 组合遭遇、玩家意图、AI 候选和 UI Snapshot；Godot Adapter 只负责输入、Resource 映射、
 棋盘绘制和 committed event 表现，不重新裁决玩法结果。
+
+跨引擎沿用的属性、状态、朝向与等距投影规则已整理为带稳定 Contract ID 的 Godot 权威文档。新角色或机制必须显式引用相关合同；旧 Unity 类名和编辑器结构不再作为规则来源。
 
 固定战场使用 10×10、零基坐标。单位实例身份使用 `UnitInstanceId`，不能用内容 `ContentId` 代替。合法性预览、
 AI 和真实 Transition 必须复用 Core 规则；表现 cue、Tween、伤害数字和 Sprite 姿态不能修改战斗状态。
@@ -53,6 +60,14 @@ Adventure 事件战的随机状态会从 checkpoint revision 中扣除 Adventure
 Pure Run 三职业、敌人、召唤物和固定遭遇均从 Godot-owned Catalog/Resource 组合；N6/E2 使用的
 `battle-layout.pure-run.split-flank` 已由正式 `BattleLayoutResource` 提供，不再由运行时硬编码补建。内容
 ownership 与人工验收分开记录；自动测试通过不能把视觉或操作验收直接标为 passed。
+
+棋盘地形现区分 Ground 与 ShallowWater，单位移动类型为 Land、Air、Swim。Land 进入浅水消耗 2 点，
+Air/Swim 消耗 1 点；路径范围按累计点数裁决，但冲刺等按路径格数计数的机制继续读取实际经过格数。
+Air 可越过动态占位与 flyover 障碍但不能停在其上；absolute 障碍不可穿越。移动、传送和召唤落点统一
+使用 `CanStop` 语义。N2 的正式布局已加入浅水，并由棋盘 Snapshot 与 Godot 静态表现共同投影。
+
+大嘴蝠是 N2 的 Air 敌人，咬击复用标准物理攻击链，并按最终实际 HP 伤害的 50% 向下取整吸血。
+伤害、恢复、死亡结算保持稳定事件顺序；完整数值、AI 与表现合同见 `.agents/docs/maw-bat-enemy-slice-design.md`。
 
 魔剑士 `Demonbound` 作为第四名开局候选但仍维持三人参战。Core 保存战斗局部 0–10 腐化、正念等级、冥想资格与附身控制状态；附身只切换控制者、不改变阵营，AI 优先攻击存活队友并在队友全 Down 后回退敌人。友军致命伤只进行一次确定性 25% Run 永久死亡判定；仅剩附身魔剑士且敌人全灭仍是玩家胜利。Godot 左上状态卡只绑定当前行动者，复用 Unit Resource 显示头像/名称/HP/MP，并由 nullable Corruption 投影可选连续特殊资源条；Hover/LOS 详情迁入鼠标旁输入穿透浮层。结构与语义已自动覆盖，视觉可读性仍待人工验收。
 

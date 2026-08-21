@@ -7,6 +7,12 @@ import { formatGameplayTestDocument, parseGameplayTestDocument } from "./frontma
 import { generateScenarioSpec, generateSkillGraphSpec, generateSkillGraphSpecFromAnswers, generateGameplayTestFromSpec, type SkillDesignAnswers } from "./generator.js";
 import { validateScenarioSpec, validateScenarioDraft } from "./validator.js";
 import { compileAuthoringSpec } from "./authoring/compiler.js";
+import { parseGameplayContracts, validateContractRegistry } from "./contracts.js";
+import { extractContractCandidates, generateScenarioDraft, type LlmProviderId, type StructuredLlmProvider } from "./llm.js";
+import { loadConfiguredProvider } from "./provider-config.js";
+import { createOllamaProvider } from "./providers/ollama-provider.js";
+import { doctorOpenCodeGo } from "./providers/opencode-go-provider.js";
+import type { ExpectationDiagnostic } from "./schema.js";
 
 const program = new Command();
 
@@ -34,6 +40,106 @@ program
   .name("gameplay-test-spec")
   .description("Generate, validate, and compile gameplay test specs.")
   .version("0.1.0");
+
+program.command("validate-contracts")
+  .description("Validate explicit gameplay-contract blocks in a Markdown document or directory")
+  .requiredOption("-d, --doc <path>", "input design document or directory")
+  .action(async options => {
+    const input = await stat(options.doc);
+    const result = input.isDirectory()
+      ? validateContractRegistry(await Promise.all((await findMarkdownFiles(options.doc)).map(async path => ({
+          path,
+          markdown: await readFile(path, "utf8")
+        }))))
+      : parseGameplayContracts(await readFile(options.doc, "utf8"), options.doc);
+    printJson(result);
+    process.exitCode = result.valid ? 0 : 1;
+  });
+
+program.command("extract-contracts")
+  .description("Use the configured LLM provider to propose evidence-bound gameplay contracts")
+  .requiredOption("-d, --doc <path>", "input design document")
+  .option("--provider <provider>", "provider override: opencode-go or ollama")
+  .option("--host <url>", "explicit Ollama loopback host")
+  .option("--model <name>", "explicit Ollama model")
+  .option("--timeout-ms <milliseconds>", "explicit Ollama request timeout")
+  .option("-o, --out <path>", "optional candidate JSON output")
+  .action(async options => {
+    const resolved = await resolveCliProvider(options);
+    if (!resolved.provider) { printJson({ valid: false, diagnostics: resolved.diagnostics }); process.exitCode = 1; return; }
+    const result = await extractContractCandidates(await readFile(options.doc, "utf8"), resolved.provider);
+    if (options.out && result.valid) await writeFile(options.out, `${JSON.stringify(result.value, null, 2)}\n`, "utf8");
+    printJson(options.out && result.valid ? { ...result, out: options.out } : result);
+    process.exitCode = result.valid ? 0 : 1;
+  });
+
+program.command("generate-drafts")
+  .description("Use the configured LLM provider to propose a ScenarioDraft for one explicit contract")
+  .requiredOption("-d, --doc <path>", "input design document")
+  .requiredOption("-c, --contract <id>", "contract ID")
+  .requiredOption("-o, --out <path>", "candidate ScenarioDraft JSON output")
+  .option("--provider <provider>", "provider override: opencode-go or ollama")
+  .option("--host <url>", "explicit Ollama loopback host")
+  .option("--model <name>", "explicit Ollama model")
+  .option("--timeout-ms <milliseconds>", "explicit Ollama request timeout")
+  .action(async options => {
+    const markdown = await readFile(options.doc, "utf8");
+    const parsed = parseGameplayContracts(markdown, options.doc);
+    const contract = parsed.contracts.find(value => value.id === options.contract);
+    if (!parsed.valid || !contract) {
+      const diagnostics = [...parsed.diagnostics];
+      if (!contract) {
+        diagnostics.push({
+          code: "ContractNotFound",
+          severity: "error" as const,
+          message: `Contract '${options.contract}' was not found.`
+        });
+      }
+      printJson({ valid: false, diagnostics });
+      process.exitCode = 1;
+      return;
+    }
+    const resolved = await resolveCliProvider(options);
+    if (!resolved.provider) { printJson({ valid: false, diagnostics: resolved.diagnostics }); process.exitCode = 1; return; }
+    const result = await generateScenarioDraft(contract.statement, contract.id, resolved.provider);
+    if (result.valid && result.value) await writeFile(options.out, `${JSON.stringify(result.value, null, 2)}\n`, "utf8");
+    printJson(result.valid ? { ...result, out: options.out } : result);
+    process.exitCode = result.valid ? 0 : 1;
+  });
+
+program.command("provider-doctor")
+  .description("Validate OpenCode Go configuration, model discovery, and JSON output without sending project content")
+  .action(async () => {
+    const loaded = await loadConfiguredProvider("opencode-go");
+    if (!loaded.openCodeOptions) {
+      printJson({ valid: false, diagnostics: loaded.diagnostics, paths: loaded.paths });
+      process.exitCode = 1;
+      return;
+    }
+    const result = await doctorOpenCodeGo(loaded.openCodeOptions);
+    printJson({ ...result, paths: loaded.paths });
+    process.exitCode = result.valid ? 0 : 1;
+  });
+
+program.command("contract-coverage")
+  .description("Report deterministic contract coverage from design documents and gameplay specs")
+  .requiredOption("--docs <path>", "directory containing contract Markdown documents")
+  .requiredOption("--specs <path>", "directory containing *.gameplay-test.md files")
+  .action(async options => {
+    const documents = await Promise.all((await findMarkdownFiles(options.docs)).map(async path => ({ path, markdown: await readFile(path, "utf8") })));
+    const registry = validateContractRegistry(documents);
+    const references = new Map<string, "covered" | "failed">();
+    for (const file of await findGameplayTestFiles(options.specs)) {
+      const doc = parseGameplayTestDocument(await readFile(file, "utf8"));
+      const validation = validateScenarioSpec(doc.frontmatter);
+      const ids = (doc.frontmatter as { contractIds?: string[] }).contractIds ?? [];
+      for (const id of ids) if (references.get(id) !== "failed") references.set(id, validation.valid ? "covered" : "failed");
+    }
+    const coverage = registry.contracts.map(contract => ({ id: contract.id, status: contract.dsl_support === "unsupported" ? "unsupported" : references.get(contract.id) ?? "missing-spec" }));
+    const valid = registry.valid && coverage.every(value => value.status !== "failed");
+    printJson({ valid, diagnostics: registry.diagnostics, coverage });
+    process.exitCode = valid ? 0 : 1;
+  });
 
 program
   .command("generate-spec")
@@ -81,7 +187,7 @@ program
   .description("Compile ScenarioSpec to ExecutableScenarioPlan")
   .requiredOption("-s, --spec <path>", "input *.gameplay-test.md path")
   .requiredOption("-o, --out <path>", "output *.plan.json path")
-  .option("--runtime <runtime>", "runtime target: unity or godot", "unity")
+  .option("--runtime <runtime>", "runtime target: godot (unity is frozen compatibility only)", "godot")
   .action(async options => {
     const markdown = await readFile(options.spec, "utf8");
     const doc = parseGameplayTestDocument(markdown);
@@ -102,7 +208,7 @@ program
   .description("Compile ScenarioDraft JSON to ExecutableScenarioPlan")
   .requiredOption("-d, --draft <path>", "input *.json draft path")
   .requiredOption("-o, --out <path>", "output *.plan.json path")
-  .option("--runtime <runtime>", "runtime target: unity or godot", "unity")
+  .option("--runtime <runtime>", "runtime target: godot (unity is frozen compatibility only)", "godot")
   .action(async options => {
     const content = await readFile(options.draft, "utf8");
     const draft = JSON.parse(content);
@@ -180,7 +286,7 @@ program
   .option("--filter-tag <tag>", "filter by tag")
   .option("--filter-feature <feature>", "filter by feature")
   .option("--filter-scenario <scenario>", "filter by scenario name")
-  .option("--runtime <runtime>", "runtime target: unity or godot", "unity")
+  .option("--runtime <runtime>", "runtime target: godot (unity is frozen compatibility only)", "godot")
   .action(async options => {
     const inputDir = options.dir;
     const outDir = options.out || inputDir;
@@ -346,9 +452,54 @@ function printJson(value: unknown): void {
   console.log(JSON.stringify(value, null, 2));
 }
 
+async function findMarkdownFiles(dir: string): Promise<string[]> {
+  const files: string[] = [];
+  for (const entry of await readdir(dir, { withFileTypes: true })) {
+    const fullPath = join(dir, entry.name);
+    if (entry.isDirectory()) files.push(...await findMarkdownFiles(fullPath));
+    else if (entry.name.endsWith(".md")) files.push(fullPath);
+  }
+  return files;
+}
+
 function parseRuntime(value: string): "Unity" | "Godot" {
   const normalized = value.toLowerCase();
   if (normalized === "unity") return "Unity";
   if (normalized === "godot") return "Godot";
   throw new Error(`Unknown runtime '${value}'. Expected unity or godot.`);
+}
+
+function parsePositiveInteger(value: string, optionName: string): number {
+  const parsed = Number(value);
+  if (!Number.isSafeInteger(parsed) || parsed <= 0) {
+    throw new Error(`--${optionName} must be a positive integer.`);
+  }
+  return parsed;
+}
+
+async function resolveCliProvider(options: {
+  provider?: string;
+  host?: string;
+  model?: string;
+  timeoutMs?: string;
+}): Promise<{ provider?: StructuredLlmProvider; diagnostics: ExpectationDiagnostic[] }> {
+  const provider = parseProvider(options.provider);
+  if (provider === "ollama" && (options.host || options.model || options.timeoutMs)) {
+    return {
+      provider: createOllamaProvider({
+        host: options.host,
+        model: options.model,
+        timeoutMs: options.timeoutMs ? parsePositiveInteger(options.timeoutMs, "timeout-ms") : undefined
+      }),
+      diagnostics: []
+    };
+  }
+  const loaded = await loadConfiguredProvider(provider);
+  return { provider: loaded.provider, diagnostics: loaded.diagnostics };
+}
+
+function parseProvider(value?: string): LlmProviderId | undefined {
+  if (value === undefined) return undefined;
+  if (value === "opencode-go" || value === "ollama") return value;
+  throw new Error(`Unknown provider '${value}'. Expected opencode-go or ollama.`);
 }

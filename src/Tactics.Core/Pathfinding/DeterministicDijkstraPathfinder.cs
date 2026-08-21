@@ -8,7 +8,8 @@ public interface IPathfinder
         BoardSnapshot board,
         GridPoint origin,
         GridPoint destination,
-        bool allowOccupiedDestination = false);
+        bool allowOccupiedDestination = false,
+        Units.UnitMovementKind movementKind = Units.UnitMovementKind.Land);
 }
 
 /// <summary>
@@ -25,7 +26,8 @@ public sealed class DeterministicDijkstraPathfinder : IPathfinder
         BoardSnapshot board,
         GridPoint origin,
         GridPoint destination,
-        bool allowOccupiedDestination = false)
+        bool allowOccupiedDestination = false,
+        Units.UnitMovementKind movementKind = Units.UnitMovementKind.Land)
     {
         ArgumentNullException.ThrowIfNull(board);
 
@@ -49,10 +51,13 @@ public sealed class DeterministicDijkstraPathfinder : IPathfinder
             {
                 CellState cell = board.GetCell(neighbour);
                 bool isDestination = neighbour == destination;
-                if (!cell.IsWalkable && !(allowOccupiedDestination && isDestination))
+                if (isDestination && (cell.Obstacle != MovementObstacleKind.None ||
+                    (cell.IsOccupied && !allowOccupiedDestination)))
+                    continue;
+                if (!isDestination && !cell.CanTraverse(movementKind))
                     continue;
 
-                float nextCost = costSoFar[current] + cell.MovementCost;
+                float nextCost = costSoFar[current] + cell.MovementPointCost(movementKind);
                 if (costSoFar.TryGetValue(neighbour, out float previousCost) && nextCost >= previousCost)
                     continue;
 
@@ -76,6 +81,9 @@ public sealed class DeterministicDijkstraPathfinder : IPathfinder
         path.Reverse();
         return path;
     }
+
+    public static int MovementPointCost(BoardSnapshot board, IReadOnlyList<GridPoint> path,
+        Units.UnitMovementKind movementKind) => path.Sum(point => board.GetCell(point).MovementPointCost(movementKind));
 
     /// <summary>
     /// Preserves the final Unity heap's equal-priority behavior instead of relying on an unspecified

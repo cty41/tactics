@@ -163,10 +163,12 @@ public sealed class BattleTransitionService
         IReadOnlyList<GridPoint> path = _pathfinder.FindPath(
             state.CreateMovementBoard(command.ActorId),
             actor.Unit.Position,
-            command.Destination);
+            command.Destination,
+            movementKind: actor.Unit.MovementKind);
         if (path.Count == 0 && actor.Unit.Position != command.Destination)
             return Rejected(state, command.ActorId, "path_not_found");
-        if (path.Count > actor.Unit.MoveRange)
+        int movementCost = path.Sum(point => state.Board.GetCell(point).MovementPointCost(actor.Unit.MovementKind));
+        if (movementCost > actor.Unit.MoveRange)
             return Rejected(state, command.ActorId, "path_exceeds_move_range");
 
         GridPoint origin = actor.Unit.Position;

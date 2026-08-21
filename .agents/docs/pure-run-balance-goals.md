@@ -34,11 +34,11 @@ Pure Run 是一局内完成的固定三人小队短流程：玩家用有限路�
 
 P0-B 只建立可验证基线：
 
-- 从 Unity 当前真实类型、Ability/SkillGraph、正式怪物 Prefab、Brain/Profile/Pattern 与 EncounterCatalog 只读导出；
+- 从当前 Core/Application、Godot Resource/Catalog、正式 AI 配置与 Encounter 定义只读导出；
 - 修正文档冲突，并把未知项明确标成未验证；
 - 固化 Mewgenics 的聚合参考与归一化公式；
 - 允许运行只读 report、validator 和测试；
-- **不修改 C#、Unity 资产、游戏数值、场景或存档，不提交。收口时只允许同步本任务命中的 `project-documentation` OKF scope，不同步由用户既有改动触发的其他 scope。**
+- **不修改 C#、Godot Resource、游戏数值、场景或存档，不提交。收口时只允许同步本任务命中的 `project-documentation` OKF scope，不同步由用户既有改动触发的其他 scope。**
 
 P0 不声称完成手动试玩，也不根据一次导出直接判断“强/弱”。进入调优前，应先用固定 seed 和同路线采样建立当前基线，再一次只改一个杠杆。
 

@@ -4,6 +4,31 @@ This is the current cross-project manual acceptance state. Stable IDs are author
 
 ## Pending
 
+### MQA-GODOT-MAW-BAT-SLICE — 大嘴蝠、浅水与 N2 实战纵切
+
+- Status: `pending`
+- Source: 大嘴蝠 EnemySlice、通用移动地形与 N2 浅水布局实现
+- Action: 使用隔离存档进入 N2，观察大嘴蝠待机、跨越地面单位/浅水移动、咬击命中与吸血、受击和死亡；分别悬停浅水与普通地面，并至少完成三局相同队伍/不同 seed 的 N2。
+- Expected: 大嘴蝠稳定悬浮且移动时显示在地面单位上方，咬击使用双方向专用动作并在伤害后显示有效吸血，死亡时停止悬浮、短暂下落后落尸；浅水呈蓝绿色静态波纹且悬停显示“浅水”。Land 进入浅水明显消耗 2 移动力，Air 可越过但不能停在占位/障碍上；Predatory Diver 优先可击杀的低 HP 目标，低血时不撤退。三局无卡死，并记录 N2 难度相对原体验是否明显漂移。
+- Observe: N2 棋盘、单位 Body/Shadow/状态层、悬停 Tooltip、Turn Order、战斗事件日志、CheatConsole 与 Godot Output。
+- Preserve on failure: Run seed、双方阵容与格子、行动前后 HP、目标选择、短视频或连续截图、战斗 checkpoint/save 副本和完整 Output。
+- Save boundary: 战斗和结算会修改当前 Run；必须使用 disposable/隔离存档，不覆盖生产存档，失败时先复制 checkpoint 再重试。
+- Automated evidence: Core 146 项与 Application 183 项覆盖移动成本、Air 穿越/落点、绝对障碍、召唤落点、吸血事件顺序和真实 Transition 可击杀排序；Resource/Catalog、AI Encounter、Unit 与 Playable UI headless 验证通过。悬浮节奏、素材接触、浅水可读性和 N2 体验平衡仍只能人工判断。
+- User verdict: none.
+
+### MQA-GODOT-UNIT-VISUAL — Unit Gallery and Spawn framing baseline
+
+- Status: `pending`
+- Source: 大嘴蝠加入后 13-unit Gallery/Spawn 布局更新
+- Reopen reason: Unit Catalog 新增大嘴蝠，Gallery 从 4×3 改为 5×3、缩放与间距变化，SpawnFixture 增加第 13 个位置。
+- Action: 打开 Unit Gallery 与 Unit SpawnFixture，依次切换四方向和死亡模式，重点检查大嘴蝠及最外圈单位。
+- Expected: 13 个单位及标签均在 1600×900 安全区内，无重叠、裁切或明显比例跳变；旧单位方向、羊魔染色和死亡显示保持原基线，大嘴蝠素材在两个夹具中均正确装载。
+- Observe: Unit Gallery、Unit SpawnFixture、画布边缘和 Godot Output。
+- Preserve on failure: 当前夹具截图、单位 ContentId/索引、方向/死亡模式及第一条 Output 异常。
+- Save boundary: 只读预览，不修改 Run 存档或正式 Resource。
+- Automated evidence: 13 个唯一 Spawn cell、资源类型、纹理与边界检查已自动覆盖；新版 5×3 视觉密度与标签可读性仍需人工复验。
+- User verdict: 原 Phase 4 基线曾通过；本次因布局与内容变化重新 pending。
+
 ### MQA-GODOT-AGENT-FIRST-EDITOR — Clean worktree Editor and Godot AI Dock startup
 
 - Status: `pending`
@@ -486,18 +511,6 @@ This is the current cross-project manual acceptance state. Stable IDs are author
 - Automated evidence: Hash-bound 14-texture converter, ResourceSaver references, directional pose/fallback tests, Body-only transforms, interrupt cleanup, serial cue order, death status cleanup, GdUnit, Compatibility and Forward+ are asserted; motion feel and contact spacing remain manual.
 - User verdict: Passed in the latest user report.
 
-### MQA-GODOT-UNIT-VISUAL — Unit Gallery and Spawn framing baseline
-
-- Status: `passed`
-- Source: Phase 4 closure
-- Action: Historical Gallery/Spawn direction, tint, scale, and edge framing acceptance.
-- Expected: Historical acceptance retained unless unit presentation/layout changes reopen it.
-- Observe: Unit Gallery and SpawnFixture.
-- Preserve on failure: Screenshot and Output.
-- Save boundary: No save mutation.
-- Automated evidence: Unit resources, bounds, directions, shader, and screenshots remain in regression coverage.
-- User verdict: User explicitly accepted the Phase 4 visual baseline.
-
 ## Deferred or Blocked
 
 ### MQA-GODOT-AUDIO-ASSETS — Licensed audio payload and listening pass
@@ -514,4 +527,5 @@ This is the current cross-project manual acceptance state. Stable IDs are author
 
 ## Last Emitted Order
 
-1. `MQA-GODOT-CONTENT-WORKBENCH`
+1. `MQA-GODOT-MAW-BAT-SLICE`
+2. `MQA-GODOT-UNIT-VISUAL`

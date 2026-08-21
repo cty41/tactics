@@ -1,6 +1,10 @@
 {
   "schemaVersion": 1,
   "scenarioName": "SharedBattlePrimitives.StatusTurnSemantics",
+  "contractIds": [
+    "BUFF-REFRESH-STRATEGY-001",
+    "BUFF-POISON-SOURCE-001"
+  ],
   "requiredAdapters": [
     "Skill",
     "Battle"

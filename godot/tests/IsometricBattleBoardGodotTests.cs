@@ -302,7 +302,7 @@ public sealed class IsometricBattleBoardGodotTests
         AssertThat(catalog).IsNotNull();
         if (board is null || catalog is null) return;
         AssertThat(board.TileSize).IsEqual(new Vector2(96, 48));
-        AssertThat(catalog.Entries.Length).IsEqual(162);
+        AssertThat(catalog.Entries.Length).IsEqual(166);
         AssertThat(catalog.Entries.Count(entry => entry.ContentIdValue == "battle-board.pure-run.isometric-v1")).IsEqual(1);
     }
 
@@ -317,7 +317,7 @@ public sealed class IsometricBattleBoardGodotTests
         AssertThat(profiles.Single(value=>value.ProgrammaticKind=="fireball").LevelOneHasAreaEffect).IsFalse();
         AssertThat(profiles.Single(value=>value.ProgrammaticKind=="bone-spear").MaximumGhosts).IsEqual(2);
         var catalog=ResourceLoader.Load<GodotResourceCatalog>("res://content/ContentCatalog.tres")!;
-        AssertThat(catalog.Entries.Length).IsEqual(162);
+        AssertThat(catalog.Entries.Length).IsEqual(166);
     }
 
     [TestCase]

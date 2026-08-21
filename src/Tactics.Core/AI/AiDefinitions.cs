@@ -5,7 +5,7 @@ using Tactics.Core.Units;
 
 namespace Tactics.Core.AI;
 
-public enum AiArchetype { Charger, Ranged, Area, Support, EliteCharger, ElitePoisonCaster }
+public enum AiArchetype { Charger, Ranged, Area, Support, EliteCharger, ElitePoisonCaster, PredatoryDiver }
 public enum AiIntentKind { Move, Attack, Debuff, AreaAttack, Engage, FinishOff, Retreat, HoldPosition, EndTurn }
 
 public sealed record AiProfileDefinition(float DistanceWeight, float DamageWeight, float TargetCountWeight, float HarmfulStatusWeight);

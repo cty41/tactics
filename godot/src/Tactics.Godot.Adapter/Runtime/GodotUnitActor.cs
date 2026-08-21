@@ -29,6 +29,10 @@ public partial class GodotUnitActor : Node2D
 
     private UnitDefinitionResource? _definition;
     private GodotUnitActionPose? _actionPose;
+    private Node2D? _flightLayer;
+    private double _flightTime;
+    private double _flightPhase;
+    private double _deathDescent;
 
     public GodotUnitFacing Facing { get; private set; } = GodotUnitFacing.South;
     public bool IsShowingDeath { get; private set; }
@@ -37,6 +41,7 @@ public partial class GodotUnitActor : Node2D
     public bool IsSpearHeld { get; private set; } = true;
     public bool UsesGoatBodyMaskTint =>
         _definition?.BodyTintModeValue == UnitBodyTintModes.GoatBodyMaskV1;
+    public bool IsAirborne => _definition?.MovementKindValue == "air" && !IsShowingDeath;
 
     /// <summary>
     /// Applies presentation data from a generated definition without touching Core state.
@@ -47,6 +52,7 @@ public partial class GodotUnitActor : Node2D
         definition.ValidateVisualContract();
         EnsureNodes();
         _definition = definition;
+        ConfigureFlightLayer();
         Shadow!.Texture = definition.ShadowTexture;
         Shadow.Position = definition.ShadowOffset;
         Shadow.Scale = definition.ShadowScale;
@@ -55,6 +61,28 @@ public partial class GodotUnitActor : Node2D
         IsBodyTintEnabled = true;
         ApplyTint();
         ApplyVisual();
+    }
+
+    public void ConfigureInstanceIdentity(string instanceId)
+    {
+        uint hash = 2166136261;
+        foreach (char value in instanceId ?? string.Empty) hash = (hash ^ value) * 16777619;
+        _flightPhase = hash / (double)uint.MaxValue * Math.Tau;
+    }
+
+    public override void _Process(double delta)
+    {
+        if (_flightLayer is null) return;
+        if (IsAirborne)
+        {
+            _flightTime += delta;
+            _flightLayer.Position = new Vector2(0, (float)(Math.Sin(_flightPhase + _flightTime * Math.Tau / 1.4) * 3));
+        }
+        else if (IsShowingDeath && _deathDescent < .18)
+        {
+            _deathDescent = Math.Min(.18, _deathDescent + delta);
+            _flightLayer.Position = new Vector2(0, (float)(_deathDescent / .18 * 12));
+        }
     }
 
     /// <summary>Applies presentation-only contact tuning without changing the generated Unit definition.</summary>
@@ -93,11 +121,17 @@ public partial class GodotUnitActor : Node2D
 
     public void SetDeathVisual(bool enabled)
     {
+        if (enabled && !IsShowingDeath) _deathDescent = 0;
         IsShowingDeath = enabled && _definition?.DeathTexture is not null;
         if (enabled) _actionPose = null;
         if (enabled && StatusOverlay is not null)
             StatusOverlay.Apply(Array.Empty<BattleUiStatusSnapshot>());
         ApplyVisual();
+    }
+
+    public void SetAirMoveOverlay(bool enabled)
+    {
+        if (_definition?.MovementKindValue == "air") ZIndex = enabled ? 100 : 0;
     }
 
     public void SetSpearHeld(bool held)
@@ -212,5 +246,16 @@ public partial class GodotUnitActor : Node2D
     {
         if (Body is null || Shadow is null)
             throw new InvalidOperationException("Godot Unit actor is missing its Body or Shadow node.");
+    }
+
+
+    private void ConfigureFlightLayer()
+    {
+        if (_definition?.MovementKindValue != "air" || Body is null || _flightLayer is not null) return;
+        _flightLayer = new Node2D { Name = "FlightVisualOffset" };
+        AddChild(_flightLayer);
+        Body.Owner = null;
+        Body.Reparent(_flightLayer, keepGlobalTransform: false);
+        SetProcess(true);
     }
 }

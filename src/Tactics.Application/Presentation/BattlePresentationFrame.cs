@@ -110,7 +110,7 @@ public static class BattlePresentationFrameCompiler
 
     private static PresentationCueKind ResolveAction(SkillDefinition skill) => skill.ExecutionKind switch
     {
-        SkillExecutionKind.MeleeAttack or SkillExecutionKind.Thrust or SkillExecutionKind.MultiStab or SkillExecutionKind.Bane => PresentationCueKind.Melee,
+        SkillExecutionKind.MeleeAttack or SkillExecutionKind.DirectAttack or SkillExecutionKind.Thrust or SkillExecutionKind.MultiStab or SkillExecutionKind.Bane => PresentationCueKind.Melee,
         SkillExecutionKind.RangedAttack or SkillExecutionKind.HeavyShot or SkillExecutionKind.PoisonSpear => PresentationCueKind.Ranged,
         _ => PresentationCueKind.Cast
     };

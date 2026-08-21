@@ -110,9 +110,13 @@ public partial class GodotPlayableRunMain : Control
     private enum InventoryReturnTarget { RunRoute }
     internal enum PresentationDrainAction { DequeueFrame, CompleteBattle, Pause, Refresh }
 
-    public bool IsReadyForInput => _run is not null && _page is not null && _units.Count == 13 &&
-        _skills.Count >= 22 && _ai.Count == 8 && _layouts.Count >= 2 && _encounters.Count >= 3 &&
-        _mapDefinition is not null && _treasureDefinition is not null && _catalogCount == 162;
+    public bool IsReadyForInput => _run is not null && _page is not null && _units.Count == 14 &&
+        _skills.Count >= 22 && _ai.Count == 9 && _layouts.Count >= 2 && _encounters.Count >= 3 &&
+        _mapDefinition is not null && _treasureDefinition is not null && _catalogCount == 166;
+    public string StartupContractSummary =>
+        $"run={_run is not null}, page={_page is not null}, units={_units.Count}, skills={_skills.Count}, " +
+        $"ai={_ai.Count}, layouts={_layouts.Count}, encounters={_encounters.Count}, " +
+        $"map={_mapDefinition is not null}, treasure={_treasureDefinition is not null}, catalog={_catalogCount}";
 
     public override void _Ready()
     {
@@ -788,7 +792,7 @@ public partial class GodotPlayableRunMain : Control
         foreach (BattleUiUnitSnapshot unit in visible)
         {
             if(!_actors.TryGetValue(unit.UnitId,out GodotUnitActor? actor)||!GodotObject.IsInstanceValid(actor))
-            {actor=GodotUnitFactory.InstantiateActor(_unitResources[unit.DefinitionId]);actor.Scale=Vector2.One*.34f;actor.SetFacing(GodotPresentationFacingResolver.Initial(unit.PlayerNumber));actor.ConfigurePresentation(_presentationProfile??new StandardUnitPresentationResource());_board.AddChild(actor);_actors[unit.UnitId]=actor;}
+            {actor=GodotUnitFactory.InstantiateActor(_unitResources[unit.DefinitionId]);actor.ConfigureInstanceIdentity(unit.UnitId.Value);actor.Scale=Vector2.One*.34f;actor.SetFacing(GodotPresentationFacingResolver.Initial(unit.PlayerNumber));actor.ConfigurePresentation(_presentationProfile??new StandardUnitPresentationResource());_board.AddChild(actor);_actors[unit.UnitId]=actor;}
             if(!(_presentationPlayer?.IsPlaying??false))actor.Position = IsometricBattleBoardLayout.GridToScreen(unit.Cell);
             actor.SetDeathVisual(!unit.IsAlive);
             actor.Modulate = unit.IsPossessed ? new Color(1.25f, .55f, 1.35f) : Colors.White;
@@ -878,7 +882,7 @@ public partial class GodotPlayableRunMain : Control
             }
             colors[hovered]=colors[hovered].Lightened(.22f);
         }
-        _board?.SetVisuals(colors,snapshot.BlockedCells??Array.Empty<GridPoint>());
+        _board?.SetVisuals(colors,snapshot.BlockedCells??Array.Empty<GridPoint>(),snapshot.ShallowWaterCells);
     }
 
     internal static BattleUiUnitSnapshot? ResolveActiveUnit(BattleUiSnapshot snapshot) =>
@@ -904,6 +908,7 @@ public partial class GodotPlayableRunMain : Control
         BattleUiUnitSnapshot? unit=snapshot.Units.FirstOrDefault(value=>value.Cell==cell);
         string detail=unit is null?$"Cell {cell}":$"Cell {cell} | {unit.UnitId.Value} | HP {unit.CurrentHealth}/{unit.MaxHealth} MP {unit.CurrentMana}/{unit.MaxMana} | {string.Join(',',unit.StatusIds.Select(id=>id.Value))}";
         if(snapshot.Corpses.Contains(cell))detail+=" | Corpse";
+        if(snapshot.ShallowWaterCells?.Contains(cell)==true)detail+=" | 浅水";
         if(snapshot.TargetingMode==BattleTargetingMode.Move)detail+=snapshot.LegalMoveCells.Contains(cell)?$" | Legal move, path {_battle?.PreviewMovePath(cell).Count??0}":" | Illegal move";
         if(snapshot.TargetingMode==BattleTargetingMode.Skill&&snapshot.SelectedSkillId is ContentId skillId)
         {

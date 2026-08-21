@@ -14,9 +14,10 @@ public partial class BattleLayoutResource : Resource
     [Export] public string PartySpawnsValue { get; set; }=string.Empty;
     [Export] public string EnemySpawnsValue { get; set; }=string.Empty;
     [Export] public string BlockedCellsValue { get; set; }=string.Empty;
+    [Export] public string ShallowWaterCellsValue { get; set; }=string.Empty;
 
     public BattleLayoutDefinition ToCoreDefinition() => new(
-        new ContentId(ContentIdValue), ParseCells(PartySpawnsValue), ParseCells(EnemySpawnsValue), ParseCells(BlockedCellsValue));
+        new ContentId(ContentIdValue), ParseCells(PartySpawnsValue), ParseCells(EnemySpawnsValue), ParseCells(BlockedCellsValue), ParseCells(ShallowWaterCellsValue));
 
     private static GridPoint[] ParseCells(string value) => string.IsNullOrWhiteSpace(value)
         ? Array.Empty<GridPoint>()
