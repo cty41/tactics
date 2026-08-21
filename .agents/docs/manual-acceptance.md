@@ -16,6 +16,18 @@ This is the current cross-project manual acceptance state. Stable IDs are author
 - Automated evidence: Vendor hash, launcher policy, Codex bootstrap/profile, production assembly identity, release exclusion and same-worktree mutex checks are automated. Real Dock visibility, Editor reload and two-window routing remain human-only.
 - User verdict: none.
 
+### MQA-GODOT-DEMONBOUND-ACTION-ART — Demonbound native pose integration
+
+- Status: `pending`
+- Source: Approved Demonbound Idle, Melee, Cast, Hit and Death artwork integration
+- Action: In a representative battle, rotate Demonbound between DR/UL, trigger melee, cast and hit in both native directions, then defeat the unit.
+- Expected: Every state uses Demonbound artwork rather than Hunter placeholders; action poses return to the correct Idle, Cast/Hit sword layering remains intact, and Death is centered without unexpected mirroring or scale jumps.
+- Observe: Body silhouette, sword/hand occlusion, feet, transition offsets and corpse placement at normal Game View scale.
+- Preserve on failure: Screenshot, facing, action state and first incorrect texture/offset.
+- Save boundary: Use an isolated test Run; do not overwrite the production save.
+- Automated evidence: ResourceSaver-generated `PureRunDemonbound.tres` binds nine Demonbound textures, texture-copy hashes match approved sources, and automated Resource loading/assertions pass. Automation does not establish visual transition quality.
+- User verdict: Pending runtime visual verification after integration.
+
 ### MQA-GODOT-DEMONBOUND-HUD — Active-unit card, corruption meter and hover tooltip
 
 - Status: `pending`
@@ -81,11 +93,11 @@ This is the current cross-project manual acceptance state. Stable IDs are author
 - Status: `pending`
 - Source: `82c073f5`, `78f032a3`, ownership closure content checkpoints
 - Action: In a disposable Run, obtain and use one player Lv3, resolve a Treasure node, Reload, and continue through the authoritative Map.
-- Expected: Lv2 upgrades to the implemented Lv3 contract; Treasure resolves once without rerolling or duplicate rewards; Map route, pending node and Save V6 identity survive Reload.
+- Expected: Lv2 upgrades to the implemented Lv3 contract; Treasure resolves once without rerolling or duplicate rewards; Map route, pending node and current V10 identity survive Reload.
 - Observe: Progression cards/current skills, Battle HUD and CheatConsole, Treasure result, Rogue Map node state, Inventory and Godot Output.
 - Preserve on failure: Run seed/revision, selected skill/branch, Treasure node/result, save and backup copy, screenshot and Output excerpt.
-- Save boundary: This journey mutates progression, rewards and Save V6; use a disposable Run or preserve the current save first.
-- Automated evidence: Core/Application cover all nine player Lv3 contracts, Skeleton Warrior Lv3, deterministic Treasure rewards/idempotency, arbitrary Map topology and V5→V6 migration; Catalog 143 (including the formal split-flank Layout), ResourceSaver idempotency, Gameplay Specs and both renderers are green. Gameplay feel and cross-page readability remain manual.
+- Save boundary: This journey mutates progression, rewards and the current V10 save; use a disposable Run or preserve the current save first.
+- Automated evidence: Core/Application cover all nine player Lv3 contracts, Skeleton Warrior Lv3, deterministic Treasure rewards/idempotency, arbitrary Map topology and current V10 round-trip; historical migration behavior has separate compatibility tests. Catalog, ResourceSaver idempotency, Gameplay Specs and both renderers cover the structural boundary. Gameplay feel and cross-page readability remain manual.
 - User verdict: none.
 
 ### MQA-GODOT-CONTENT-WORKBENCH — Unified authoring and fixture shell
@@ -225,16 +237,17 @@ This is the current cross-project manual acceptance state. Stable IDs are author
 - Automated evidence: Interaction-settled, Event Battle Ready, overlay-updated, event-result, battle-context, and idempotent-state assertions pass.
 - User verdict: None; pending human acceptance.
 
-### MQA-GODOT-TILE-ROUTE-MISCLICK — Route overview and accidental submission risk
+### MQA-GODOT-TILE-ROUTE-MISCLICK — Immediate exits and accidental transition risk
 
 - Status: `pending`
-- Source: Gameplay-Test-Driven Tile Adventure Goal
-- Action: At both three-way route choices, inspect candidates, deliberately click between choices and on the overview background, then select and submit one route.
-- Expected: Background or near-miss clicks do not choose or submit a route; the chosen route is clearly previewed; submission occurs only through the explicit confirmation action and cannot duplicate.
-- Observe: Candidate routes, selected route, submit control, unlocked node, lifecycle state, and Godot Output.
-- Preserve on failure: Screenshot, pointer position, candidate/selected route IDs, node lifecycle, save/backup copy, and Output; stop before advancing.
-- Save boundary: Preview is transient; route submission mutates the Run once.
-- Automated evidence: RouteNode targeting, candidate-route assertion, route-submitted checkpoint, lifecycle transition, and fixed topology regression pass.
+- Source: Gameplay-Test-Driven Tile Adventure Goal; `781fd5fd`, immediate-successor Tile exits
+- Reopen reason: The earlier Route Overview and two-route submission flow was removed; route choice now occurs through visible exits inside the current node scene.
+- Action: At every implemented multi-exit node, identify each visible destination, click near an exit edge, between adjacent exits and on unrelated board/background cells, then deliberately enter one exit.
+- Expected: Only the current node's directly reachable successors appear; near-miss/background clicks do not transition; a valid exit click transitions immediately and exactly once to the indicated node, without an overview or separate submit step.
+- Observe: Adventure Board exit objects/labels, pointer highlight, destination node/overlay, lifecycle state and Godot Output.
+- Preserve on failure: Screenshot or short video, pointer position, source/expected/actual node IDs, visible exit set, save/backup copy and Output; stop before another transition.
+- Save boundary: Inspection and near-miss clicks should not mutate the Run; a valid exit immediately commits the next node, so preserve the pre-exit checkpoint.
+- Automated evidence: Formal Main-scene input proves that each exit targets only an immediate successor, locked/non-successor nodes cannot be selected, and the transition commits once. Destination readability and accidental-click risk remain human-only.
 - User verdict: None; pending human acceptance.
 
 ### MQA-GODOT-TILE-START-CAMP — Start Camp presentation and setup flow
@@ -258,7 +271,7 @@ This is the current cross-project manual acceptance state. Stable IDs are author
 - Observe: Escort overlay, villager position/HP, enemy target choices, objective result, reward, node state, and Godot Output.
 - Preserve on failure: Run seed, node/battle IDs, turn sequence, villager HP/cell, enemy targets, result, save/backup copy, and Output.
 - Save boundary: Accepting, battle turns, and settlement mutate the Run; use the pre-battle checkpoint for replay and keep production backup unchanged.
-- Automated evidence: Escort state, protected-NPC AI, enemy priority target, special victory/failure, reward, V8 round-trip, and idempotent settlement assertions pass.
+- Automated evidence: Escort state, protected-NPC AI, enemy priority target, special victory/failure, reward, current V10 round-trip, and idempotent settlement assertions pass.
 - User verdict: None; pending human acceptance.
 
 ## Passed

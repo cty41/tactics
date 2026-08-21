@@ -4,6 +4,8 @@
 
 本文集中记录已经从代码、资产或测试中确认，但尚未转成活跃执行计划的缺口。它不是承诺清单；只有满足“激活条件”并另行建立范围明确的开发计划后，项目才开始实现。
 
+人工视觉、输入手感、Editor Reload 和完整游玩验收不在本文重复维护；其权威状态与可执行步骤统一记录在 [人工验收账本](manual-acceptance.md)。本文只保留需要继续开发、决策或工程收尾的事项。
+
 状态定义：
 
 - `verified-gap`：已确认当前实现缺失或不完整。
@@ -35,7 +37,7 @@
 |---|---|---|---|---|
 | `verified-gap` | Gameplay Test 尚不能严格断言完整事件先后序列。 | 当前结果断言已覆盖首切片核心行为。 | 出现“结果相同但阶段顺序错误”的回归风险。 | Framework Roadmap 旧计划 |
 | `verified-gap` | 动画完成/表现时序缺少稳定的跨帧断言契约。 | 战斗逻辑验证不依赖表现资产。 | 动画进入自动验收范围。 | Framework Roadmap 旧计划 |
-| `deferred` | Gameplay Test 未接入 CI。 | 项目当前没有 CI 流程。 | 建立可稳定启动 Unity 的 CI 环境。 | Framework Roadmap 旧计划 |
+| `deferred` | Gameplay Test 的完整 Godot runtime batch 尚未作为独立 CI 质量面板展示。 | 当前统一 verifier 已执行该批次，但 CI 可发现性仍有限。 | 需要独立质量趋势或失败分类时，为 Godot runtime report 建立专门汇总。 | Framework Roadmap |
 | `needs-decision` | SkillGraph 更强的循环、阶段与目标语义静态检查仍可扩展。 | 静态校验与运行测试的职责边界需先确定。 | 收集真实误配案例并定义可判定规则。 | SkillGraph 旧计划 |
 
 ## Godot Content Workbench
@@ -44,16 +46,14 @@
 |---|---|---|---|---|
 | `deferred` | 自动作者闭环已完成；真实 Godot Editor 中逐页 Apply All→Undo→Redo→Save→C# Reload、Graph 拖动手感与 Preview cleanup 尚未人工验收。自动套件中的 PlayableRunUi 仍报告 4 个 orphan-node runner warning，独立 page-replacement/preview cleanup 断言通过。 | 前台交互、视觉观感和 Assembly Reload 不能由后台门禁替代；不修改第三方 GdUnit adapter 掩盖 warning。 | 用户在 canonical Editor 按 `MQA-GODOT-CONTENT-WORKBENCH` 完成并反馈。 | Workbench 人工验收账本 |
 
-## Unity MCP 可靠性
+## Adventure Tile 与发布整合
 
 | 状态 | 缺口与证据 | 未激活原因 | 激活条件 | 历史来源 |
 |---|---|---|---|---|
-| `verified-gap` | MCPForUnity 10.1.0/10.1.2 在 `registered` 处理期间同步等待 Unity 主线程工具发现，receive loop 无法同时处理 ping；10.1.2 的相关三个源码文件没有变化。 | 当前任务只允许稳定版升级，禁止 fork；尚无满足源码门的发布版。 | 上游 stable 同时发布匹配 Unity package/server，并让工具发现 pending 时 receive loop 仍可响应、旧 session 结果不会写入新连接。 | Unity MCP 重连调查 2026-08-06 |
-| `verified-gap` | 后台测试轮询的上游 focus nudge 可能调用 Windows 前台激活，与项目焦点保护规则冲突，当前 10.1.x 未提供正式 opt-out。 | 项目不允许用窗口激活推进后台测试；本地不能安全补丁 PackageCache。 | 上游提供可配置关闭开关，或新稳定版移除对前台焦点的依赖并通过后台测试。 | Unity MCP 测试合批调查 2026-08-06 |
-| `verified-gap` | 自动恢复仍为 `0/5`、`blocked_upstream`。项目 bootstrap 已收缩为 batch/import-worker guard 后显式 no-op，5 个定向 EditMode case 通过；项目不再覆盖 manual Disconnect、不再写 endpoint/preference，也不再 start/stop/connect/verify/retry。包层 10.1.0 仍可能创建并发 reconnect continuation 和 session eviction，10.1.2 相关源码未修复。 | 开发期优先消除项目层副作用，不在当前切片建设新的自动恢复 owner；定向 guard 测试不能替代真实 reload 稳定性。 | 先等待上游 stable 通过 receive-loop/tool-discovery 源码门；若未来确需自动恢复，再设计可被用户接管的 per-Editor owner，并在同一 Editor、零手动 Connect/重启/前台自动化条件下从 0 完成连续 5 次 reload。 | Unity MCP 安全收缩 2026-08-07 |
-| `verified-gap` | MCPForUnity 10.1.x 的 transport、scope、local endpoint 与 auto-start 公共 API 最终写入机器级 `EditorPrefs`；并行打开其他 Unity 项目时仍可能观察到本项目配置。项目 bootstrap 已停止每 Domain 重写 endpoint，因此只保证项目层不再扩大竞争，不提供跨项目存储隔离。 | 当前只允许上游稳定版升级，不能 fork 包并改写配置存储。 | 上游提供 project/editor-instance scoped 配置 API，或稳定版实现不依赖机器级偏好，并通过多 Editor/worktree 隔离验证。 | Unity MCP 生命周期审查 2026-08-07 |
-| `deferred` | `Manage-UnityTestGate.ps1` 仍是本地 draft helper，尚未完成无歧义 canonical commitment、attempt-local result、单次 StateRoot snapshot、全根 fail-closed、严格 migration/replay 与确定性并发，因此不能作为 CI、发布或审计事实源。 | 当前开发只要求单 Editor、单执行者、单 test job；完善 final v3 的收益低于玩法回归。 | 建立 CI/发布认证、多执行者并发或正式审计需求，并为 final-v3 契约建立独立计划。 | Unity Test Gate closing review 2026-08-06 |
-| `deferred` | 历史 Git 提交曾包含 Context7 凭据；当前 tracked tree 与 Phase A 新 blob 已移除凭据形态，但服务端撤销/轮换状态未知，Git 历史未重写。 | 用户明确接受开发期剩余风险，先完成仓库侧防复发与逻辑开发。 | 在 Context7 供应商侧撤销/轮换旧 key，并只记录完成确认，不记录凭据值。 | Unity MCP 配置迁移 2026-08-07 |
+| `verified-gap` | Adventure 节点已实现 10×10 等距 Board、正式输入寻路、领队切换、交互物和仅指向直接后继节点的即时出口；营地、商人、NPC、火堆、出口、宝箱和祭坛仍主要使用功能性占位表现，缺少按节点定制的场景构图、正式状态变化、转场和音频。 | 当前垂直切片先验证玩法闭环，正式内容预算和视觉基准尚未批准。 | 确认首批节点的美术清单、复用规则与表现验收标准后建立内容计划。 | Tile Adventure review；`GodotPlayableRunMain` |
+| `verified-gap` | 多出口已经替代开局 Route Overview/两组路线提交，只显示当前节点直接可达的下一层节点；出口类型、危险度、目的地提示和近距离误触保护仍未形成正式表现规范。 | 拓扑合法性已有自动回归，但可读性和点击风险只能先由人工验收暴露真实问题。 | 完成 `MQA-GODOT-TILE-ROUTE-MISCLICK`；若失败，再按具体误触或信息缺口立项。 | `781fd5fd`；Adventure exit Gameplay Tests |
+| `needs-decision` | 旧活跃 Run 按既定兼容策略要求重新开局；当前 V10 存档与事件上下文可恢复，但旧存档失效时的玩家提示、终局摘要保留说明和备份恢复入口尚未形成产品文案契约。 | 不影响新 Run 的状态正确性，需要先决定提示层级和是否提供恢复入口。 | 确认旧存档面向玩家的处理方式后实现并加入迁移验收。 | V9/V10 Save review |
+| `verified-gap` | `migration/godot` 到公开 `main` 的本地整合可无文本冲突重放，但公开候选门禁仍报告 200 个未登记 artwork state、4 个未登记 asset 和 1 个本地 `godot_ai` 用户路径；因此尚不能创建可合并的公开候选。 | 资产需逐项登记或排除，本地注入插件不得进入公开根，不能用放宽门禁代替处理。 | 收口资产 provenance/发布范围，剔除或改造本地注入内容，随后重跑 public candidate validator 与 `Verify-GodotProject.ps1`。 | 2026-08-21 public-main integration audit |
 
 ## Pure Run、奖励与内容扩展
 
@@ -65,7 +65,7 @@
 | `needs-decision` | 战后第三类奖励槽位与装备战斗掉落仍未形成规则；装备/消耗品统一背包、角色携带、药水战斗使用、药水掉落和商店购买已实现。 | 当前胜利后直接成长，药水掉落独立结算，不提供战后奖励选择。 | 决定是否改变“无战后选择”的核心节奏，以及装备是否进入战斗掉落。 | 战斗奖励/商店旧计划 |
 | `verified-gap` | 部分奖励提示仍为临时 UI，商店存在 fallback 路径。 | 首切片优先保证流程闭环。 | UI 交互规范和商店内容稳定。 | Map/Reward 旧计划 |
 | `needs-decision` | 难度池、装备掉落与当前固定层级遭遇如何组合尚未定义。 | 会影响 Run 节奏和配置结构。 | 确定长期遭遇生成模型。 | 战斗奖励旧计划 |
-| `resolved` | Pure Run 的 Layer 4/6 已各生成一个 Treasure 节点；2–5 Gold、weighted Equipment/Consumable/Buff、一次性确认、Save V6 与 Reload 不重掷均已收口。 | — | 若未来改变奖励预算，建立新版本 Treasure Definition，不修改 v1 语义。 | Godot ownership closure 2026-08-15 |
+| `resolved` | Pure Run 的 Layer 4/6 已各生成一个 Treasure 节点；2–5 Gold、weighted Equipment/Consumable/Buff、一次性确认与 Reload 不重掷均已收口。该规则最初在 Save V6 落地，当前由 V10 round-trip 与幂等回归继续保护。 | — | 若未来改变奖励预算，建立新版本 Treasure Definition，不修改 v1 语义。 | Godot ownership closure 2026-08-15；V10 regression |
 | `idea` | 为事件检定结果增加类似桌面角色扮演投骰子的表现结算。 | 当前确定性检定与结果事务已完成，表现形式尚未确定。 | 确定骰面、加值展示、跳过规则和美术资源。 | Pure Run 事件设定 |
 | `idea` | 无道德值的选择后果框架。 | 尚无当前玩法需求验证。 | 出现至少一组需要跨节点追踪的选择后果。 | Morality Framework 旧计划 |
 
@@ -95,4 +95,4 @@
 - 回收长矛嵌入敌人的状态；当前规则是落到最后命中单位附近空格。
 - 将装备与消耗品分成两套背包交互，或让全队共享全部战斗药水能力；当前已统一为角色各携带 1 个独立实例。
 
-相关当前设计见 [Pure Run 小队原型](2026-06-24-pure-run-squad-prototype-design.md)、[三职业首批技能](three-class-skill-design.md)、[SkillGraph 系统](skill-graph-system.md) 与 [Gameplay Test Framework](gameplay-test-framework.md)。
+相关当前设计见 [Pure Run 小队原型](2026-06-24-pure-run-squad-prototype-design.md)、[三职业首批技能](three-class-skill-design.md) 与 [Gameplay Test Framework](gameplay-test-framework.md)；SkillGraph 当前状态由 OKF 系统页导航到代码和 Godot Resource。
