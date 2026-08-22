@@ -1,13 +1,14 @@
 # Tactics Knowledge Update Log
 
 ## 2026-08-22
+* **Sync**: `pure-run-artwork` 已同步到来源指纹 `sha256:261840ebd1e843328d6a5d6e12ba2715c9866e479c8aaa19d71b7e7bc78b0dff`。
+* **Sync**: `project-documentation` 已同步到来源指纹 `sha256:ddffa5e1856d77b9c50310a1d6a0b7fbcdc2d085f49a065fabd69d5c8e5d5b2c`。
+* **Sync**: `godot-agent-workflow` 已同步到来源指纹 `sha256:1dce404ddd1b5dd5d64bf0c754ab0d663e644b388a01853f4b2e9b334686d6c6`。
 * **Sync**: `roguelike-run` 已同步到来源指纹 `sha256:1ee16b47836a0112140e459db62391fc28979f0a3a29e03dab0d51bb6bc9b155`。
 * **Sync**: `project-architecture` 已同步到来源指纹 `sha256:660513ac25eacff995f27ed9a9933dafe9a1a6ac1c8da80effc5e43544a43a38`。
 * **Sync**: `godot-migration` 已同步到来源指纹 `sha256:091195c7b24b8b9eda34c5a49bff39a4ae203e8daae13e1362dabb475008a7d0`。
 * **Sync**: `battle-system` 已同步到来源指纹 `sha256:3cfaccd7dcddb1b9e6a2003eeeb1aceedf25e7f3e7d4e8115a9a429b2279a1a7`。
 * **Sync**: `gameplay-test-framework` 已同步到来源指纹 `sha256:afb8ebae6cc89dd354e2bbacd65037ec0456a78c91b2ac715d38bc385c94a166`。
-* **Sync**: `project-documentation` 已同步到来源指纹 `sha256:d8b3035aae08e65f7069ee98843062b37447712a8d547a16163ce25f100108bb`。
-* **Sync**: `godot-agent-workflow` 已同步到来源指纹 `sha256:431431f342ce70659d884ebf6c2ba8d70e9c5ff180ed478a30b2466f37a831e3`。
 * **Sync**: `skill-graph` 已同步到来源指纹 `sha256:44594192015c7b314a248c23426609887130de68400ee134f4461adcef9285c8`。
 
 ## 2026-08-21
@@ -437,3 +438,4 @@
 * **Fix (2026-08-22)**: 为公开根补充不依赖一次性 Unity DTO 的 Unit ResourceSaver 属性升级入口；12 个公式单位已刷新到 `ATTR-DERIVED-STATS-002`，显式派生的 Maw Bat 保持冻结例外，门禁同时验证幂等与 Godot 运行时合同。
 * **Fix (2026-08-22)**: `PresentationMiss` checkpoint 从新命中公式下会命中的 RNG state 2 调整为确定闪避的 state 6，并同步 semantic hash 与编译 plan；生产输入的 20 场景 acceptance batch 复跑通过。
 * **Fix (2026-08-22)**: Gameplay pointer resolver 同时应用 Screen/Canvas/Control transform，并要求本地鼠标位置精确命中目标点；修复 GitHub Windows 下全屏 Adventure/Battle surface 的宽泛 Hover 掩盖错误格坐标。
+* **Fix (2026-08-22)**: Windows CI 在统一 verifier 前显式安装 Pure Run Artwork skill 固定的 Pillow 12.1.1；干净虚拟环境中的 strict artwork registry 校验通过 385 项清单。

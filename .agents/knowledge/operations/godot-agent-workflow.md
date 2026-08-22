@@ -4,7 +4,7 @@ resource: https://github.com/cty41/tactics
 title: Godot agent workflow
 description: Godot 4.7 C# 主线的项目、分层、Editor 生命周期、验证和发布边界。
 tags: [godot, agent, workflow, testing]
-timestamp: "2026-08-22T14:43:08+08:00"
+timestamp: "2026-08-22T16:06:51+08:00"
 status: active
 catalog_scope: godot-agent-workflow
 repo_paths:
@@ -18,7 +18,7 @@ repo_paths:
   - Tools/godot/Build-GodotWindows.ps1
   - Tools/migration/manifest/godot-tooling.json
 verified_revision: d092a955
-source_fingerprint: sha256:431431f342ce70659d884ebf6c2ba8d70e9c5ff180ed478a30b2466f37a831e3
+source_fingerprint: sha256:1dce404ddd1b5dd5d64bf0c754ab0d663e644b388a01853f4b2e9b334686d6c6
 ---
 
 # Current State
@@ -31,7 +31,7 @@ Godot 修改先由 `godot-workflow` 路由到最小 Specialist Skill。C#、Reso
 
 统一入口 `Tools/godot/Verify-GodotProject.ps1` 串行执行 restore/build、Core/Application/FrozenOracle、Gameplay Spec、Python、Skill/Incident、ResourceSaver 升级、GdUnit、Release/Runtime/Editor headless、renderer、receipt 与 OKF。FrozenOracle、Golden 和 receipt 只是历史/确定性证据，不能替代视觉、手感、真实 Editor Reload 或干净 Windows 启动。
 
-Windows 构建使用单一 `Windows Desktop` preset、锁定工具链和受审计 staging。Debug/Release 包必须通过架构、PCK/managed runtime、顶层 allowlist、测试/缓存/本地配置排除、manifest/hash 与隔离用户目录启动验证。
+Windows 构建使用单一 `Windows Desktop` preset、锁定工具链和受审计 staging。CI 在运行统一 verifier 前显式安装 OKF 与 Pure Run Artwork skill 各自声明的 Python requirements；Debug/Release 包必须通过架构、PCK/managed runtime、顶层 allowlist、测试/缓存/本地配置排除、manifest/hash 与隔离用户目录启动验证。
 
 # Relationships
 

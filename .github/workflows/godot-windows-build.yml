@@ -109,6 +109,7 @@ jobs:
         run: |
           python --version
           python -m pip install --disable-pip-version-check --requirement Tools/okf/requirements.txt
+          python -m pip install --disable-pip-version-check --requirement .agents/skills/pure-run-artwork-pipeline/requirements.txt
 
       - name: Cache official Godot archives
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0

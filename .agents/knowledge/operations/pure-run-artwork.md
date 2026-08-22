@@ -4,7 +4,7 @@ resource: https://github.com/cty41/tactics/tree/main/Tools/artworks
 title: Pure Run Artwork Pipeline
 description: Pure Run 角色美术的生成、去幕、尺寸校准、Review 与提交入口。
 tags: [operations, pure-run, artwork, sprite, godot]
-timestamp: "2026-08-21T20:49:06+08:00"
+timestamp: "2026-08-22T16:06:56+08:00"
 status: active
 catalog_scope: pure-run-artwork
 repo_paths:
@@ -14,7 +14,7 @@ repo_paths:
   - godot/assets
   - Tools/public-release/asset-provenance.json
 verified_revision: c68dbebe
-source_fingerprint: sha256:bbad637172c1af85f0058086135da08781b76f93d6c73532256de52e3ae038a7
+source_fingerprint: sha256:261840ebd1e843328d6a5d6e12ba2715c9866e479c8aaa19d71b7e7bc78b0dff
 ---
 
 # Pure Run 角色美术流水线
@@ -87,6 +87,8 @@ python -m unittest discover Tools/okf -p "test_*.py"
 ```
 
 校验脚本只读 PNG 并输出机器可读摘要；`--review-examples` 同时验证正式母图清单、正反路径状态和案例快照。Godot 测试必须覆盖当前单位的纹理绑定、Land/Air 参数、Tile 落点和动作期间阴影稳定性。候选资产需使用 `--include-candidates` 额外查看，但外部武器轮廓不会被错误地当成发布尺寸失败。Git 提交前按路径暂存并排除 `.hermes/`、`tmp/` 和未授权运行时文件。
+
+Artwork 校验的 Pillow 版本固定在 `.agents/skills/pure-run-artwork-pipeline/requirements.txt`；Windows CI 在统一 verifier 前显式安装该 requirements，避免依赖 runner 的预装状态。
 
 死亡图仍以人工 QA 为发布门槛：胶囊单位检查与赤柴同向且平直短厚，球形单位检查近圆球核与头部朝右上；两类都只以核心体量比较大小，检查脱手道具层级、去幕后的 RGBA/透明四角、无精确色幕残边，以及以死亡尸体 AABB 中心完成的 Tile 居中。未经人工确认和明确运行时授权不得接入 Unity。
 
