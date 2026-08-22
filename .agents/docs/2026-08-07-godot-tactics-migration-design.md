@@ -31,13 +31,13 @@ Godot Runtime Adapter
 - C# EditorPlugin Reload、多态 Resource 往返和 Godot C# 测试链路通过既定 Spike 或启用已定义 fallback；
 - 迁移期不夹带玩法规则重设计，已有语义先保持版本化一致。
 
-当前 Unity `main` 基线已增加固定 `10×10` 局部棋盘契约（`BattleBoardSpec`、`Test1_10x10_Probe`、`Probe10x10Encounter/Party`）。Godot 首个战斗 fixture 应以 `(0…9, 0…9)` 局部坐标和该探针的布局契约为输入，不再把旧 `18×18` 坐标作为迁移目标；探针是否推广为 Unity 正式 `Test1` 仍是 Unity 侧独立审批，不在本设计中默认替换。
+Unity 迁移源固定为分支 `w1`，对应干净 worktree `D:\codes\tactics-worktrees\w1-unity-final`。迁移启动前第一道闸门是将 `w1` 与 `main` 完全同步：核对两者的 HEAD、merge-base、左右提交计数、树 hash 和稳定 patch identity；若存在分歧，先完成安全的历史对账与内容整合，再使 `w1` 与 `main` 指向同一已验证基线。只有同步验证通过后，才在 `w1` 上冻结源 commit 并生成迁移快照。冻结基线必须包含固定 `10×10` 局部棋盘契约（`BattleBoardSpec`、`Test1_10x10_Probe`、`Probe10x10Encounter/Party`）；如果同步后的 `w1` 尚未包含该探针，必须先完成 Unity 编译、测试和 OKF 校验，再冻结。Godot 首个战斗 fixture 使用 `(0…9, 0…9)` 局部坐标和该探针布局，不再把旧 `18×18` 坐标作为迁移目标；探针是否推广为 Unity 正式 `Test1` 仍是 Unity 侧独立审批，不在本设计中默认替换。
 
 ## 仓库、分支与代码边界
 
-建立长期 Godot migration branch 和独立 worktree。Unity 主线继续作为当前 Unity 与共享 Core 的权威源，需要保留的变更只单向汇入迁移分支；Godot 专属工程、Resource、场景和 Adapter 不反向合并到 Unity 主线。
+建立长期分支 `migration/godot` 和 worktree `D:\codes\tactics-worktrees\godot`，从冻结后的 Unity `w1` 源快照创建。`w1` 保留 Unity 工程、资产和历史源；迁移期间只允许引擎无关的源快照/台账按明确批次单向汇入 `migration/godot`，Godot 专属工程、Resource、场景和 Adapter 不反向合并到 `w1`。
 
-共存期，正在剥离的 Pure .NET 源文件仍放在 Unity 能管理 `.meta` 的位置；独立 `.csproj`、测试项目和 Godot 工程通过显式 `Compile Include` 或 `ProjectReference` 复用，不维护两份源码，也不使用目录软链接。
+建立源快照后，`migration/godot` 立即移除 Unity 工程目录、Unity 资产和 Unity `.meta`。迁移工具只读访问 sibling `w1-unity-final` worktree，并用 source commit、路径 hash 和批次 manifest 校验输入；不把 Unity 资产复制回 Godot 分支。Pure .NET Core 在冻结点从 Unity 源提取到 Godot 分支并由 Godot 接管，`w1` 中的旧 Core 仅作为 Unity 历史基线，不再进行两份源码的持续同步，也不使用目录软链接。
 
 最终代码层次为：
 
