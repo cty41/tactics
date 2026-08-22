@@ -4,7 +4,7 @@ resource: https://github.com/cty41/tactics
 title: Tactics Project Overview
 description: Tactics 的 Godot 产品主线、纯 .NET 分层、运行时和主要游戏系统总入口。
 tags: [architecture, godot, agent-first]
-timestamp: "2026-08-22T13:25:28+08:00"
+timestamp: "2026-08-22T13:49:43+08:00"
 status: active
 catalog_scope: project-architecture
 repo_paths:
@@ -17,12 +17,14 @@ repo_paths:
   - godot/src/Tactics.Godot.Adapter
   - godot/project.godot
 verified_revision: c56d71ad4ebd
-source_fingerprint: sha256:b1ceb9f742ecd33be8f9cc5f59e93dd4c1eaa9f53dd08735c6510c81c83a2e96
+source_fingerprint: sha256:1b661cb6d4ce35c13a0d5058d8c4ccae0df44975f55ac480ac9cbe07793b88a3
 ---
 
 # Summary
 
 Tactics 是 Agent 优先维护并准备公开发布的 Godot 4.7 C# 战棋项目。根 `README.md` 面向访问仓库的玩家与开发者介绍 Pure Run、环境、运行、验证、许可和两档 Windows 构建入口；本页继续负责架构综合。远程 `main` 是产品与治理权威，运行时由纯 .NET Core/Application、Godot Adapter 和唯一 `godot/project.godot` 组成。公开根采用 Apache-2.0 代码许可、逐文件登记的 CC BY 4.0 项目资产与独立商标边界；完整 Unity 历史仅保存在私有归档，Frozen Oracle、Golden、迁移 receipt 和 OKF 作为公开历史/测试证据。当前设计保存在 `.agents/docs/`，仍需执行的活跃计划保存在 `.agents/plans/`，当前行为由代码、Resource 和测试证明。
+
+`Tools/gameplay-test-spec` 将明确的玩法合同和受控 Draft 编译为 Godot 测试计划或 typed authoring batch；OpenCode Go/Ollama 仅提供可替换的候选生成层。模型输出必须经过逐字证据、Schema、capability、revision 和 compiler 门禁，不能直接写 Resource 或批准体验验收；完整流程见 `.agents/docs/gameplay-design-to-development-workflow.md`。
 
 # Runtime Foundation
 

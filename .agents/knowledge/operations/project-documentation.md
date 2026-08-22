@@ -4,7 +4,7 @@ resource: https://github.com/cty41/tactics/tree/main/.agents/docs
 title: Project Documentation
 description: 当前设计、活跃计划、统一缺口与 OKF 综合层的文档生命周期。
 tags: [operations, documentation, plans, knowledge]
-timestamp: "2026-08-22T13:25:30+08:00"
+timestamp: "2026-08-22T13:48:52+08:00"
 status: active
 catalog_scope: project-documentation
 repo_paths:
@@ -14,12 +14,14 @@ repo_paths:
   - .agents/skills/plan-mode-plan-writer/SKILL.md
   - .agents/skills/manual-qa-handoff/SKILL.md
 verified_revision: c56d71ad4ebd
-source_fingerprint: sha256:f37ad288548a72d6f96031b706d7e7057c0d64be1cc39b9b202550b3cd6cd329
+source_fingerprint: sha256:d631d7e94d2efed2b5762efc9ff9550ef27a93e5b0ba10c0e7b448d8839f0cb1
 ---
 
 # Current State
 
 `.agents/docs/` 主要保存当前设计与使用指南；同一主题优先维护一份权威文档。`brainstorm.md` 是唯一的临时灵感收集箱，不属于设计真相源或实施承诺。想法成熟后迁入主题设计、[项目已知缺口](../plans/project-known-gaps.md)或正式计划。
+
+端到端指南 `.agents/docs/gameplay-design-to-development-workflow.md` 说明需求收束、玩法合同、可替换 Provider、受控 Draft、确定性编译、typed authoring、自动测试与人工验收。模型只生成带证据的候选；设计合同、代码、Resource 和测试继续承担权威，外接 LLM 不替代 Codex/开发者判断。
 
 魔剑士 `Demonbound` 已从职业 brainstorm 迁入 `.agents/docs/demonbound-class-design.md` 作为唯一权威设计，并由 `.agents/plans/demonbound-loop-development.md` 持续跟踪非大师实现、自动样本与人工门禁。三个大师技能及正式美术/完整表现仍由[项目已知缺口](../plans/project-known-gaps.md)导航；在人工账本通过前不得把自动绿灯表述为体验验收。
 

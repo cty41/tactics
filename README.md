@@ -75,6 +75,12 @@ pwsh -NoProfile -File .\Tools\godot\Verify-GodotProject.ps1 `
 
 完整门禁还需要仓库工具使用的 Python、Node.js/npm 依赖。脚本会在缺少必要工具或版本不匹配时停止并报告原因。
 
+## LLM 辅助策划与开发
+
+项目支持将自然语言策划需求整理为稳定 `gameplay-contract`，再通过 OpenCode Go 或本地 Ollama 提出带原文证据的合同与测试候选，并由严格 Schema、capability、compiler、typed authoring 和 Godot ResourceSaver 确定性把关。外接 LLM 是可替换、可批处理、可审计的候选生成层，不替代 Codex/开发者判断，也不能直接写 Resource、运行时代码或批准人工体验。
+
+从需求收束、Provider 配置到 Scenario/Enemy Draft、Godot 写入、自动测试和人工验收的完整操作见 [LLM 辅助策划到 Godot 开发](.agents/docs/gameplay-design-to-development-workflow.md)。
+
 ## Windows 构建
 
 GitHub Actions 的 **Godot Windows Debug and Release build** 工作流支持手动选择：
@@ -101,6 +107,7 @@ pwsh -NoProfile -File .\Tools\godot\Build-GodotWindows.ps1 `
 | `src/Tactics.Application` | 应用用例、内容转换和保存边界 |
 | `godot/` | 唯一 Godot 项目、Adapter、Scene、Resource 和测试宿主 |
 | `Tools/godot/` | 主线验证、Windows 构建、包审计和启动 smoke |
+| `Tools/gameplay-test-spec/` | 玩法合同、LLM 候选、Gameplay Spec 与确定性编译工具 |
 | `Tests/gameplay-specs/` | 平台中立的 Gameplay Spec 与 Godot 执行计划 |
 | `.agents/docs/` | 当前设计、验收边界和项目约束 |
 | `.agents/knowledge/` | OKF 项目知识索引与跨系统导航 |
