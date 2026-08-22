@@ -4,7 +4,7 @@ resource: https://github.com/cty41/tactics/tree/main/Tools/gameplay-test-spec
 title: Gameplay Test Framework
 description: 将受控 gameplay spec 编译为 Godot runtime runner 可执行的确定性计划。
 tags: [testing, gameplay, automation, godot]
-timestamp: "2026-08-21T19:10:12+08:00"
+timestamp: "2026-08-22T14:26:28+08:00"
 status: active
 catalog_scope: gameplay-test-framework
 repo_paths:
@@ -16,7 +16,7 @@ repo_paths:
   - godot/src/Tactics.Godot.Adapter/Runtime/GodotPlayableRunMain.cs
   - Tests/gameplay-specs
 verified_revision: c56d71ad4ebd
-source_fingerprint: sha256:223142cdf82e6ad89921a2a7ba4041f5d47908359bfefb7b12f72e899071495a
+source_fingerprint: sha256:06a47be6d7f0ab2290abc2cb6616134693705d6689b9e156b1a75ae4721dd66d
 ---
 
 # Current State
@@ -34,6 +34,8 @@ OpenCode Go Key 与普通 provider 配置分离，secrets ACL 只允许当前用
 
 `GodotGameplayRuntimeRunner` 加载正式 `Main.tscn`，并通过 `Viewport.PushInput` 驱动生产 GUI/Input 链。每个场景使用隔离 `user://qa-runner/<scenario>/<attempt>/`，执行前后验证生产主档与 backup 未变化，并在退出时释放 Main、临时节点和隔离目录。
 
+测试按非零最小测试、相关 fixture、相关门禁和统一 verifier 逐级升级；输入、场景、缓存 UI、异步状态或 reload fixture 首次通过后连续复跑一轮。同一 canonical Editor、runner 和 verifier 只有一个 mutating job owner。长任务以实际进度判断 active/stalled，90 秒无可验证进展时检查进程、runner 和日志，确认卡死后只恢复当前门禁。当前任务失败必须修复；基线失败需要可核验证据和用户或仓库政策授权。
+
 框架覆盖 Battle、Map、UI、Skill、Adventure 和作者 spec。Adventure 合同使用 `exitCommitted`、`immediateSuccessorNodeIdsEqual` 和权威 Adventure revision/state hash 验证节点内即时出口，不再表达全局 RouteNode 预提交。自动化证明规则、事务、生产输入、重载和清理；视觉、动画、可读性、Editor Assembly Reload 与操作手感仍由人工验收。
 
 # Relationships
@@ -44,4 +46,4 @@ OpenCode Go Key 与普通 provider 配置分离，secrets ACL 只允许当前用
 
 # Verification Guidance
 
-修改 schema、compiler、adapter 或 runner 后，运行 TypeScript 测试、源 spec validate/compile、Godot runtime batch 和清理断言。玩家输入场景的状态变化必须来自生产输入链，不能以直接调用业务服务代替。
+修改 schema、compiler、adapter 或 runner 后，按非零最小测试、相关 fixture、相关门禁和统一 verifier 的顺序运行 TypeScript 测试、源 spec validate/compile、Godot runtime batch 和清理断言。玩家输入场景的状态变化必须来自生产输入链，不能以直接调用业务服务代替。

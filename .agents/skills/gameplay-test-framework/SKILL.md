@@ -101,6 +101,15 @@ node Tools/gameplay-test-spec/dist/src/cli.js provider-doctor
 - 每个场景只写 `user://qa-runner/<scenario>/<attempt>/`；执行前后必须证明生产主档和 backup 未变化。
 - 批量结果写入 `artifacts/gameplay-specs/godot/godot-gameplay-spec-result-v1.json`，并由统一迁移门禁校验。
 
+### 5. 测试升级与 Job 所有权
+
+- 先运行能精确命中目标行为的最小测试，并确认测试数非零；再升级到相关 fixture、相关门禁和统一 verifier。`total=0` 是无效运行，不是通过。
+- 涉及输入、场景、缓存 UI、异步状态或 reload 时，相关 fixture 首次通过后立即连续运行第二轮，检查残留状态与顺序依赖。
+- 下游首次出现新失败时停止扩围，先取得该失败的最小复现和 GREEN，再从最早受影响的后续门禁继续；不要盲目重跑已证明不受影响的前置门禁。
+- 同一 canonical Godot Editor、runner 和 verifier 同时只能有一个 mutating job owner；build、Editor、GdUnit 和统一 verifier 按项目 mutex 串行，独立只读分析可以并行。
+- 超过 60 秒的任务报告阶段、进度和最近更新时间。自最后可验证进展起 90 秒无变化时检查进程、runner 与日志；只有确认卡死后才停止当前 job，并只恢复当前门禁。
+- 当前任务引入的失败必须修复。疑似基线失败需有基线复现或权威记录，并按用户许可或仓库政策决定是否继续，不得自行忽略。
+
 ## Agent-first SkillGraph 辅助命令
 
 ```powershell
@@ -119,6 +128,10 @@ node Tools/gameplay-test-spec/dist/src/cli.js generate-test-from-spec -s <skill-
 | 用轻量测试替身证明真实资产行为 | 显式加载真实资产 |
 | 跳过 validate | 先校验再编译 |
 | 只看最终日志 | 使用专用状态断言 |
+| `total=0` 当作通过 | 修正发现或筛选并取得非零测试数 |
+| 多个任务竞争同一 Editor/runner | 指定唯一 mutating job owner 并串行执行 |
+| focused 门禁失败后继续扩围 | 先取得最小复现和 GREEN，再恢复升级 |
+| 没有进度证据就反复等待 | 90 秒检查进程、runner 和日志，确认卡死后恢复当前门禁 |
 
 ## Checklist
 
@@ -127,3 +140,5 @@ node Tools/gameplay-test-spec/dist/src/cli.js generate-test-from-spec -s <skill-
 - [ ] TS 测试、validate 和 compile 通过。
 - [ ] Godot 使用需要的真实 Resource 与 adapter 执行。
 - [ ] 失败信息能定位到具体步骤/断言。
+- [ ] 测试数非零，并按最小测试、fixture、相关门禁、统一 verifier 的顺序升级。
+- [ ] 同一 Editor、runner 和 verifier 只有一个 mutating job owner；长任务有可验证进度记录。
