@@ -136,7 +136,7 @@ public class UnitBatchGodotTests
 
     [TestCase]
     [RequireGodotRuntime]
-    public void CatalogResourcesAndFactoryMatchTheSharedGolden()
+    public void CatalogResourcesPreserveFrozenMembershipAndUseCurrentDerivedFormula()
     {
         using JsonDocument golden = LoadGolden();
         var catalog = ResourceLoader.Load<GodotResourceCatalog>(
@@ -156,7 +156,6 @@ public class UnitBatchGodotTests
             AssertThat(resource).IsInstanceOf<UnitDefinitionResource>();
             if (resource is not UnitDefinitionResource definition)
                 continue;
-            JsonElement derived = vector.GetProperty("derived");
             var state = GodotUnitFactory.CreateBattleState(
                 definition,
                 new UnitInstanceId($"test.{definition.SourceId}.0"),
@@ -164,11 +163,16 @@ public class UnitBatchGodotTests
                 1,
                 7);
             AssertThat(definition.ContentIdValue).IsEqual(contentId);
-            AssertThat(definition.MaxHealth).IsEqual(derived.GetProperty("maxHealth").GetInt32());
-            AssertThat(definition.MaxMana).IsEqual(derived.GetProperty("maxMana").GetInt32());
-            AssertThat(definition.StartingMana).IsEqual(derived.GetProperty("startingMana").GetInt32());
-            AssertThat(definition.MoveRange).IsEqual(derived.GetProperty("moveRange").GetInt32());
-            AssertThat(definition.Initiative).IsEqual(derived.GetProperty("initiative").GetSingle());
+            UnitDerivedStats derived = UnitDerivedStatRules.Calculate(
+                new UnitAttributes(definition.Strength, definition.Agility, definition.Constitution,
+                    definition.Intelligence, definition.Charisma, definition.Luck),
+                definition.MovementTraitModifier);
+            AssertThat(definition.DerivedStatModeValue).IsEqual("frozen-formula");
+            AssertThat(definition.MaxHealth).IsEqual(derived.MaxHealth);
+            AssertThat(definition.MaxMana).IsEqual(derived.MaxMana);
+            AssertThat(definition.StartingMana).IsEqual(derived.StartingMana);
+            AssertThat(definition.MoveRange).IsEqual(derived.MoveRange);
+            AssertThat(definition.Initiative).IsEqual(derived.Initiative);
             AssertThat(state.Unit.DefinitionId.Value).IsEqual(contentId);
             AssertThat(state.Unit.InstanceId.Value).IsNotEqual(contentId);
             AssertThat(state.CurrentHealth).IsEqual(definition.MaxHealth);
@@ -178,6 +182,21 @@ public class UnitBatchGodotTests
         AssertThat(validation.CatalogEntryCount).IsEqual(14);
         AssertThat(validation.UnitCount).IsEqual(13);
         AssertThat(validation.SpawnedStates.Count).IsEqual(13);
+
+        UnitDefinitionResource LoadUnit(string contentId) => ResourceLoader.Load<UnitDefinitionResource>(
+            catalog.Entries.Single(entry => entry.ContentIdValue == contentId).DiagnosticPathValue,
+            string.Empty,
+            ResourceLoader.CacheMode.Ignore)!;
+        UnitDefinitionResource mage = LoadUnit("unit.pure-run.mage");
+        UnitDefinitionResource necromancer = LoadUnit("unit.pure-run.necromancer");
+        UnitDefinitionResource amazon = LoadUnit("unit.pure-run.amazon");
+        AssertThat(new[] { mage.Strength, mage.Agility, mage.Constitution, mage.Intelligence, mage.Charisma, mage.Luck })
+            .ContainsExactly(4, 5, 3, 6, 6, 6);
+        AssertThat(new[] { necromancer.Strength, necromancer.Agility, necromancer.Constitution,
+            necromancer.Intelligence, necromancer.Charisma, necromancer.Luck })
+            .ContainsExactly(5, 3, 6, 6, 6, 4);
+        AssertThat(new[] { amazon.Strength, amazon.Agility, amazon.Constitution, amazon.Intelligence,
+            amazon.Charisma, amazon.Luck }).ContainsExactly(5, 5, 5, 5, 5, 5);
     }
 
     [TestCase]

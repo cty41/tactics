@@ -570,6 +570,10 @@ try {
     }
     else {
         Write-Host '== Skip real Pure Run Unit regeneration: disposable Unity DTO is not present =='
+        Invoke-Checked 'Upgrade committed Pure Run Unit attributes through ResourceSaver' {
+            & $GodotExecutable --headless --path $projectRoot `
+                --script 'res://src/Tactics.Godot.Adapter/Editor/UnitAttributeBalanceBuilder.cs'
+        }
     }
 
     if (Test-Path -LiteralPath $buffItemExport -PathType Leaf) {

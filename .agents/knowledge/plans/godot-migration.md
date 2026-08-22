@@ -4,7 +4,7 @@ resource: https://github.com/cty41/tactics
 title: Godot migration provenance
 description: 已完成迁移的冻结来源、Godot ownership、生成批次与验证边界。
 tags: [migration, godot, provenance, testing]
-timestamp: "2026-08-22T14:34:03+08:00"
+timestamp: "2026-08-22T14:43:08+08:00"
 status: active
 catalog_scope: godot-migration
 repo_paths:
@@ -16,7 +16,7 @@ repo_paths:
   - Tools/migration
   - Tools/migration/manifest/retirement
 verified_revision: 2b341cb3
-source_fingerprint: sha256:bdfe617e9bc2afa1a1639545a82ba055bde640c2c4dbd3f8ce91ac49ebfb4237
+source_fingerprint: sha256:196c62b70e7a9c2c9698bc3daf19888b67ba9a22c0a378b2255bcce46772e14f
 ---
 
 # Current State
@@ -25,7 +25,7 @@ Godot 4.7 C# 是唯一产品主线，`godot/project.godot` 是唯一项目。Cor
 
 迁移来源已冻结在最终 Tag、FrozenOracle、Golden、DTO、receipt、ownership ledger 与 retirement manifest 中。它们只用于来源审计、确定性回归和许可证证明，不提供 live 旧编辑器、旧 MCP 或旧资产写入路径。
 
-内容生成只消费已绑定的冻结输入，经 Application typed draft、ResourceSaver/PackedScene、Catalog/UID、target hash、幂等与 rollback 门禁进入 Godot。自动验证不能替代视觉、操作、真实 Editor Reload 或干净 Windows 启动验收。
+内容生成只消费已绑定的冻结输入，经 Application typed draft、ResourceSaver/PackedScene、Catalog/UID、target hash、幂等与 rollback 门禁进入 Godot。公开根缺少一次性 Unity DTO 时，已提交 Unit Resource 仍通过专用 ResourceSaver 升级入口应用当前属性派生合同并由主线门禁校验。自动验证不能替代视觉、操作、真实 Editor Reload 或干净 Windows 启动验收。
 
 开发工具链把固定的 MIT godot-ai v3.1.2 源码作为 Editor-only vendor 依赖纳入公开源码，并由 manifest tree hash 审计；它不进入游戏 PCK/Windows 包。Editor 通过统一入口完成 production C# Build、worktree 用户数据隔离、项目级 Codex 配置和会话租约，避免测试宿主程序集或另一个 worktree 的窗口被误认成当前项目。
 

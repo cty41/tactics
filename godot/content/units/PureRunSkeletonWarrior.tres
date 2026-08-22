@@ -21,6 +21,7 @@ Intelligence = 2
 Charisma = 2
 Luck = 2
 Speed = 4.0
+MovementTraitModifier = -1
 MaxHealth = 8
 MaxMana = 6
 StartingMana = 2

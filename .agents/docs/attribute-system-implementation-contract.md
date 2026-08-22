@@ -10,7 +10,7 @@
 
 ```gameplay-contract
 id: ATTR-DERIVED-STATS-001
-status: verified_current
+status: superseded
 statement: 战斗单位只消费 UnitDerivedStats 中显式且已校验的最大生命、最大法力、初始法力、移动范围和先攻；Godot Adapter 不得从六项主属性重新推导这些数值。
 verification:
   - layer: core_test
@@ -22,7 +22,7 @@ dsl_support: partial
 
 ```gameplay-contract
 id: ATTR-DERIVED-STATS-002
-status: approved_target
+status: verified_current
 supersedes:
   - ATTR-DERIVED-STATS-001
 statement: 最大生命、最大法力、初始法力、移动范围和先攻由战斗有效六维属性及固定单位移动特性统一派生；最大生命为体质乘四且最低一，最大法力为魅力乘三，初始法力为魅力，移动为二加体质二分之一向下取整再加移动特性并限制在二至五，先攻为敏捷乘二。
@@ -31,6 +31,8 @@ verification:
     path: src/Tactics.Core.Tests/UnitCombatStatRulesTests.cs
   - layer: application_test
     path: src/Tactics.Application.Tests/UnitDefinitionCompilerTests.cs
+  - layer: godot_test
+    path: godot/tests/UnitBatchGodotTests.cs
 dsl_support: unsupported
 ```
 

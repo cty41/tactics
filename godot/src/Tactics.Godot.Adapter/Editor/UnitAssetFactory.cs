@@ -302,6 +302,39 @@ public static class UnitAssetFactory
         ResourceLoader.CacheMode.Ignore)
         ?? throw new InvalidOperationException($"Cannot load migrated Unit texture '{path}'.");
 
+    public static void UpgradeExistingAttributeBalance(string root = DefaultRoot)
+    {
+        if (root != DefaultRoot)
+            throw new ArgumentException($"Unit assets must use the canonical root '{DefaultRoot}'.", nameof(root));
+
+        GodotResourceCatalog catalog = ResourceLoader.Load<GodotResourceCatalog>(
+            CatalogPath,
+            string.Empty,
+            ResourceLoader.CacheMode.Ignore)
+            ?? throw new InvalidOperationException("Canonical Unit Catalog cannot be loaded.");
+        foreach (GodotResourceEntry entry in catalog.Entries
+                     .Where(item => item.ResourceTypeIdValue == "unit")
+                     .OrderBy(item => item.ContentIdValue, StringComparer.Ordinal))
+        {
+            UnitDefinitionResource resource = ResourceLoader.Load<UnitDefinitionResource>(
+                entry.DiagnosticPathValue,
+                string.Empty,
+                ResourceLoader.CacheMode.Ignore)
+                ?? throw new InvalidOperationException($"Unit Resource '{entry.DiagnosticPathValue}' cannot be loaded.");
+            if (resource.DerivedStatModeValue == "explicit")
+            {
+                resource.ToCoreDefinition();
+                continue;
+            }
+
+            ApplyAttributeBalanceOverrides(resource);
+            resource.ToCoreDefinition();
+            SaveResource(resource, entry.DiagnosticPathValue);
+        }
+
+        UnitBatchValidator.Validate(catalog);
+    }
+
     private static void ApplyAttributeBalanceOverrides(UnitDefinitionResource resource)
     {
         (UnitAttributes Attributes, int MovementTrait) target = resource.ContentIdValue switch
