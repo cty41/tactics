@@ -4,7 +4,7 @@ resource: https://github.com/cty41/tactics/tree/main/src/Tactics.Core/Runs
 title: Roguelike Run
 description: Godot Pure Run 的七层路线、节点事务、队伍成长、存档和终局主链。
 tags: [gameplay, roguelike, map, progression, godot]
-timestamp: "2026-08-22T02:51:11+08:00"
+timestamp: "2026-08-22T15:35:50+08:00"
 status: active
 catalog_scope: roguelike-run
 repo_paths:
@@ -17,10 +17,12 @@ repo_paths:
   - godot/src/Tactics.Godot.Adapter/Runtime/GodotPlayableRunMain.cs
   - Tests/gameplay-specs/godot
 verified_revision: c56d71ad4ebd
-source_fingerprint: sha256:90aaf3ed02675dc0a884a48b4791240fa7006206f8870d6acc5b76be87b2f899
+source_fingerprint: sha256:1ee16b47836a0112140e459db62391fc28979f0a3a29e03dab0d51bb6bc9b155
 ---
 
 # Current State
+
+Adventure Board 测试目标由 Board 本地格中心转换为 Canvas 全局坐标后注入 Viewport，确保窗口缩放和非单位 CanvasTransform 下仍命中同一生产输入格。
 
 Pure Run 使用七层只前进路线、稳定节点 ID 和持久化 `RunAdventureState`。每个节点的 Tile 场景只展示当前节点的直接后继出口；领队移动到相邻格并点击后立即选择目标，不存在开局两组路线预提交。Application transition 统一移动、即时出口、节点事务、战斗请求/结算、成长、Inventory 与终局；成功事务使用稳定 key 防止重入时重复扣款、发奖或结算。
 

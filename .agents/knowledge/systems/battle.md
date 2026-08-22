@@ -4,7 +4,7 @@ resource: https://github.com/cty41/tactics
 title: Battle System
 description: Godot Pure Run 的棋盘、回合、技能、状态、AI 合法性、结算与表现投影主链。
 tags: [gameplay, battle, turn-based, godot]
-timestamp: "2026-08-22T13:25:23+08:00"
+timestamp: "2026-08-22T15:35:48+08:00"
 status: active
 catalog_scope: battle-system
 repo_paths:
@@ -25,10 +25,12 @@ repo_paths:
   - godot/src/Tactics.Godot.Adapter/Runtime/GodotPlayableRunMain.cs
   - godot/tests/CoreGoldenVectorGodotTests.cs
 verified_revision: 04c75ec4
-source_fingerprint: sha256:df4ebc2669504de5c4833f4d5a079afff79fd22a90b703a3606660be89dae6a2
+source_fingerprint: sha256:3cfaccd7dcddb1b9e6a2003eeeb1aceedf25e7f3e7d4e8115a9a429b2279a1a7
 ---
 
 # Current State
+
+Gameplay runner 的 Battle/Adventure 生产指针坐标统一转换到 Canvas 全局坐标后交给 Viewport；测试仍通过真实 `_gui_input`、PointerPressed 与状态变化证明提交，不直接调用玩法动作。
 
 当前产品战斗主线分为三层：`Tactics.Core` 持有不可变战斗状态、命令、事件、技能解释、回合、路径和视线；
 `Tactics.Application` 组合遭遇、玩家意图、AI 候选和 UI Snapshot；Godot Adapter 只负责输入、Resource 映射、

@@ -627,9 +627,6 @@ public sealed class GodotGameplayRuntimeContext(GodotGameplayScenarioPlan plan, 
             await WaitFramesAsync(1, token);
             adventureViewport.PushInput(new InputEventMouseButton { Position = adventureClickPoint, GlobalPosition = adventureClickPoint, ButtonIndex = MouseButton.Left, Pressed = false }, adventureLocal);
             await WaitForStateDifferentAsync(before, token);
-            // Keep consecutive production-pointer actions independent on fast headless runners. The state
-            // transition can commit before the adventure layout has completed its deferred frame update.
-            await WaitFramesAsync(1, token);
             return;
         }
         if (!Main.TryResolveTestBattlePointerTarget(targetKind, target, out Control? surface, out Vector2 logicalPoint) ||

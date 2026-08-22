@@ -4,7 +4,7 @@ resource: https://github.com/cty41/tactics
 title: Godot migration provenance
 description: 已完成迁移的冻结来源、Godot ownership、生成批次与验证边界。
 tags: [migration, godot, provenance, testing]
-timestamp: "2026-08-22T15:22:13+08:00"
+timestamp: "2026-08-22T15:35:49+08:00"
 status: active
 catalog_scope: godot-migration
 repo_paths:
@@ -16,7 +16,7 @@ repo_paths:
   - Tools/migration
   - Tools/migration/manifest/retirement
 verified_revision: 2b341cb3
-source_fingerprint: sha256:2da4abac1159d98913a6e3e4afdf4261f0bd8d9da8bc9018c447aff724c94ab3
+source_fingerprint: sha256:a93050e57d2d02577bfee2ba368f6b8ecd76a7144106c514d7a217e1e1dd9455
 ---
 
 # Current State
@@ -29,7 +29,7 @@ Godot 4.7 C# 是唯一产品主线，`godot/project.godot` 是唯一项目。Cor
 
 属性命中公式切换后的 `PresentationMiss` 使用固定 RNG state 6 继续验证生产 End Turn 输入产生 committed dodge 与灰色 Miss 数字；checkpoint 哈希和跟踪 plan 与该状态共同受门禁约束。
 
-Adventure 生产指针测试在每次已提交状态变化后额外等待一帧，使 deferred 布局更新完成后才执行下一次点击；该等待不绕过 Hover、PointerPressed 或状态变化证明，并消除快速 CI runner 的连续输入竞态。
+Adventure 生产指针目标先从 Board 本地坐标转换为 Canvas 全局坐标，再由 Viewport 按 embedder 坐标注入；Hover、PointerPressed 与状态变化继续作为三层提交证据，避免非单位 CanvasTransform 下点击错误格。
 
 开发工具链把固定的 MIT godot-ai v3.1.2 源码作为 Editor-only vendor 依赖纳入公开源码，并由 manifest tree hash 审计；它不进入游戏 PCK/Windows 包。Editor 通过统一入口完成 production C# Build、worktree 用户数据隔离、项目级 Codex 配置和会话租约，避免测试宿主程序集或另一个 worktree 的窗口被误认成当前项目。
 

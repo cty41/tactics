@@ -302,8 +302,11 @@ public partial class GodotPlayableRunMain : Control
     {
         surface = _adventureBoard;
         globalPoint = Vector2.Zero;
-        return _adventureBoard is not null && GodotObject.IsInstanceValid(_adventureBoard) &&
-            _adventureBoard.TryResolveTarget(targetKind, locator, out globalPoint);
+        if (_adventureBoard is null || !GodotObject.IsInstanceValid(_adventureBoard) ||
+            !_adventureBoard.TryResolveTarget(targetKind, locator, out Vector2 localPoint))
+            return false;
+        globalPoint = _adventureBoard.GetGlobalTransform() * localPoint;
+        return true;
     }
 
     private IRunSaveStore SaveStore => _saveStore ?? throw new InvalidOperationException("Run save store is not initialized.");
