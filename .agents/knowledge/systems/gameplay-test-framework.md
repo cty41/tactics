@@ -4,7 +4,7 @@ resource: https://github.com/cty41/tactics/tree/main/Tools/gameplay-test-spec
 title: Gameplay Test Framework
 description: 将 Agent 编写的受控 gameplay spec 编译为 Unity adapters 可执行的确定性计划。
 tags: [testing, gameplay, automation, unity]
-timestamp: "2026-07-28T00:46:37+08:00"
+timestamp: "2026-07-30T16:20:00+08:00"
 status: active
 catalog_scope: gameplay-test-framework
 repo_paths:
@@ -16,7 +16,7 @@ repo_paths:
   - Assets/Tactics/Tests/PlayMode/HomeSceneInputSmokeTests.cs
   - Tests/gameplay-specs
 verified_revision: c56d71ad4ebd
-source_fingerprint: sha256:f30f1cf05214a2c1c56c8bdfa8e5f229541093fcf3026f38a38e3546cae81a0c
+source_fingerprint: sha256:f24b0af5239515b380a43b28e6fcc85dc18906ec664ff56f17fbf88e3c055a46
 ---
 
 # Current State
@@ -51,6 +51,8 @@ Map adapter 还支持 `encounterRecipeContract`、怪物 AI 目录/Heavy Shot �
 
 长期测试分为四层：逻辑测试验证规则和事务，语义 UI 测试验证元素与布局，`player-input-e2e` 验证生产输入和场景旅程，最终人工测试只判断视觉裁切、动画反馈、可读性与操作手感。
 
+Gameplay/PlayerInput 测试采用渐进门禁：先以非零测试数完成 exact RED/GREEN，再进入相关 fixture；涉及虚拟输入、场景、缓存 UI 或异步生命周期时，fixture 需连续通过两轮。focused gates 全绿后才能运行 full PlayMode；当前任务失败未清除不得进入 review/commit，基线失败则需可核验证据，并按用户许可或仓库政策处理。同一 Unity Editor 的 Test Runner、refresh/compile 与 domain reload 由单一 owner 串行驱动。长任务依据 job 进度区分 `active` 与 `stalled`，确认卡住后清理状态并仅从当前 focused gate 恢复。
+
 Battle/Map/UI PlayMode 夹具在激活对象前完成序列化依赖注入，避免重复调用 Unity 生命周期；运行时上下文销毁时取消 AI 任务、解绑结算事件并清理战斗作用域状态。测试 adapter 的失败信息包含当前选中单位、能力、节点与 summary 快照，便于区分业务失败和夹具隔离问题。
 
 # Relationships
@@ -58,11 +60,14 @@ Battle/Map/UI PlayMode 夹具在激活对象前完成序列化依赖注入，避
 - Battle adapter 验证[Monster AI](monster-ai.md)与[Battle System](battle.md)。
 - Map adapter 验证[Roguelike Run](roguelike-run.md)。
 - Skill adapter 验证[SkillGraph](skill-graph.md)。
+- [Unity Agent Workflow](../operations/unity-agent-workflow.md) 管理 Editor、MCP 与 compile 的串行安全边界；本概念记录长期约束，对应 skill 执行测试升级顺序。
 - 严格事件顺序、动画完成断言和 CI 接入记录在[Project Known Gaps](../plans/project-known-gaps.md)。
 
 # Verification Guidance
 
 修改 Spec 工具、adapter 或 fixtures 后运行工具测试、validate/compile 和对应 Unity PlayMode 测试。Home Options smoke 需从 `home-options-player-input-smoke.gameplay-test.md` 编译 plan，并独立运行 `HomeSceneInputSmokeTests` fixture。真实玩家输入场景必须带 `player-input-e2e` 标签，状态变化只能来自 `PlayerInput` action；Map、Battle、Skill、UI adapter 仅可用于只读 assertion。需要证明实际行为时必须加载真实资产，不能用手写结果或日志文本替代。
+
+渐进门禁按非零测试数的 exact RED/GREEN → 相关 fixture → 涉及虚拟输入、场景、缓存 UI 或异步生命周期时连续通过第二轮 fixture → related gates → full PlayMode 的顺序执行，并记录每次运行的测试 count、最终 status 与首个失败。仅在前置门禁全绿后进入 full suite 和 review/commit；当前任务失败与基线失败按可核验证据、用户许可及仓库政策处理。详细流程见 `.agents/skills/gameplay-test-framework/SKILL.md`。
 
 # Citations
 

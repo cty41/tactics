@@ -1,5 +1,9 @@
 # Tactics Knowledge Update Log
 
+## 2026-07-30
+* **Sync**: `gameplay-test-framework` 已同步到来源指纹 `sha256:f24b0af5239515b380a43b28e6fcc85dc18906ec664ff56f17fbf88e3c055a46`。
+* **Update**: `gameplay-test-framework` 沉淀 exact → fixture → full suite 渐进门禁、单 Unity job owner 和长任务 active/stall 报告规则。
+
 ## 2026-07-29
 * **Sync**: `project-documentation` 已同步到来源指纹 `sha256:103b047a1824679669dd50730b263941b6f5875456b11345704519632c1fc038`。
 * **Sync**: `pure-run-artwork` 已同步到来源指纹 `sha256:1af5404faddeab30c21bd0838c75125aaa82b6fe6fbf4ceed94e22b7a95d4cec`。
