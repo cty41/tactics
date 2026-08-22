@@ -134,6 +134,8 @@ public static class WorkbenchResourceBatchSaveService
             {
                 WorkbenchResourceSaveRequest request = values[index];
                 WorkbenchPathSnapshot snapshot = snapshots[index];
+                string absolutePath = ProjectSettings.GlobalizePath(request.Path);
+                Directory.CreateDirectory(Path.GetDirectoryName(absolutePath)!);
                 Error error = ResourceSaver.Save(request.Resource, request.Path); if (error != Error.Ok) throw new InvalidOperationException($"ResourceSaver failed for '{request.Path}': {error}.");
                 long uid = snapshot.Uid != ResourceUid.InvalidId ? snapshot.Uid : request.AssignedUid ?? ResourceUid.InvalidId;
                 if (uid != ResourceUid.InvalidId)
