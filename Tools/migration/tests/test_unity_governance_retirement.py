@@ -8,6 +8,26 @@ MANIFEST = ROOT / "Tools/migration/manifest/retirement/unity-governance-retireme
 
 
 class UnityGovernanceRetirementTests(unittest.TestCase):
+    def test_active_unity_agent_entrypoints_are_absent(self) -> None:
+        retired_entrypoints = (
+            ".agents/mcp.template.json",
+            ".agents/scripts/trigger-unity-compile.py",
+            ".agents/shared-rules/unity-auto-compile.md",
+            ".agents/skills/unity-auto-compile-guard/SKILL.md",
+            ".agents/skills/unity-mcp-advanced/SKILL.md",
+            ".agents/skills/unity-mcp-assets/SKILL.md",
+            ".agents/skills/unity-mcp-core/SKILL.md",
+            ".agents/skills/unity-mcp-gameobjects/SKILL.md",
+            ".agents/skills/unity-mcp-scene/SKILL.md",
+            "Tools/unity-mcp",
+        )
+
+        for relative_path in retired_entrypoints:
+            self.assertFalse(
+                (ROOT / relative_path).exists(),
+                f"retired Unity agent entrypoint must remain absent: {relative_path}",
+            )
+
     def test_frozen_manifest_covers_required_legacy_surfaces(self) -> None:
         document = json.loads(MANIFEST.read_text(encoding="utf-8"))
         self.assertEqual(1, document["schemaVersion"])
