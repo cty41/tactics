@@ -1,0 +1,4 @@
+**/bin/
+**/obj/
+!src/Tactics.Core/Tactics.Core.csproj
+!tests/Tactics.Core.Tests/Tactics.Core.Tests.csproj
