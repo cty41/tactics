@@ -180,6 +180,12 @@ namespace Tactics.Units
             _hasUnitStateHighlight = false;
         }
 
+        private bool CanProcessPointerHover()
+        {
+            return this != null && isActiveAndEnabled &&
+                _cellManager != null && _cellManager.isActiveAndEnabled;
+        }
+
         private bool ShouldDisplayUnitStateHighlight(TileHighlightType type)
         {
             return PlayerNumber == FriendlyPlayerNumber || type == TileHighlightType.UnitTargetable;
@@ -214,18 +220,26 @@ namespace Tactics.Units
 
         public override void OnPointerEnter(PointerEventData eventData)
         {
+            if (!CanProcessPointerHover())
+                return;
+
             base.OnPointerEnter(eventData);
             TLog.Info($"[TilemapUnit] OnPointerEnter: {gameObject.name}, CurrentCell={CurrentCell?.GridCoordinates}");
-            if (CurrentCell != null)
-                CurrentCell.InvokeCellHighlighted();
+            var currentCell = CurrentCell;
+            if (currentCell != null)
+                currentCell.InvokeCellHighlighted();
         }
 
         public override void OnPointerExit(PointerEventData eventData)
         {
+            if (!CanProcessPointerHover())
+                return;
+
             base.OnPointerExit(eventData);
             TLog.Info($"[TilemapUnit] OnPointerExit: {gameObject.name}, CurrentCell={CurrentCell?.GridCoordinates}");
-            if (CurrentCell != null)
-                CurrentCell.InvokeCellDehighlighted();
+            var currentCell = CurrentCell;
+            if (currentCell != null)
+                currentCell.InvokeCellDehighlighted();
         }
 
         public override void OnPointerClick(PointerEventData eventData)

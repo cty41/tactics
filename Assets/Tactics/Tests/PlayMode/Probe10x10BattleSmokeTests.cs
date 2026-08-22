@@ -103,6 +103,22 @@ namespace Tactics.Tests.PlayMode
         }
 
         [UnityTest]
+        public IEnumerator PointerExitAfterCellManagerDestruction_DoesNotTouchDestroyedRenderer()
+        {
+            Scene probe = RequireActiveProbeScene();
+            TilemapCellManager manager = ComponentsInScene<TilemapCellManager>(probe, true).Single();
+            TilemapUnit unit = ComponentsInScene<TilemapUnit>(probe, true).FirstOrDefault();
+
+            Assert.That(unit, Is.Not.Null, "Probe scene must contain a TilemapUnit for pointer lifecycle coverage.");
+
+            Object.Destroy(manager);
+            yield return null;
+
+            Assert.DoesNotThrow(() => unit.OnPointerExit(null));
+            Assert.DoesNotThrow(() => manager.UnMarkAsHighlighted(null));
+        }
+
+        [UnityTest]
         public IEnumerator RuntimeSmoke_LoadsExactBoardAndSpawnLayout()
         {
             Scene probe = RequireActiveProbeScene();
