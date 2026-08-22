@@ -1,11 +1,11 @@
 # Tactics Knowledge Update Log
 
 ## 2026-08-22
+* **Sync**: `godot-migration` 已同步到来源指纹 `sha256:ead82258b6de5737bc5f10aa133bfb8fb096cc9669bea579afe13915df61a5ef`。
+* **Sync**: `gameplay-test-framework` 已同步到来源指纹 `sha256:afb8ebae6cc89dd354e2bbacd65037ec0456a78c91b2ac715d38bc385c94a166`。
 * **Sync**: `project-documentation` 已同步到来源指纹 `sha256:d8b3035aae08e65f7069ee98843062b37447712a8d547a16163ce25f100108bb`。
 * **Sync**: `project-architecture` 已同步到来源指纹 `sha256:37e266349d6da0a36d649623b2fbbb6ac14ac4789eddf652fa7a0ac74891a9eb`。
-* **Sync**: `godot-migration` 已同步到来源指纹 `sha256:196c62b70e7a9c2c9698bc3daf19888b67ba9a22c0a378b2255bcce46772e14f`。
 * **Sync**: `godot-agent-workflow` 已同步到来源指纹 `sha256:431431f342ce70659d884ebf6c2ba8d70e9c5ff180ed478a30b2466f37a831e3`。
-* **Sync**: `gameplay-test-framework` 已同步到来源指纹 `sha256:06a47be6d7f0ab2290abc2cb6616134693705d6689b9e156b1a75ae4721dd66d`。
 * **Sync**: `skill-graph` 已同步到来源指纹 `sha256:44594192015c7b314a248c23426609887130de68400ee134f4461adcef9285c8`。
 * **Sync**: `roguelike-run` 已同步到来源指纹 `sha256:90aaf3ed02675dc0a884a48b4791240fa7006206f8870d6acc5b76be87b2f899`。
 * **Sync**: `battle-system` 已同步到来源指纹 `sha256:df4ebc2669504de5c4833f4d5a079afff79fd22a90b703a3606660be89dae6a2`。
@@ -435,3 +435,4 @@
 * **Update (2026-08-21)**: Gameplay Test Spec 将 LLM 候选前端升级为 provider 架构，默认使用仓库外配置的 OpenCode Go DeepSeek V4 Flash，保留显式 Ollama；模型发现、ACL、脱敏审计、逐字证据与确定性 compiler 均 fail-closed。
 * **Update (2026-08-22)**: 属性系统切换到永久属性与战斗有效属性双投影；装备和临时变化影响实战但不影响高级/大师解锁，六维统一派生命法、行动、命中闪避暴击及技能贡献，旧 Speed/减速合同由属性行动合同替代。
 * **Fix (2026-08-22)**: 为公开根补充不依赖一次性 Unity DTO 的 Unit ResourceSaver 属性升级入口；12 个公式单位已刷新到 `ATTR-DERIVED-STATS-002`，显式派生的 Maw Bat 保持冻结例外，门禁同时验证幂等与 Godot 运行时合同。
+* **Fix (2026-08-22)**: `PresentationMiss` checkpoint 从新命中公式下会命中的 RNG state 2 调整为确定闪避的 state 6，并同步 semantic hash 与编译 plan；生产输入的 20 场景 acceptance batch 复跑通过。

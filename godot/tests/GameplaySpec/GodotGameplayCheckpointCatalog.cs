@@ -19,7 +19,7 @@ public static class GodotGameplayCheckpointCatalog
             : character),
         "numbers-miss-v1" => PendingBattle(id,
             character => character.CharacterId == "pure_run_amazon" ? character : Copy(character, health: 0),
-            amazonStartingSkill: new ContentId("skill.amazon.combat-techniques.lv1"), battleRandomState: 2),
+            amazonStartingSkill: new ContentId("skill.amazon.combat-techniques.lv1"), battleRandomState: 6),
         "reload-pending-battle-v1" => PendingBattle(id, character => character),
         "demonbound-ready-v1" => DemonboundPendingBattle(id),
         "layer4-choice-ready-v1" => LayerFourChoice(id, damaged: true),
