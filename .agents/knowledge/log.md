@@ -1,8 +1,8 @@
 # Tactics Knowledge Update Log
 
 ## 2026-08-22
-* **Sync**: `project-documentation` 已同步到来源指纹 `sha256:f37ad288548a72d6f96031b706d7e7057c0d64be1cc39b9b202550b3cd6cd329`。
-* **Sync**: `project-architecture` 已同步到来源指纹 `sha256:b1ceb9f742ecd33be8f9cc5f59e93dd4c1eaa9f53dd08735c6510c81c83a2e96`。
+* **Sync**: `project-documentation` 已同步到来源指纹 `sha256:d631d7e94d2efed2b5762efc9ff9550ef27a93e5b0ba10c0e7b448d8839f0cb1`。
+* **Sync**: `project-architecture` 已同步到来源指纹 `sha256:1b661cb6d4ce35c13a0d5058d8c4ccae0df44975f55ac480ac9cbe07793b88a3`。
 * **Sync**: `godot-migration` 已同步到来源指纹 `sha256:84ca2bc485b4f4118ef189662fd731f737018e6de628ac1db29a44af47b36e6f`。
 * **Sync**: `skill-graph` 已同步到来源指纹 `sha256:44594192015c7b314a248c23426609887130de68400ee134f4461adcef9285c8`。
 * **Sync**: `roguelike-run` 已同步到来源指纹 `sha256:90aaf3ed02675dc0a884a48b4791240fa7006206f8870d6acc5b76be87b2f899`。
