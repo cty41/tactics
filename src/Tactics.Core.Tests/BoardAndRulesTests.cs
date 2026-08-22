@@ -13,7 +13,7 @@ namespace Tactics.Core.Tests;
 public sealed class BoardAndRulesTests
 {
     [Test]
-    public void WithBaseSpeed_RecomputesInitiativeAndMovementFromTheOverride()
+    public void LegacyBaseSpeedOverrideDoesNotChangeAttributeDerivedActionStats()
     {
         var facts = new UnitState(new UnitInstanceId("unit-speed"), new ContentId("unit.speed"),
             new GridPoint(1, 1), 2, 10f, 1, 0);
@@ -24,8 +24,8 @@ public sealed class BoardAndRulesTests
         Assert.Multiple(() =>
         {
             Assert.That(adjusted.BaseSpeed, Is.EqualTo(6f));
-            Assert.That(adjusted.Unit.Initiative, Is.EqualTo(12f));
-            Assert.That(adjusted.Unit.MoveRange, Is.EqualTo(3));
+            Assert.That(adjusted.Unit.Initiative, Is.EqualTo(10f));
+            Assert.That(adjusted.Unit.MoveRange, Is.EqualTo(2));
         });
     }
     [TestCase("Skill.Poison-Spear.Lv1")]

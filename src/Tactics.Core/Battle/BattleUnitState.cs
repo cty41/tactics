@@ -519,14 +519,7 @@ combatTechniquesLevel: CombatTechniquesLevel, damageShield: DamageShield, moveme
     {
         if (!float.IsFinite(baseSpeed) || baseSpeed < 0f)
             throw new ArgumentOutOfRangeException(nameof(baseSpeed));
-        float effectiveSpeed = Math.Max(1f, baseSpeed + _statuses.Values.Sum(status =>
-            status.EffectKind == Tactics.Core.Statuses.StatusEffectKind.Slow ? -2f : status.SpeedModifier));
-        UnitState facts = Unit with
-        {
-            MoveRange = (int)Math.Clamp(Math.Ceiling(effectiveSpeed * 0.5d), 1d, 4d),
-            Initiative = effectiveSpeed * 2f
-        };
-        return new BattleUnitState(facts, MaxHealth, CurrentHealth, HasMovedThisTurn,
+        return new BattleUnitState(Unit, MaxHealth, CurrentHealth, HasMovedThisTurn,
             maxMana: MaxMana, currentMana: CurrentMana, statuses: _statuses, baseSpeed: baseSpeed,
             consumables: _consumables, lastSuccessfulConsumableUseRound: LastSuccessfulConsumableUseRound,
             physicalAttack: PhysicalAttack, magicalAttack: MagicalAttack, summonOwnerId: SummonOwnerId,

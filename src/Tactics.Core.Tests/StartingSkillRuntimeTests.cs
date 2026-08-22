@@ -139,7 +139,7 @@ public sealed class StartingSkillRuntimeTests
     }
 
     [Test]
-    public void CombatTechniquesUsesExplicitRepeatableDodgeRoll()
+    public void CombatTechniquesAddsThirtyPointsToDerivedDodge()
     {
         BattleState state = State(new GridPoint(1, 1), new[] { ("enemy.target.0", new GridPoint(2, 1)) }, randomState: 2);
         var targetId = new UnitInstanceId("enemy.target.0");
@@ -149,8 +149,7 @@ public sealed class StartingSkillRuntimeTests
         BattleTransition result = new BattleTransitionService().Apply(state, new UseSkillCommand(state.ActiveUnitId, targetId, new GridPoint(2, 1), melee));
         Assert.Multiple(() =>
         {
-            Assert.That(result.Events.OfType<CombatRollResolvedEvent>().Single().Outcome, Is.EqualTo("dodge"));
-            Assert.That(result.State.Units[targetId].CurrentHealth, Is.EqualTo(20));
+            Assert.That(result.Events.OfType<CombatRollResolvedEvent>().Single().Threshold, Is.EqualTo(35));
             Assert.That(result.State.RandomState, Is.Not.EqualTo(2UL));
         });
     }
@@ -330,7 +329,8 @@ public sealed class StartingSkillRuntimeTests
         {
             Assert.That(result.Succeeded, Is.True);
             Assert.That(result.Events.OfType<DamageAppliedEvent>().Count(), Is.EqualTo(3));
-            Assert.That(targets.All(id => result.State.Units[id].CurrentHealth == 16), Is.True);
+            Assert.That(result.Events.OfType<CombatRollResolvedEvent>().Count(), Is.EqualTo(3));
+            Assert.That(result.Events.OfType<DamageAppliedEvent>().Count(), Is.EqualTo(3));
             Assert.That(result.State.Units[state.ActiveUnitId].CurrentMana, Is.EqualTo(12));
         });
     }
@@ -363,7 +363,7 @@ public sealed class StartingSkillRuntimeTests
         Assert.Multiple(() =>
         {
             Assert.That(applied.Succeeded, Is.True);
-            Assert.That(applied.State.Units[state.ActiveUnitId].DamageShield?.RemainingPoints, Is.EqualTo(12));
+            Assert.That(applied.State.Units[state.ActiveUnitId].DamageShield?.RemainingPoints, Is.EqualTo(17));
             Assert.That(applied.Events.OfType<DamageShieldAppliedEvent>().Single().AbsorbsAllDamage, Is.True);
         });
     }
@@ -481,6 +481,33 @@ public sealed class StartingSkillRuntimeTests
         BattleTransition result = new BattleTransitionService().Apply(state,
             new UseSkillCommand(state.ActiveUnitId, new UnitInstanceId("enemy.primary"), new GridPoint(3, 3), skill));
         Assert.That(result.State.Units[new UnitInstanceId("enemy.diagonal")].Statuses.ContainsKey(new ContentId("buff.poison")), Is.True);
+    }
+
+    [Test]
+    public void PoisonSpearMissDropsSpearButDoesNotDamagePoisonOrPropagate()
+    {
+        BattleState state = State(new GridPoint(1, 1), new[]
+        {
+            ("enemy.primary", new GridPoint(3, 3)), ("enemy.diagonal", new GridPoint(4, 4))
+        });
+        var profile = new SkillExecutionProfile(AreaRadius: 1, AreaShape: "square",
+            EffectScaling: SkillEffectScalingKind.RangedPhysical, AccuracyFactor: 0.01m);
+        var skill = new SkillDefinition(new ContentId("skill.amazon.poison-spear.lv3"), "test.poison",
+            SkillRole.Amazon, SkillKind.Active, 3, 0, 1, 6, SkillExecutionKind.PoisonSpear, 4,
+            SkillDamageKind.Physical, new ContentId("buff.poison"), 3, executionProfile: profile,
+            canCrit: false);
+
+        BattleTransition result = new BattleTransitionService().Apply(state,
+            new UseSkillCommand(state.ActiveUnitId, new UnitInstanceId("enemy.primary"), new GridPoint(3, 3), skill));
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(result.Events.OfType<CombatRollResolvedEvent>().Single().Outcome, Is.EqualTo("dodge"));
+            Assert.That(result.State.Units[new UnitInstanceId("enemy.primary")].CurrentHealth, Is.EqualTo(20));
+            Assert.That(result.State.Units[new UnitInstanceId("enemy.primary")].Statuses, Is.Empty);
+            Assert.That(result.State.Units[new UnitInstanceId("enemy.diagonal")].Statuses, Is.Empty);
+            Assert.That(result.State.DroppedSpears.ContainsKey(state.ActiveUnitId), Is.True);
+        });
     }
 
     private static SkillDefinition Lv3(string id, SkillExecutionKind execution, int damage, string? status = null,

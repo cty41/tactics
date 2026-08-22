@@ -36,6 +36,18 @@ verification:
 dsl_support: unsupported
 ```
 
+```gameplay-contract
+id: BUFF-ACTION-MODIFIER-001
+status: approved_target
+supersedes:
+  - BUFF-SPEED-PROJECTION-001
+statement: 减速不修改敏捷、体质、生命或命中，而是分别修改先攻与移动；旧的负二速度效果迁移为负四先攻和负一移动，最终移动仍遵守二至五的限制。
+verification:
+  - layer: core_test
+    path: src/Tactics.Core.Tests/StatusItemRuntimeTests.cs
+dsl_support: unsupported
+```
+
 ## 设计约束
 
 - 新状态必须明确 polarity、effect kind、触发时点、刷新策略、来源与持续量纲。

@@ -65,8 +65,16 @@ public sealed class RunInventoryProgressionService
         return offer;
     }
 
-    public bool CanUnlockWithAttributePoints(RunCharacterState character, SkillDefinition skill, int points) =>
-        points >= 0 && AttributeValue(character.Attributes, skill.RequiredAttribute) + points >= skill.MinimumAttribute;
+    public bool CanUnlockWithAttributePoints(RunCharacterState character, SkillDefinition skill, int points)
+    {
+        if (points < 0) return false;
+        if (skill.Role == SkillRole.Amazon)
+        {
+            int requiredGrowth = skill.MinimumAttribute switch { >= 9 => 4, >= 7 => 2, _ => 0 };
+            return UnitCombatStatRules.PermanentUniversalGrowth(character.Attributes) + points >= requiredGrowth;
+        }
+        return AttributeValue(character.Attributes, skill.RequiredAttribute) + points >= skill.MinimumAttribute;
+    }
 
     public IReadOnlyList<SkillDefinition> PreviewGrowthOffer(PureRunState state, string transactionKey,
         UnitAttributes attributes, IReadOnlyDictionary<ContentId, SkillDefinition> skills,
@@ -185,7 +193,8 @@ public sealed class RunInventoryProgressionService
         if (skillId is ContentId selected)
         {
             if (!skills.TryGetValue(selected, out SkillDefinition? selectedDefinition) || !selectedDefinition.GrowthVisible || selectedDefinition.Level > 3) return Reject(state, "progression.invalid_skill");
-            if (AttributeValue(attributes, selectedDefinition.RequiredAttribute) < selectedDefinition.MinimumAttribute) return Reject(state, "progression.attribute_requirement_not_met");
+            if (!CanUnlockWithAttributePoints(preview, selectedDefinition, 0))
+                return Reject(state, "progression.attribute_requirement_not_met");
             RunLearnedSkillState? prior = learned.FirstOrDefault(value => value.BranchId == selectedDefinition.BranchId);
             if (selectedDefinition.Level != (prior?.Level ?? 0) + 1) return Reject(state, "progression.invalid_skill_level");
             learned = learned.Where(value => value.BranchId != selectedDefinition.BranchId).Append(new RunLearnedSkillState(selectedDefinition.BranchId, selectedDefinition.Level, selected)).ToArray();

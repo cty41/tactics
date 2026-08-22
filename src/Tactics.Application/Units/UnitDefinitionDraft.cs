@@ -21,6 +21,7 @@ public sealed record UnitDefinitionDraft
     public int Charisma { get; init; }
     public int Luck { get; init; }
     public float Speed { get; init; }
+    public int MovementTraitModifier { get; init; }
     public int MaxHealth { get; init; }
     public int MaxMana { get; init; }
     public int StartingMana { get; init; }

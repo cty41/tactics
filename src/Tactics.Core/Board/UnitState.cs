@@ -1,5 +1,6 @@
 using Tactics.Core.Content;
 using Tactics.Core.Units;
+using Tactics.Core.Skills;
 
 namespace Tactics.Core.Board;
 
@@ -17,7 +18,11 @@ public readonly record struct UnitState
         int playerNumber,
         int spawnOrdinal,
         bool isAlive = true,
-        UnitMovementKind movementKind = UnitMovementKind.Land)
+        UnitMovementKind movementKind = UnitMovementKind.Land,
+        UnitAttributes? effectiveAttributes = null,
+        int? baseMoveRange = null,
+        float? baseInitiative = null,
+        SkillRole combatRole = SkillRole.Any)
     {
         if (!float.IsFinite(initiative))
             throw new ArgumentOutOfRangeException(nameof(initiative));
@@ -35,6 +40,10 @@ public readonly record struct UnitState
         SpawnOrdinal = spawnOrdinal;
         IsAlive = isAlive;
         MovementKind = movementKind;
+        EffectiveAttributes = effectiveAttributes ?? new UnitAttributes(5, 5, 5, 5, 5, 5);
+        BaseMoveRange = baseMoveRange ?? MoveRange;
+        BaseInitiative = baseInitiative ?? Initiative;
+        CombatRole = combatRole;
     }
 
     public UnitInstanceId InstanceId { get; init; }
@@ -46,6 +55,10 @@ public readonly record struct UnitState
     public int SpawnOrdinal { get; init; }
     public bool IsAlive { get; init; }
     public UnitMovementKind MovementKind { get; init; }
+    public UnitAttributes EffectiveAttributes { get; init; }
+    public int BaseMoveRange { get; init; }
+    public float BaseInitiative { get; init; }
+    public SkillRole CombatRole { get; init; }
 
     private static int ValidateMoveRange(int moveRange) =>
         moveRange < 0 ? throw new ArgumentOutOfRangeException(nameof(moveRange)) : moveRange;

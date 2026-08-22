@@ -48,6 +48,7 @@ public static class DemonboundAssetFactory
                     ? "PrimaryAttributeAboveNeutral" : "None",
                 Hidden = data.Hidden, AuthoringSourceKindValue = "GodotAuthored"
             };
+            AttributeSkillBalanceOverrides.Apply(resource);
             resource.ToCoreDefinition();
             Save(resource, path);
             string[] references = new[] { data.Prerequisite, data.StatusId }
@@ -95,8 +96,9 @@ public static class DemonboundAssetFactory
         UnitDefinitionResource unit = (UnitDefinitionResource)template.Duplicate(true);
         unit.ContentIdValue = "unit.pure-run.demonbound"; unit.SourceId = "godot.demonbound";
         unit.DisplayName = "Demonbound"; unit.FamilyId = "player"; unit.RoleId = "demonbound";
-        unit.Strength = 5; unit.Agility = 5; unit.Constitution = 5; unit.Intelligence = 5; unit.Charisma = 6; unit.Luck = 5;
-        unit.Speed = 4; unit.MaxHealth = 20; unit.MaxMana = 18; unit.StartingMana = 6; unit.MoveRange = 4; unit.Initiative = 8;
+        unit.Strength = 6; unit.Agility = 4; unit.Constitution = 6; unit.Intelligence = 6; unit.Charisma = 6; unit.Luck = 2;
+        unit.Speed = 4; unit.MaxHealth = 24; unit.MaxMana = 18; unit.StartingMana = 6; unit.MoveRange = 5; unit.Initiative = 8;
+        unit.MovementTraitModifier = 0;
         unit.DerivedStatModeValue = "explicit";
         unit.DownRightTexture = Texture("res://assets/units/doge_demonbound.png");
         unit.UpLeftTexture = Texture("res://assets/units/doge_demonbound_ul.png");
@@ -133,12 +135,12 @@ public static class DemonboundAssetFactory
         }).Distinct().ToArray();
         run.SeededStartingSkillFlags = new[] { 0, 0, 0, 1 };
         run.InherentSkillContentIds = new[] { "", "", "", "skill.demonbound.meditation" };
-        run.Strengths = new[] { 5, 5, 5, 5 };
-        run.Agilities = new[] { 5, 5, 6, 5 };
-        run.Constitutions = new[] { 5, 5, 5, 5 };
-        run.Intelligences = new[] { 6, 5, 5, 5 };
-        run.Charismas = new[] { 5, 6, 5, 6 };
-        run.Lucks = new[] { 5, 5, 5, 5 };
+        run.Strengths = new[] { 4, 5, 5, 6 };
+        run.Agilities = new[] { 5, 3, 5, 4 };
+        run.Constitutions = new[] { 3, 6, 5, 6 };
+        run.Intelligences = new[] { 6, 6, 5, 6 };
+        run.Charismas = new[] { 6, 6, 5, 6 };
+        run.Lucks = new[] { 6, 4, 5, 2 };
         run.ToCoreDefinition(); Save(run, RunPath);
 
         PlayableLv1BalanceProfileResource balance = ResourceLoader.Load<PlayableLv1BalanceProfileResource>(

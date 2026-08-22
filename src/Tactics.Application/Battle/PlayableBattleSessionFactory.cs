@@ -82,8 +82,6 @@ public sealed class PlayableBattleSessionFactory
             var instanceId = new UnitInstanceId($"enemy-{index:D2}");
             UnitDefinition enemyDefinition = units[monster.UnitId];
             BattleUnitState enemy = enemyDefinition.CreateBattleState(instanceId, cell, 1, request.Party.Count + index);
-            if (enemySpeed is not null)
-                enemy = enemy.WithBaseSpeed(enemySpeed.Speed(monster.UnitId, enemyDefinition.Speed));
             int scaledHealth = (int)Math.Ceiling(enemy.MaxHealth * encounter.HealthMultiplier);
             enemy = enemy.WithHealthAndMana(scaledHealth, scaledHealth,
                 enemy.MaxMana, Math.Min(enemy.MaxMana, Math.Max(enemy.CurrentMana, encounter.MinimumStartingMana)))
@@ -173,7 +171,8 @@ public sealed class PlayableBattleSessionFactory
         UnitDerivedStats battleDerived = ResolvePartyDerivedStats(definition, projection);
         var facts = new UnitState(
             instanceId, definition.ContentId, cell, battleDerived.MoveRange,
-            battleDerived.Initiative, 0, spawnOrdinal, !character.IsDead, definition.MovementKind);
+            battleDerived.Initiative, 0, spawnOrdinal, !character.IsDead, definition.MovementKind,
+            projection.Attributes, combatRole: role);
         IReadOnlyDictionary<ItemInstanceId, BattleConsumableState> consumables = character.CarriedConsumables
             .ToDictionary(item => item.InstanceId);
         (int physical, int magical) = balance?.Attacks(definition.ContentId) ?? (2, 2);
@@ -197,7 +196,8 @@ public sealed class PlayableBattleSessionFactory
         int primary = role switch
         {
             SkillRole.Mage => attributes.Intelligence,
-            SkillRole.Necromancer or SkillRole.Demonbound => attributes.Charisma,
+            SkillRole.Necromancer => attributes.Constitution,
+            SkillRole.Demonbound => attributes.Charisma,
             SkillRole.Amazon => attributes.Agility,
             _ => 5
         };

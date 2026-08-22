@@ -104,7 +104,8 @@ public sealed class UnitDefinitionCompiler
                     draft.AttackFactor,
                     draft.DefenceFactor,
                     movementKind,
-                    draft.CanProduceCorpse);
+                    draft.CanProduceCorpse,
+                    movementTraitModifier: draft.MovementTraitModifier);
                 var visual = new UnitVisualDefinition(
                     draft.DownRightTexture,
                     draft.UpLeftTexture,
@@ -300,7 +301,7 @@ public sealed class UnitDefinitionCompiler
                     draft.Intelligence,
                     draft.Charisma,
                     draft.Luck),
-                draft.Speed);
+                draft.MovementTraitModifier);
             if (draft.MaxHealth != expected.MaxHealth || draft.MaxMana != expected.MaxMana ||
                 draft.StartingMana != expected.StartingMana || draft.MoveRange != expected.MoveRange ||
                 draft.Initiative != expected.Initiative)

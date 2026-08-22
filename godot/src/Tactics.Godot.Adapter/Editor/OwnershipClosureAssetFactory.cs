@@ -34,6 +34,7 @@ public static class OwnershipClosureAssetFactory
                 ? ResourceLoader.Load<SkillDefinitionResource>(path, string.Empty, ResourceLoader.CacheMode.Ignore) ?? new SkillDefinitionResource()
                 : new SkillDefinitionResource();
             Populate(resource, definition);
+            AttributeSkillBalanceOverrides.Apply(resource);
             resource.ToCoreDefinition();
             Save(resource, path);
             generated.Add(new GodotResourceEntry

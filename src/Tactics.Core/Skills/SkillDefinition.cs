@@ -7,6 +7,7 @@ public enum SkillRole { Any, Mage, Necromancer, Amazon, Demonbound }
 public enum SkillKind { Basic, Active, Passive, Utility }
 public enum SkillDamageKind { None, Physical, Magical }
 public enum SkillDamageScalingKind { None, PrimaryAttributeAboveNeutral }
+public enum SkillEffectScalingKind { None, MeleePhysical, RangedPhysical, Magical, Healing, Shield, DamageOverTime }
 public enum SkillExecutionKind
 {
     MagicAttack,
@@ -70,7 +71,9 @@ public sealed record SkillExecutionProfile(
     ContentId? SummonAttackContentId = null,
     int CorruptionCost = 0,
     SkillDamageScalingKind DamageScaling = SkillDamageScalingKind.None,
-    int LifeStealPercent = 0);
+    int LifeStealPercent = 0,
+    SkillEffectScalingKind EffectScaling = SkillEffectScalingKind.None,
+    decimal AccuracyFactor = 1m);
 
 /// <summary>Normalized engine-neutral execution contract for one migrated skill level.</summary>
 public sealed record SkillDefinition
@@ -129,7 +132,8 @@ public sealed record SkillDefinition
         ExecutionProfile = executionProfile ?? new SkillExecutionProfile();
         if (ExecutionProfile.StatusChancePercent is < 0 or > 100 || ExecutionProfile.BounceRange < 0 ||
             ExecutionProfile.BounceCount < 0 || ExecutionProfile.MovementDamagePerCell < 0 ||
-            ExecutionProfile.CorruptionCost < 0 || !Enum.IsDefined(ExecutionProfile.DamageScaling))
+            ExecutionProfile.CorruptionCost < 0 || !Enum.IsDefined(ExecutionProfile.DamageScaling) ||
+            !Enum.IsDefined(ExecutionProfile.EffectScaling) || ExecutionProfile.AccuracyFactor <= 0m)
             throw new ArgumentOutOfRangeException(nameof(executionProfile));
         if (ExecutionProfile.LifeStealPercent is < 0 or > 100)
             throw new ArgumentOutOfRangeException(nameof(executionProfile));

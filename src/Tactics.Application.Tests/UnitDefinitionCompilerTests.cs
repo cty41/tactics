@@ -185,7 +185,7 @@ public sealed class UnitDefinitionCompilerTests
         float[] deathPivot = deathSprite.GetProperty("pivot").EnumerateArray().Select(item => item.GetSingle()).ToArray();
         float[] shadowScale = shadowSprite.GetProperty("localScale").EnumerateArray().Select(item => item.GetSingle()).ToArray();
         float[] shadowColor = shadowSprite.GetProperty("color").EnumerateArray().Select(item => item.GetSingle()).ToArray();
-        return new UnitDefinitionDraft
+        UnitDefinitionDraft draft = new UnitDefinitionDraft
         {
             SchemaVersion = 1,
             ContentId = unit.GetProperty("contentId").GetString()!,
@@ -241,6 +241,36 @@ public sealed class UnitDefinitionCompilerTests
             DeferredDependencies = unit.GetProperty("deferredDependencies").EnumerateArray()
                 .Select(item => item.GetString()!)
                 .ToArray()
+        };
+        (int Strength, int Agility, int Constitution, int Intelligence, int Charisma, int Luck, int MoveTrait) target =
+            draft.ContentId switch
+            {
+                "unit.pure-run.mage" => (4, 5, 3, 6, 6, 6, 0),
+                "unit.pure-run.necromancer" => (5, 3, 6, 6, 6, 4, 0),
+                "unit.pure-run.amazon" => (5, 5, 5, 5, 5, 5, 0),
+                "unit.pure-run.skeleton-warrior" or "unit.pure-run.skeleton-mage" => (4, 4, 2, 2, 2, 2, -1),
+                "unit.pure-run.fire-demon" => (5, 4, 3, 5, 5, 5, -1),
+                "unit.pure-run.goat-charger" or "unit.pure-run.goat-elite-charger" =>
+                    (draft.Strength, 8, draft.Constitution, draft.Intelligence, draft.Charisma, draft.Luck, 0),
+                "unit.pure-run.goat-ranged" =>
+                    (draft.Strength, 12, draft.Constitution, draft.Intelligence, draft.Charisma, draft.Luck, 0),
+                "unit.pure-run.goat-support" =>
+                    (draft.Strength, 8, draft.Constitution, draft.Intelligence, draft.Charisma, draft.Luck, 0),
+                "unit.pure-run.goat-aoe" or "unit.pure-run.goat-elite-poison-caster" =>
+                    (draft.Strength, 6, draft.Constitution, draft.Intelligence, draft.Charisma, draft.Luck, -1),
+                _ => (draft.Strength, draft.Agility, draft.Constitution, draft.Intelligence, draft.Charisma, draft.Luck, 0)
+            };
+        var targetAttributes = new Tactics.Core.Units.UnitAttributes(target.Strength, target.Agility,
+            target.Constitution, target.Intelligence, target.Charisma, target.Luck);
+        Tactics.Core.Units.UnitDerivedStats stats = Tactics.Core.Units.UnitDerivedStatRules.Calculate(targetAttributes,
+            target.MoveTrait);
+        return draft with
+        {
+            Strength = target.Strength, Agility = target.Agility, Constitution = target.Constitution,
+            Intelligence = target.Intelligence, Charisma = target.Charisma, Luck = target.Luck,
+            MaxHealth = stats.MaxHealth, MaxMana = stats.MaxMana, StartingMana = stats.StartingMana,
+            MoveRange = stats.MoveRange, Initiative = stats.Initiative,
+            MovementTraitModifier = target.MoveTrait
         };
     }
 }

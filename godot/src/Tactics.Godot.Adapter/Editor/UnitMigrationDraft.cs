@@ -152,6 +152,12 @@ internal sealed class UnitDraftRecord
         if (Visual.ShadowOffset.Length != 2 || Visual.BodyTint.Length != 4 ||
             Visual.BaseBodyColor.Length != 4)
             throw new InvalidOperationException($"Unit '{ContentId}' has malformed visual vectors.");
+        (int Strength, int Agility, int Constitution, int Intelligence, int Charisma, int Luck, int MoveTrait) target =
+            TargetAttributes();
+        var attributes = new Tactics.Core.Units.UnitAttributes(target.Strength, target.Agility,
+            target.Constitution, target.Intelligence, target.Charisma, target.Luck);
+        Tactics.Core.Units.UnitDerivedStats derived = Tactics.Core.Units.UnitDerivedStatRules.Calculate(attributes,
+            target.MoveTrait);
         return new UnitDefinitionDraft
         {
             SchemaVersion = 1,
@@ -160,18 +166,19 @@ internal sealed class UnitDraftRecord
             DisplayName = DisplayName,
             FamilyId = FamilyId,
             RoleId = RoleId,
-            Strength = Attributes.Strength,
-            Agility = Attributes.Agility,
-            Constitution = Attributes.Constitution,
-            Intelligence = Attributes.Intelligence,
-            Charisma = Attributes.Charisma,
-            Luck = Attributes.Luck,
+            Strength = target.Strength,
+            Agility = target.Agility,
+            Constitution = target.Constitution,
+            Intelligence = target.Intelligence,
+            Charisma = target.Charisma,
+            Luck = target.Luck,
             Speed = Speed,
-            MaxHealth = Derived.MaxHealth,
-            MaxMana = Derived.MaxMana,
-            StartingMana = Derived.StartingMana,
-            MoveRange = Derived.MoveRange,
-            Initiative = Derived.Initiative,
+            MovementTraitModifier = target.MoveTrait,
+            MaxHealth = derived.MaxHealth,
+            MaxMana = derived.MaxMana,
+            StartingMana = derived.StartingMana,
+            MoveRange = derived.MoveRange,
+            Initiative = derived.Initiative,
             AttackRange = Combat.AttackRange,
             AttackFactor = Combat.AttackFactor,
             DefenceFactor = Combat.DefenceFactor,
@@ -208,6 +215,26 @@ internal sealed class UnitDraftRecord
             DeferredDependencies = DeferredDependencies
         };
     }
+
+    private (int Strength, int Agility, int Constitution, int Intelligence, int Charisma, int Luck, int MoveTrait)
+        TargetAttributes() => ContentId switch
+        {
+            "unit.pure-run.mage" => (4, 5, 3, 6, 6, 6, 0),
+            "unit.pure-run.necromancer" => (5, 3, 6, 6, 6, 4, 0),
+            "unit.pure-run.amazon" => (5, 5, 5, 5, 5, 5, 0),
+            "unit.pure-run.skeleton-warrior" or "unit.pure-run.skeleton-mage" => (4, 4, 2, 2, 2, 2, -1),
+            "unit.pure-run.fire-demon" => (5, 4, 3, 5, 5, 5, -1),
+            "unit.pure-run.goat-charger" or "unit.pure-run.goat-elite-charger" =>
+                (Attributes.Strength, 8, Attributes.Constitution, Attributes.Intelligence, Attributes.Charisma, Attributes.Luck, 0),
+            "unit.pure-run.goat-ranged" =>
+                (Attributes.Strength, 12, Attributes.Constitution, Attributes.Intelligence, Attributes.Charisma, Attributes.Luck, 0),
+            "unit.pure-run.goat-support" =>
+                (Attributes.Strength, 8, Attributes.Constitution, Attributes.Intelligence, Attributes.Charisma, Attributes.Luck, 0),
+            "unit.pure-run.goat-aoe" or "unit.pure-run.goat-elite-poison-caster" =>
+                (Attributes.Strength, 6, Attributes.Constitution, Attributes.Intelligence, Attributes.Charisma, Attributes.Luck, -1),
+            _ => (Attributes.Strength, Attributes.Agility, Attributes.Constitution, Attributes.Intelligence,
+                Attributes.Charisma, Attributes.Luck, 0)
+        };
 }
 
 internal sealed class UnitDraftAttributes

@@ -46,6 +46,8 @@ public sealed record SkillDefinitionDraft
     public int CorruptionCost { get; init; }
     public string DamageScaling { get; init; } = nameof(SkillDamageScalingKind.None);
     public int LifeStealPercent { get; init; }
+    public string EffectScaling { get; init; } = nameof(SkillEffectScalingKind.None);
+    public decimal AccuracyFactor { get; init; } = 1m;
 }
 
 public sealed record SkillDefinitionCompileResult(
@@ -74,7 +76,8 @@ public sealed class SkillDefinitionCompiler
             if (draft.SchemaVersion != 1 || string.IsNullOrWhiteSpace(draft.SourceId) ||
                 !TryEnum(draft.Role, out SkillRole role) || !TryEnum(draft.Kind, out SkillKind kind) ||
                 !TryEnum(draft.ExecutionKind, out SkillExecutionKind execution) || !TryEnum(draft.DamageKind, out SkillDamageKind damageKind) ||
-                !TryEnum(draft.DamageScaling, out SkillDamageScalingKind damageScaling))
+                !TryEnum(draft.DamageScaling, out SkillDamageScalingKind damageScaling) ||
+                !TryEnum(draft.EffectScaling, out SkillEffectScalingKind effectScaling))
             { diagnostics.Add(Error("skill.invalid_contract", $"Skill '{contentId}' has an invalid schema, source, or enum.", contentId)); continue; }
             ContentId? statusId = null;
             if (!string.IsNullOrEmpty(draft.StatusContentId))
@@ -87,7 +90,7 @@ public sealed class SkillDefinitionCompiler
             if (diagnostics.Any(item => item.ContentId == contentId && item.Severity == ContentDiagnosticSeverity.Error)) continue;
             try
             {
-                var profile = new SkillExecutionProfile(draft.AreaRadius, draft.OrderedTargetCount, summonId, draft.SummonCount, draft.SummonLimit, draft.SummonCategory, draft.RequiresCorpse, draft.IgnoreLineOfSight, draft.ShieldMultiplier, draft.ShieldAbsorbsAllDamage, draft.CleanseHarmful, draft.SecondaryDamage, CorruptionCost: draft.CorruptionCost, DamageScaling: damageScaling, LifeStealPercent: draft.LifeStealPercent);
+                var profile = new SkillExecutionProfile(draft.AreaRadius, draft.OrderedTargetCount, summonId, draft.SummonCount, draft.SummonLimit, draft.SummonCategory, draft.RequiresCorpse, draft.IgnoreLineOfSight, draft.ShieldMultiplier, draft.ShieldAbsorbsAllDamage, draft.CleanseHarmful, draft.SecondaryDamage, CorruptionCost: draft.CorruptionCost, DamageScaling: damageScaling, LifeStealPercent: draft.LifeStealPercent, EffectScaling: effectScaling, AccuracyFactor: draft.AccuracyFactor);
                 var definition = new SkillDefinition(contentId, draft.SourceId, role, kind, draft.Level, draft.ManaCost, draft.MinRange, draft.MaxRange, execution, draft.Damage, damageKind, statusId, draft.StatusDuration, draft.Hidden, draft.ExternalDependency, draft.IsBasicAbility, draft.MaxUsesPerTurn, draft.BranchId, prerequisiteId, draft.GrowthVisible, profile, draft.RequiredAttribute, draft.MinimumAttribute, draft.PrerequisiteBranchId);
                 definitions.Add(contentId, definition);
                 contentDrafts.Add(new ContentDraft(contentId, "skill", 1, statusId is null ? null : new[] { statusId.Value }, new Dictionary<string, string>(StringComparer.Ordinal)

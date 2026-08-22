@@ -28,7 +28,10 @@ public sealed record BattleStatusState
         float speedModifier = 0f,
         float damageReductionPercent = 0f,
         ContentId? meleeRetaliationStatusId = null,
-        int meleeRetaliationDuration = 0)
+        int meleeRetaliationDuration = 0,
+        int initiativeModifier = 0,
+        int movementModifier = 0,
+        int frozenTotalDamageRemaining = 0)
     {
         if (remainingTurns <= 0)
             throw new ArgumentOutOfRangeException(nameof(remainingTurns));
@@ -68,6 +71,9 @@ public sealed record BattleStatusState
         DamageReductionPercent = damageReductionPercent;
         MeleeRetaliationStatusId = meleeRetaliationStatusId;
         MeleeRetaliationDuration = meleeRetaliationDuration;
+        InitiativeModifier = initiativeModifier;
+        MovementModifier = movementModifier;
+        FrozenTotalDamageRemaining = frozenTotalDamageRemaining;
     }
 
     public ContentId ContentId { get; }
@@ -85,12 +91,21 @@ public sealed record BattleStatusState
     public float DamageReductionPercent { get; }
     public ContentId? MeleeRetaliationStatusId { get; }
     public int MeleeRetaliationDuration { get; }
+    public int InitiativeModifier { get; }
+    public int MovementModifier { get; }
+    public int FrozenTotalDamageRemaining { get; }
 
     public BattleStatusState WithRemainingTurns(int remainingTurns) =>
         Copy(remainingTurns, StackCount);
 
     public BattleStatusState WithStackCount(int stackCount) =>
         Copy(RemainingTurns, stackCount);
+
+    public BattleStatusState WithFrozenTotalDamageRemaining(int value) => new(
+        ContentId, SourceId, RemainingTurns, DamagePerTurn, StackCount, CanAct, Polarity, EffectKind,
+        TriggerTiming, RefreshStrategy, CurseCategory, SpeedModifier, DamageReductionPercent,
+        MeleeRetaliationStatusId, MeleeRetaliationDuration, InitiativeModifier, MovementModifier,
+        Math.Max(0, value));
 
     private BattleStatusState Copy(int remainingTurns, int stackCount) => new(
         ContentId,
@@ -107,5 +122,8 @@ public sealed record BattleStatusState
         SpeedModifier,
         DamageReductionPercent,
         MeleeRetaliationStatusId,
-        MeleeRetaliationDuration);
+        MeleeRetaliationDuration,
+        InitiativeModifier,
+        MovementModifier,
+        FrozenTotalDamageRemaining);
 }

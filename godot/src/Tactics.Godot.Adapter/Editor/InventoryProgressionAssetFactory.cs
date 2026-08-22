@@ -28,7 +28,7 @@ public static class InventoryProgressionAssetFactory
             var resource = File.Exists(ProjectSettings.GlobalizePath(path))
                 ? ResourceLoader.Load<SkillDefinitionResource>(path, string.Empty, ResourceLoader.CacheMode.Ignore) ?? new SkillDefinitionResource()
                 : new SkillDefinitionResource();
-            Populate(resource, item); resource.ToCoreDefinition(); Save(resource, path);
+            Populate(resource, item); AttributeSkillBalanceOverrides.Apply(resource); resource.ToCoreDefinition(); Save(resource, path);
             generated.Add(Entry(item.ContentId, path, References(item)));
         }
         foreach (Dependency dependency in draft.InternalSkillDependencies.OrderBy(value => value.ContentId, StringComparer.Ordinal))
@@ -38,6 +38,7 @@ public static class InventoryProgressionAssetFactory
                 ? ResourceLoader.Load<SkillDefinitionResource>(path, string.Empty, ResourceLoader.CacheMode.Ignore) ?? new SkillDefinitionResource()
                 : new SkillDefinitionResource();
             Populate(resource, dependency);
+            AttributeSkillBalanceOverrides.Apply(resource);
             resource.ToCoreDefinition();
             Save(resource, path);
             generated.Add(Entry(dependency.ContentId, path,
