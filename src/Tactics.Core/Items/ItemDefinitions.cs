@@ -198,7 +198,7 @@ public static class EquipmentStatProjector
             throw new ArgumentException($"Equipment slot '{duplicateSlot}' is occupied more than once.", nameof(equipment));
 
         UnitAttributes projected = materialized.Aggregate(baseAttributes, AddBonuses);
-        return new EquipmentStatProjection(projected, UnitDerivedStatRules.Calculate(projected, baseSpeed));
+        return new EquipmentStatProjection(projected, UnitDerivedStatRules.Calculate(projected));
     }
 
     private static UnitAttributes AddBonuses(UnitAttributes current, EquipmentDefinition definition) => new(

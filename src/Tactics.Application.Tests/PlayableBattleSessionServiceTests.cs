@@ -31,7 +31,7 @@ public sealed class PlayableBattleSessionServiceTests
         {
             Assert.That(result.MoveRange, Is.EqualTo(4));
             Assert.That(result.Initiative, Is.EqualTo(8));
-            Assert.That(projection.DerivedStats.MoveRange, Is.EqualTo(2));
+            Assert.That(projection.DerivedStats.MoveRange, Is.EqualTo(4));
         });
     }
 
@@ -43,7 +43,7 @@ public sealed class PlayableBattleSessionServiceTests
         Assert.Multiple(() =>
         {
             Assert.That(PlayableBattleSessionFactory.CalculatePrimaryAttributeDamageBonus(attributes, SkillRole.Mage), Is.EqualTo(4));
-            Assert.That(PlayableBattleSessionFactory.CalculatePrimaryAttributeDamageBonus(attributes, SkillRole.Necromancer), Is.EqualTo(6));
+            Assert.That(PlayableBattleSessionFactory.CalculatePrimaryAttributeDamageBonus(attributes, SkillRole.Necromancer), Is.Zero);
             Assert.That(PlayableBattleSessionFactory.CalculatePrimaryAttributeDamageBonus(attributes, SkillRole.Demonbound), Is.EqualTo(6));
             Assert.That(PlayableBattleSessionFactory.CalculatePrimaryAttributeDamageBonus(attributes, SkillRole.Amazon), Is.EqualTo(2));
             Assert.That(PlayableBattleSessionFactory.CalculatePrimaryAttributeDamageBonus(attributes, SkillRole.Any), Is.Zero);
@@ -360,7 +360,7 @@ public sealed class PlayableBattleSessionServiceTests
         Assert.Multiple(() =>
         {
             Assert.That(service.CaptureSnapshot().ActiveUnitId, Is.EqualTo(ownerId));
-            Assert.That(service.State.Units[enemyId].CurrentHealth, Is.EqualTo(18));
+            Assert.That(service.State.Units[enemyId].CurrentHealth, Is.EqualTo(17));
             Assert.That(service.CaptureSnapshot().Phase, Is.EqualTo(PlayableBattlePhase.PlayerTurn));
             Assert.That(service.CaptureSnapshot().RecentEvents.OfType<SkillUsedEvent>().Any(value => value.ActorId == summonId), Is.True);
         });

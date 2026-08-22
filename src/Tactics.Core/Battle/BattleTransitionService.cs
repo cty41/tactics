@@ -3,6 +3,7 @@ using Tactics.Core.Combat;
 using Tactics.Core.Content;
 using Tactics.Core.Items;
 using Tactics.Core.Pathfinding;
+using Tactics.Core.Randomness;
 using Tactics.Core.Statuses;
 using Tactics.Core.Skills;
 using Tactics.Core.Units;
@@ -108,29 +109,63 @@ public sealed class BattleTransitionService
             return Rejected(state, command.ActorId, usageFailure);
         if (command.TargetId is not UnitInstanceId targetId)
             return Rejected(state, command.ActorId, "target_not_found");
-        BattleTransition transition = ApplyPoisonSpear(state, actor, new UsePoisonSpearCommand(
+        if (!state.TryGetUnit(targetId, out BattleUnitState? poisonTarget) || poisonTarget is null)
+            return Rejected(state, command.ActorId, "target_not_found");
+        var random = new DeterministicRandom(state.RandomState);
+        int hitRoll = random.NextInt(100);
+        int dodge = UnitCombatStatRules.Dodge(poisonTarget.Unit.EffectiveAttributes) +
+            (poisonTarget.HasCombatTechniquesLevelOne ? 30 : 0);
+        int hitChance = Math.Clamp((int)Math.Floor((UnitCombatStatRules.Accuracy(actor.Unit.EffectiveAttributes) -
+            dodge) * command.Definition.ExecutionProfile.AccuracyFactor), 0, 100);
+        bool missed = hitRoll >= hitChance;
+        int criticalRoll = random.NextInt(100);
+        int criticalChance = Math.Clamp(UnitCombatStatRules.CriticalChance(actor.Unit.EffectiveAttributes) +
+            (actor.CombatTechniquesLevel >= 3 ? 20 : 0), 0, 100);
+        bool critical = command.Definition.CanCrit && !missed && criticalRoll < criticalChance;
+        SkillRole poisonRole = command.Definition.Role == SkillRole.Any
+            ? actor.Unit.CombatRole
+            : command.Definition.Role;
+        int directDamage = checked(command.Definition.Damage + UnitCombatStatRules.AttributeContribution(
+            actor.Unit.EffectiveAttributes, poisonRole, SkillEffectScalingKind.RangedPhysical));
+        if (critical)
+            directDamage = checked((int)Math.Floor(directDamage *
+                UnitCombatStatRules.CriticalMultiplier(actor.Unit.EffectiveAttributes)));
+        BattleState rolledState = state.WithRandomState(random.State);
+        BattleTransition transition = ApplyPoisonSpear(rolledState, actor, new UsePoisonSpearCommand(
             command.ActorId,
             targetId,
             new PoisonSpearDefinition(
                 command.Definition.ContentId,
                 command.Definition.MaxRange,
-                command.Definition.Damage,
-                command.Definition.StatusDuration,
+                missed ? 0 : directDamage,
+                missed ? 0 : command.Definition.StatusDuration,
                 command.Definition.StatusContentId,
-                poisonDamagePerTurn: 2,
+                poisonDamagePerTurn: 1,
                 manaCost: command.Definition.ManaCost,
-                dropSearchRadius: 3)));
+                dropSearchRadius: 3,
+                frozenPoisonTotalDamage: checked(command.Definition.StatusDuration +
+                    UnitCombatStatRules.AttributeContribution(actor.Unit.EffectiveAttributes,
+                        poisonRole, SkillEffectScalingKind.RangedPhysical, multiHit: true)))));
         if (transition.Events.OfType<CommandRejectedEvent>().Any()) return transition;
         BattleState finalState = transition.State;
-        var finalEvents = transition.Events.ToList();
-        if (command.Definition.Level >= 2 && command.Definition.StatusContentId is ContentId poisonId &&
+        var finalEvents = new List<BattleEvent>
+        {
+            new CombatRollResolvedEvent(actor.Unit.InstanceId, targetId, command.Definition.ContentId,
+                hitRoll, dodge, missed ? "dodge" : critical ? "critical" : "hit", random.State)
+        };
+        finalEvents.AddRange(transition.Events);
+        if (!missed && command.Definition.Level >= 2 && command.Definition.StatusContentId is ContentId poisonId &&
             finalState.TryGetUnit(targetId, out BattleUnitState? primary) && primary is not null)
         {
+            int poisonTotal = checked(command.Definition.StatusDuration +
+                UnitCombatStatRules.AttributeContribution(actor.Unit.EffectiveAttributes, poisonRole,
+                    SkillEffectScalingKind.RangedPhysical, multiHit: true));
             var poison = new StatusDefinition(poisonId, "Poison", command.Definition.StatusDuration, true,
                 StatusPolarity.Harmful, StatusEffectKind.Poison, StatusTriggerTiming.TurnStart,
-                StatusRefreshStrategy.AddDuration, damagePerTurn: 2);
+                StatusRefreshStrategy.AddDuration, damagePerTurn: 1, frozenTotalDamage: poisonTotal);
             foreach (BattleUnitState adjacent in finalState.Units.Values
                          .Where(unit => unit.IsAlive && unit.Unit.PlayerNumber != actor.Unit.PlayerNumber &&
+                             unit.Unit.InstanceId != targetId &&
                              (command.Definition.ExecutionProfile.AreaShape == "square"
                                  ? Math.Max(Math.Abs(unit.Unit.Position.X - primary.Unit.Position.X),
                                      Math.Abs(unit.Unit.Position.Y - primary.Unit.Position.Y)) <= Math.Max(1, command.Definition.AreaRadius)
@@ -277,7 +312,8 @@ public sealed class BattleTransitionService
                 StatusEffectKind.Poison,
                 StatusTriggerTiming.TurnStart,
                 StatusRefreshStrategy.AddDuration,
-                damagePerTurn: command.Definition.PoisonDamagePerTurn);
+                damagePerTurn: command.Definition.PoisonDamagePerTurn,
+                frozenTotalDamage: command.Definition.FrozenPoisonTotalDamage);
             StatusApplicationResult application = _statusRuntime.Apply(
                 updatedTarget,
                 poison,
@@ -494,7 +530,9 @@ public sealed class BattleTransitionService
         {
             if (!incoming.IsAlive)
                 continue;
-            int tickDamage = status.EffectKind == StatusEffectKind.Burning
+            int tickDamage = status.FrozenTotalDamageRemaining > 0
+                ? (int)Math.Ceiling(status.FrozenTotalDamageRemaining / (double)Math.Max(1, status.RemainingTurns))
+                : status.EffectKind == StatusEffectKind.Burning
                 ? status.StackCount
                 : status.DamagePerTurn;
             if (tickDamage <= 0)
@@ -502,6 +540,9 @@ public sealed class BattleTransitionService
             int healthAfterDamage = Math.Max(0, incoming.CurrentHealth - tickDamage);
             int appliedDamage = incoming.CurrentHealth - healthAfterDamage;
             incoming = incoming.WithHealth(healthAfterDamage);
+            if (status.FrozenTotalDamageRemaining > 0 && incoming.Statuses.ContainsKey(status.ContentId))
+                incoming = incoming.WithStatus(status.WithFrozenTotalDamageRemaining(
+                    status.FrozenTotalDamageRemaining - tickDamage));
             events.Add(new StatusTickedEvent(
                 status.SourceId,
                 incoming.Unit.InstanceId,

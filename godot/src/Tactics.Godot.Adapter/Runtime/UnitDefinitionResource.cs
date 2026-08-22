@@ -26,6 +26,7 @@ public partial class UnitDefinitionResource : Resource
     [Export] public int Charisma { get; set; }
     [Export] public int Luck { get; set; }
     [Export] public float Speed { get; set; }
+    [Export] public int MovementTraitModifier { get; set; }
     [Export] public int MaxHealth { get; set; }
     [Export] public int MaxMana { get; set; }
     [Export] public int StartingMana { get; set; }
@@ -100,7 +101,8 @@ public partial class UnitDefinitionResource : Resource
             DefenceFactor,
             movementKind,
             CanProduceCorpse,
-            derivedStatMode);
+            derivedStatMode,
+            MovementTraitModifier);
     }
 
     /// <summary>

@@ -5,6 +5,7 @@ using System.Text.Json;
 using Godot;
 using Tactics.Application.Units;
 using Tactics.Core.Content;
+using Tactics.Core.Units;
 using Tactics.Godot.Adapter.Runtime;
 
 namespace Tactics.Godot.Adapter.Editor;
@@ -89,6 +90,7 @@ public static class UnitAssetFactory
                     draft.SpriteContract,
                     actorScene,
                     goatTintShader);
+                ApplyAttributeBalanceOverrides(resource);
                 resource.ToCoreDefinition();
                 SaveResource(resource, resourcePath);
                 savedDefinitions.Add(resource);
@@ -299,6 +301,44 @@ public static class UnitAssetFactory
         string.Empty,
         ResourceLoader.CacheMode.Ignore)
         ?? throw new InvalidOperationException($"Cannot load migrated Unit texture '{path}'.");
+
+    private static void ApplyAttributeBalanceOverrides(UnitDefinitionResource resource)
+    {
+        (UnitAttributes Attributes, int MovementTrait) target = resource.ContentIdValue switch
+        {
+            "unit.pure-run.mage" => (new UnitAttributes(4, 5, 3, 6, 6, 6), 0),
+            "unit.pure-run.necromancer" => (new UnitAttributes(5, 3, 6, 6, 6, 4), 0),
+            "unit.pure-run.amazon" => (new UnitAttributes(5, 5, 5, 5, 5, 5), 0),
+            "unit.pure-run.skeleton-warrior" or "unit.pure-run.skeleton-mage" =>
+                (new UnitAttributes(4, 4, 2, 2, 2, 2), -1),
+            "unit.pure-run.fire-demon" => (new UnitAttributes(5, 4, 3, 5, 5, 5), -1),
+            "unit.pure-run.goat-charger" or "unit.pure-run.goat-elite-charger" =>
+                (WithAgility(resource, 8), 0),
+            "unit.pure-run.goat-ranged" => (WithAgility(resource, 12), 0),
+            "unit.pure-run.goat-support" => (WithAgility(resource, 8), 0),
+            "unit.pure-run.goat-aoe" or "unit.pure-run.goat-elite-poison-caster" =>
+                (WithAgility(resource, 6), -1),
+            _ => (new UnitAttributes(resource.Strength, resource.Agility, resource.Constitution,
+                resource.Intelligence, resource.Charisma, resource.Luck), 0)
+        };
+        resource.Strength = target.Attributes.Strength;
+        resource.Agility = target.Attributes.Agility;
+        resource.Constitution = target.Attributes.Constitution;
+        resource.Intelligence = target.Attributes.Intelligence;
+        resource.Charisma = target.Attributes.Charisma;
+        resource.Luck = target.Attributes.Luck;
+        resource.MovementTraitModifier = target.MovementTrait;
+        UnitDerivedStats derived = UnitDerivedStatRules.Calculate(target.Attributes, target.MovementTrait);
+        resource.MaxHealth = derived.MaxHealth;
+        resource.MaxMana = derived.MaxMana;
+        resource.StartingMana = derived.StartingMana;
+        resource.MoveRange = derived.MoveRange;
+        resource.Initiative = derived.Initiative;
+        resource.DerivedStatModeValue = "frozen-formula";
+    }
+
+    private static UnitAttributes WithAgility(UnitDefinitionResource resource, int agility) => new(
+        resource.Strength, agility, resource.Constitution, resource.Intelligence, resource.Charisma, resource.Luck);
 
     private static void ApplyPlayerActionPoses(UnitDefinitionResource resource)
     {

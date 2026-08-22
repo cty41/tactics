@@ -59,6 +59,21 @@ internal sealed class StartingSkillDraftDefinition
     public string RequiredAttribute { get; init; } = string.Empty; public int MinimumAttribute { get; init; }
     public bool GrowthVisible { get; init; }
     public string GraphPath { get; init; } = string.Empty; public string GraphDependencyHash { get; init; } = string.Empty; public StartingSkillSourceAudit SourceAudit { get; init; } = new();
-    public SkillDefinitionDraft ToApplicationDraft() => new() { ContentId = ContentId, SourceId = SourceId, Role = Role, Kind = Kind, Level = Level, ManaCost = ManaCost, MinRange = MinRange, MaxRange = MaxRange, ExecutionKind = ExecutionKind, Damage = Damage, DamageKind = DamageKind, StatusContentId = StatusContentId, StatusDuration = StatusDuration, Hidden = Hidden, ExternalDependency = ExternalDependency, IsBasicAbility = IsBasicAbility, MaxUsesPerTurn = MaxUsesPerTurn, BranchId = BranchId, RequiredAttribute = RequiredAttribute, MinimumAttribute = MinimumAttribute, GrowthVisible = GrowthVisible };
+    public SkillDefinitionDraft ToApplicationDraft() => new() { ContentId = ContentId, SourceId = SourceId, Role = Role, Kind = Kind, Level = Level, ManaCost = ManaCost, MinRange = MinRange, MaxRange = MaxRange, ExecutionKind = ExecutionKind, Damage = Damage, DamageKind = DamageKind, StatusContentId = StatusContentId, StatusDuration = StatusDuration, Hidden = Hidden, ExternalDependency = ExternalDependency, IsBasicAbility = IsBasicAbility, MaxUsesPerTurn = MaxUsesPerTurn, BranchId = BranchId, RequiredAttribute = RequiredAttribute, MinimumAttribute = MinimumAttribute, GrowthVisible = GrowthVisible, EffectScaling = EffectScalingFor(ExecutionKind), AccuracyFactor = 1m };
+
+    private static string EffectScalingFor(string executionKind) => executionKind switch
+    {
+        nameof(SkillExecutionKind.MeleeAttack) or nameof(SkillExecutionKind.Thrust) or
+            nameof(SkillExecutionKind.MultiStab) => nameof(SkillEffectScalingKind.MeleePhysical),
+        nameof(SkillExecutionKind.RangedAttack) or nameof(SkillExecutionKind.HeavyShot) or
+            nameof(SkillExecutionKind.PoisonSpear) => nameof(SkillEffectScalingKind.RangedPhysical),
+        nameof(SkillExecutionKind.MagicAttack) or nameof(SkillExecutionKind.Fireball) or
+            nameof(SkillExecutionKind.IceBolt) or nameof(SkillExecutionKind.Lightning) or
+            nameof(SkillExecutionKind.BoneSpear) => nameof(SkillEffectScalingKind.Magical),
+        nameof(SkillExecutionKind.RecoverSpear) => nameof(SkillEffectScalingKind.Healing),
+        nameof(SkillExecutionKind.IceArmor) or nameof(SkillExecutionKind.BoneShield) =>
+            nameof(SkillEffectScalingKind.Shield),
+        _ => nameof(SkillEffectScalingKind.None)
+    };
 }
 #endif

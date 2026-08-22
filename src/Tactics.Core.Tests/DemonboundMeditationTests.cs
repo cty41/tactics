@@ -122,7 +122,7 @@ public sealed class DemonboundMeditationTests
             Assert.That(hit.Events.OfType<DamageAppliedEvent>().Select(value => value.TargetId),
                 Is.EqualTo(new[] { new UnitInstanceId("enemy.0"), farId }));
             Assert.That(hit.Events.OfType<DamageAppliedEvent>().Select(value => value.Amount),
-                Is.EqualTo(new[] { 7, 7 }));
+                Is.EqualTo(new[] { 8, 8 }));
             Assert.That(hit.State.Units.Values.Where(unit => unit.Unit.PlayerNumber == 1)
                 .All(unit => unit.Statuses.Values.Any(status =>
                     status.EffectKind == Tactics.Core.Statuses.StatusEffectKind.DamageOutputReduction &&
@@ -166,7 +166,7 @@ public sealed class DemonboundMeditationTests
             new UseSkillCommand(state.ActiveUnitId, new UnitInstanceId("enemy.0"), new GridPoint(2, 1), bane));
 
         Assert.That(result.Succeeded, Is.True);
-        Assert.That(result.Events.OfType<DamageAppliedEvent>().Single().Amount, Is.EqualTo(baseDamage + 1));
+        Assert.That(result.Events.OfType<DamageAppliedEvent>().Single().Amount, Is.EqualTo(baseDamage + 2));
         BattleUnitState target = result.State.Units[new UnitInstanceId("enemy.0")];
         if (duration == 0)
             Assert.That(target.Statuses, Is.Empty);
@@ -214,7 +214,7 @@ public sealed class DemonboundMeditationTests
             new UseSkillCommand(state.ActiveUnitId, enemy.Unit.InstanceId, direction, skill));
 
         Assert.That(result.Succeeded, Is.True);
-        Assert.That(result.Events.OfType<DamageAppliedEvent>().Single().Amount, Is.EqualTo(damage));
+        Assert.That(result.Events.OfType<DamageAppliedEvent>().Single().Amount, Is.EqualTo(damage + 2));
     }
 
     [Test]

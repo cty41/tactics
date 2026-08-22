@@ -40,7 +40,8 @@ public sealed class UnitDefinition
         float defenceFactor,
         UnitMovementKind movementKind,
         bool canProduceCorpse,
-        UnitDerivedStatMode derivedStatMode = UnitDerivedStatMode.FrozenFormula)
+        UnitDerivedStatMode derivedStatMode = UnitDerivedStatMode.FrozenFormula,
+        int movementTraitModifier = 0)
     {
         if (!float.IsFinite(speed) || speed < 0)
             throw new ArgumentOutOfRangeException(nameof(speed));
@@ -55,7 +56,7 @@ public sealed class UnitDefinition
 
         if (!Enum.IsDefined(derivedStatMode))
             throw new ArgumentOutOfRangeException(nameof(derivedStatMode));
-        UnitDerivedStats expected = UnitDerivedStatRules.Calculate(attributes, speed);
+        UnitDerivedStats expected = UnitDerivedStatRules.Calculate(attributes, movementTraitModifier);
         if (derivedStatMode == UnitDerivedStatMode.FrozenFormula && derivedStats != expected)
         {
             throw new ArgumentException(
@@ -77,6 +78,7 @@ public sealed class UnitDefinition
         MovementKind = movementKind;
         CanProduceCorpse = canProduceCorpse;
         DerivedStatMode = derivedStatMode;
+        MovementTraitModifier = movementTraitModifier;
     }
 
     public ContentId ContentId { get; }
@@ -93,6 +95,7 @@ public sealed class UnitDefinition
     public UnitMovementKind MovementKind { get; }
     public bool CanProduceCorpse { get; }
     public UnitDerivedStatMode DerivedStatMode { get; }
+    public int MovementTraitModifier { get; }
 
     /// <summary>
     /// Creates mutable-per-battle state while preserving definition identity separately from instance identity.
@@ -111,7 +114,8 @@ public sealed class UnitDefinition
             DerivedStats.Initiative,
             playerNumber,
             spawnOrdinal,
-            movementKind: MovementKind);
+            movementKind: MovementKind,
+            effectiveAttributes: Attributes);
         return new BattleUnitState(
             unit,
             DerivedStats.MaxHealth,

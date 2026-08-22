@@ -14,7 +14,8 @@ public readonly record struct PoisonSpearDefinition
         ContentId? poisonStatusId = null,
         int poisonDamagePerTurn = 2,
         int manaCost = 0,
-        int dropSearchRadius = 3)
+        int dropSearchRadius = 3,
+        int frozenPoisonTotalDamage = 0)
     {
         SkillId = skillId;
         Range = ValidatePositive(range, nameof(range));
@@ -24,6 +25,7 @@ public readonly record struct PoisonSpearDefinition
         PoisonDamagePerTurn = ValidateNonNegative(poisonDamagePerTurn, nameof(poisonDamagePerTurn));
         ManaCost = ValidateNonNegative(manaCost, nameof(manaCost));
         DropSearchRadius = ValidatePositive(dropSearchRadius, nameof(dropSearchRadius));
+        FrozenPoisonTotalDamage = ValidateNonNegative(frozenPoisonTotalDamage, nameof(frozenPoisonTotalDamage));
     }
 
     public ContentId SkillId { get; init; }
@@ -34,6 +36,7 @@ public readonly record struct PoisonSpearDefinition
     public int PoisonDamagePerTurn { get; init; }
     public int ManaCost { get; init; }
     public int DropSearchRadius { get; init; }
+    public int FrozenPoisonTotalDamage { get; init; }
 
     private static int ValidatePositive(int value, string name) =>
         value <= 0 ? throw new ArgumentOutOfRangeException(name) : value;

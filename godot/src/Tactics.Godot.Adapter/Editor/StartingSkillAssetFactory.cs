@@ -37,6 +37,7 @@ public static class StartingSkillAssetFactory
             string path = ResourcePath(item.ContentId);
             SkillDefinitionResource resource = File.Exists(ProjectSettings.GlobalizePath(path)) ? ResourceLoader.Load<SkillDefinitionResource>(path, string.Empty, ResourceLoader.CacheMode.Ignore) ?? new SkillDefinitionResource() : new SkillDefinitionResource();
             Populate(resource, item);
+            AttributeSkillBalanceOverrides.Apply(resource);
             resource.ToCoreDefinition();
             Save(resource, path);
         }

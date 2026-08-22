@@ -95,7 +95,8 @@ public sealed class StatusRuntimeService
                     definition,
                     sourceId,
                     SaturatingAdd(active.RemainingTurns, appliedAmount),
-                    active.StackCount)
+                    active.StackCount).WithFrozenTotalDamageRemaining(
+                        SaturatingAdd(active.FrozenTotalDamageRemaining, definition.FrozenTotalDamage))
             };
             if (active.ContentId != result.ContentId)
             {
@@ -147,12 +148,12 @@ public sealed class StatusRuntimeService
     public BattleUnitState RecalculateSpeed(BattleUnitState unit)
     {
         ArgumentNullException.ThrowIfNull(unit);
-        float modifier = unit.Statuses.Values.Sum(status => status.EffectKind == StatusEffectKind.Slow
-            ? -2f
-            : status.SpeedModifier);
-        float effectiveSpeed = Math.Max(1f, unit.BaseSpeed + modifier);
-        int moveRange = (int)Math.Clamp(Math.Ceiling(effectiveSpeed * 0.5d), 1d, 4d);
-        float initiative = effectiveSpeed * 2f;
+        int moveModifier = unit.Statuses.Values.Sum(status => status.EffectKind == StatusEffectKind.Slow
+            ? -1 : status.MovementModifier);
+        int initiativeModifier = unit.Statuses.Values.Sum(status => status.EffectKind == StatusEffectKind.Slow
+            ? -4 : status.InitiativeModifier);
+        int moveRange = Math.Clamp(unit.Unit.BaseMoveRange + moveModifier, 2, 5);
+        float initiative = Math.Max(0f, unit.Unit.BaseInitiative + initiativeModifier);
         return unit.WithUnitFacts(unit.Unit with { MoveRange = moveRange, Initiative = initiative });
     }
 
@@ -252,7 +253,10 @@ public sealed class StatusRuntimeService
             definition.SpeedModifier,
             definition.DamageReductionPercent,
             definition.MeleeRetaliationStatusId,
-            definition.MeleeRetaliationDuration);
+            definition.MeleeRetaliationDuration,
+            definition.InitiativeModifier,
+            definition.MovementModifier,
+            definition.FrozenTotalDamage);
 
     private static int Manhattan(BattleUnitState left, BattleUnitState right) =>
         Math.Abs(left.Unit.Position.X - right.Unit.Position.X) +

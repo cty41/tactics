@@ -1,5 +1,13 @@
 # Tactics Knowledge Update Log
 
+## 2026-08-22
+* **Sync**: `project-documentation` 已同步到来源指纹 `sha256:f37ad288548a72d6f96031b706d7e7057c0d64be1cc39b9b202550b3cd6cd329`。
+* **Sync**: `project-architecture` 已同步到来源指纹 `sha256:b1ceb9f742ecd33be8f9cc5f59e93dd4c1eaa9f53dd08735c6510c81c83a2e96`。
+* **Sync**: `godot-migration` 已同步到来源指纹 `sha256:84ca2bc485b4f4118ef189662fd731f737018e6de628ac1db29a44af47b36e6f`。
+* **Sync**: `skill-graph` 已同步到来源指纹 `sha256:44594192015c7b314a248c23426609887130de68400ee134f4461adcef9285c8`。
+* **Sync**: `roguelike-run` 已同步到来源指纹 `sha256:90aaf3ed02675dc0a884a48b4791240fa7006206f8870d6acc5b76be87b2f899`。
+* **Sync**: `battle-system` 已同步到来源指纹 `sha256:df4ebc2669504de5c4833f4d5a079afff79fd22a90b703a3606660be89dae6a2`。
+
 ## 2026-08-21
 * **Sync**: `pure-run-artwork` 已同步到来源指纹 `sha256:bbad637172c1af85f0058086135da08781b76f93d6c73532256de52e3ae038a7`。
 * **Sync**: `monster-ai` 已同步到来源指纹 `sha256:e136fd2af75bd027b9394445ab2bb6a39b3858772eb203c5838d065b43e2a89b`。
@@ -423,3 +431,4 @@
 * **Update (2026-08-20)**: Pure Run 移除开局两组路线预提交，所有节点 Tile 场景只开放当前直接后继出口；战斗胜利返回同一 resolved 场景，Rogue Map 只读，存档升级 V10，20 个正式 Main.tscn journeys 全量通过且人工体验项保持 pending。
 * **Update (2026-08-21)**: 恢复属性、状态、朝向、等距投影与 SkillGraph 的跨引擎设计规则并改写为 Godot 权威 Contract ID；Gameplay Test Spec 增加合同追踪、覆盖报告及可选本地 Ollama 候选前端，确定性校验仍为唯一门禁。
 * **Update (2026-08-21)**: Gameplay Test Spec 将 LLM 候选前端升级为 provider 架构，默认使用仓库外配置的 OpenCode Go DeepSeek V4 Flash，保留显式 Ollama；模型发现、ACL、脱敏审计、逐字证据与确定性 compiler 均 fail-closed。
+* **Update (2026-08-22)**: 属性系统切换到永久属性与战斗有效属性双投影；装备和临时变化影响实战但不影响高级/大师解锁，六维统一派生命法、行动、命中闪避暴击及技能贡献，旧 Speed/减速合同由属性行动合同替代。

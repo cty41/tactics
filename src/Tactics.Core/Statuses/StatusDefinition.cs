@@ -87,10 +87,15 @@ public sealed record StatusDefinition
         float speedModifier = 0f,
         float damageReductionPercent = 0f,
         ContentId? meleeRetaliationStatusId = null,
-        int meleeRetaliationDuration = 0)
+        int meleeRetaliationDuration = 0,
+        int initiativeModifier = 0,
+        int movementModifier = 0,
+        int frozenTotalDamage = 0)
     {
         if (string.IsNullOrWhiteSpace(sourceId))
             throw new ArgumentException("SourceId cannot be empty.", nameof(sourceId));
+        if (frozenTotalDamage < 0)
+            throw new ArgumentOutOfRangeException(nameof(frozenTotalDamage));
         if (defaultDuration <= 0)
             throw new ArgumentOutOfRangeException(nameof(defaultDuration));
         if (!Enum.IsDefined(polarity))
@@ -135,6 +140,9 @@ public sealed record StatusDefinition
         DamageReductionPercent = damageReductionPercent;
         MeleeRetaliationStatusId = meleeRetaliationStatusId;
         MeleeRetaliationDuration = meleeRetaliationDuration;
+        InitiativeModifier = initiativeModifier;
+        MovementModifier = movementModifier;
+        FrozenTotalDamage = frozenTotalDamage;
     }
 
     public ContentId ContentId { get; }
@@ -153,4 +161,7 @@ public sealed record StatusDefinition
     public float DamageReductionPercent { get; }
     public ContentId? MeleeRetaliationStatusId { get; }
     public int MeleeRetaliationDuration { get; }
+    public int InitiativeModifier { get; }
+    public int MovementModifier { get; }
+    public int FrozenTotalDamage { get; }
 }

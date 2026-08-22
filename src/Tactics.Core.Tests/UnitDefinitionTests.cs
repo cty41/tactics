@@ -9,23 +9,13 @@ namespace Tactics.Core.Tests;
 public sealed class UnitDefinitionTests
 {
     [Test]
-    public void FrozenFormulaCases_MatchUnityUnitDerivedV1()
+    public void DerivedFormulaUsesConstitutionAndAgilityInsteadOfSpeed()
     {
         using JsonDocument golden = LoadGolden();
 
-        foreach (JsonElement formulaCase in golden.RootElement.GetProperty("formulaCases").EnumerateArray())
-        {
-            float speed = formulaCase.GetProperty("speed").GetSingle();
-            UnitDerivedStats result = UnitDerivedStatRules.Calculate(
-                new UnitAttributes(5, 5, 5, 5, 5, 5),
-                speed);
-
-            Assert.Multiple(() =>
-            {
-                Assert.That(result.MoveRange, Is.EqualTo(formulaCase.GetProperty("moveRange").GetInt32()));
-                Assert.That(result.Initiative, Is.EqualTo(formulaCase.GetProperty("initiative").GetSingle()));
-            });
-        }
+        UnitDerivedStats result = UnitDerivedStatRules.Calculate(new UnitAttributes(5, 4, 6, 5, 5, 5));
+        Assert.That(result.MoveRange, Is.EqualTo(5));
+        Assert.That(result.Initiative, Is.EqualTo(8));
     }
 
     [Test]
@@ -84,8 +74,6 @@ public sealed class UnitDefinitionTests
         Assert.Multiple(() =>
         {
             Assert.Throws<ArgumentOutOfRangeException>(() => new UnitAttributes(-1, 0, 0, 0, 0, 0));
-            Assert.Throws<ArgumentOutOfRangeException>(() =>
-                UnitDerivedStatRules.Calculate(new UnitAttributes(1, 1, 1, 1, 1, 1), float.NaN));
             Assert.Throws<ArgumentException>(() => new UnitDefinition(
                 new ContentId("unit.invalid"),
                 "source",
@@ -104,7 +92,7 @@ public sealed class UnitDefinitionTests
     }
 
     [Test]
-    public void ExplicitDerivedMode_AllowsAuthoredClassMovementWithoutChangingFrozenFormula()
+    public void ExplicitDerivedMode_AllowsAuthoredClassMovement()
     {
         var definition = new UnitDefinition(
             new ContentId("unit.pure-run.demonbound"), "godot.demonbound", "Demonbound", "player", "demonbound",
@@ -116,8 +104,7 @@ public sealed class UnitDefinitionTests
         {
             Assert.That(definition.DerivedStatMode, Is.EqualTo(UnitDerivedStatMode.Explicit));
             Assert.That(definition.DerivedStats.MoveRange, Is.EqualTo(4));
-            Assert.That(UnitDerivedStatRules.Calculate(definition.Attributes, definition.Speed).MoveRange, Is.EqualTo(2),
-                "The frozen migration formula remains unchanged for legacy content.");
+            Assert.That(UnitDerivedStatRules.Calculate(definition.Attributes).MoveRange, Is.EqualTo(4));
         });
     }
 
@@ -150,7 +137,8 @@ public sealed class UnitDefinitionTests
             combat.GetProperty("attackFactor").GetSingle(),
             combat.GetProperty("defenceFactor").GetSingle(),
             UnitMovementKind.Land,
-            unit.GetProperty("canProduceCorpse").GetBoolean());
+            unit.GetProperty("canProduceCorpse").GetBoolean(),
+            UnitDerivedStatMode.Explicit);
     }
 
     private static JsonDocument LoadGolden() => JsonDocument.Parse(File.ReadAllText(

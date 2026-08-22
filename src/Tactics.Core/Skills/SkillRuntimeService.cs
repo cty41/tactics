@@ -88,11 +88,17 @@ public sealed class SkillRuntimeService
             if (skill.Damage > 0 || skill.ExecutionKind is SkillExecutionKind.MagicAttack or SkillExecutionKind.MeleeAttack)
             {
                 var random = new DeterministicRandom(next.RandomState);
-                int roll = random.NextInt(100);
-                dodged = target.HasCombatTechniquesLevelOne && roll < 30;
-                int criticalThreshold = actor.CombatTechniquesLevel >= 3 ? 70 : 90;
-                critical = skill.CanCrit && !dodged && (_statuses.EvaluateBeforeAttack(target).ForceCritical || roll >= criticalThreshold);
-                events.Add(new CombatRollResolvedEvent(actor.Unit.InstanceId, target.Unit.InstanceId, skill.ContentId, roll, target.HasCombatTechniquesLevelOne ? 30 : 0, dodged ? "dodge" : critical ? "critical" : "hit", random.State));
+                int hitRoll = random.NextInt(100);
+                int accuracy = UnitCombatStatRules.Accuracy(actor.Unit.EffectiveAttributes);
+                int dodge = UnitCombatStatRules.Dodge(target.Unit.EffectiveAttributes) +
+                    (target.HasCombatTechniquesLevelOne ? 30 : 0);
+                int hitChance = Math.Clamp((int)Math.Floor((accuracy - dodge) * skill.ExecutionProfile.AccuracyFactor), 0, 100);
+                dodged = hitRoll >= hitChance;
+                int criticalRoll = random.NextInt(100);
+                int criticalChance = Math.Clamp(UnitCombatStatRules.CriticalChance(actor.Unit.EffectiveAttributes) +
+                    (actor.CombatTechniquesLevel >= 3 ? 20 : 0), 0, 100);
+                critical = skill.CanCrit && !dodged && (_statuses.EvaluateBeforeAttack(target).ForceCritical || criticalRoll < criticalChance);
+                events.Add(new CombatRollResolvedEvent(actor.Unit.InstanceId, target.Unit.InstanceId, skill.ContentId, hitRoll, dodge, dodged ? "dodge" : critical ? "critical" : "hit", random.State));
                 next = next.WithRandomState(random.State);
             }
 
@@ -104,11 +110,14 @@ public sealed class SkillRuntimeService
                 SkillExecutionKind.Thrust => checked(skill.Damage + actor.MovementCellsThisTurn * skill.ExecutionProfile.MovementDamagePerCell),
                 _ => skill.Damage
             };
-            if (skill.ExecutionProfile.DamageScaling == SkillDamageScalingKind.PrimaryAttributeAboveNeutral)
-                rawDamage = checked(rawDamage + actor.PrimaryAttributeDamageBonus);
+            SkillEffectScalingKind scaling = EffectiveScaling(skill);
+            if (rawDamage > 0 && scaling != SkillEffectScalingKind.None)
+                rawDamage = checked(rawDamage + UnitCombatStatRules.AttributeContribution(
+                    actor.Unit.EffectiveAttributes, EffectiveRole(actor, skill), scaling));
             if (actor.Statuses.Values.Any(status => status.EffectKind == StatusEffectKind.DamageOutputReduction))
                 rawDamage = (int)MathF.Round(rawDamage * 0.75f, MidpointRounding.AwayFromZero);
-            if (critical) rawDamage = checked(rawDamage * 2);
+            if (critical)
+                rawDamage = checked((int)Math.Floor(rawDamage * UnitCombatStatRules.CriticalMultiplier(actor.Unit.EffectiveAttributes)));
             StatusDamagePolicy damagePolicy = _statuses.EvaluateDamageTaken(target, actor, skill.MaxRange > 1);
             int damage = dodged ? 0 : (int)MathF.Round(rawDamage * damagePolicy.DamageMultiplier, MidpointRounding.AwayFromZero);
             if (!dodged && target.DamageShield is BattleDamageShieldState shield &&
@@ -331,7 +340,9 @@ public sealed class SkillRuntimeService
         BattleUnitState updated = actor.WithMana(actor.CurrentMana - skill.ManaCost).WithSuccessfulSkillUse(skill.ContentId);
         if (skill.ExecutionKind == SkillExecutionKind.BoneShield)
         {
-            int points = Math.Max(1, (actor.MaxMana / 3) * Math.Max(1, skill.ExecutionProfile.ShieldMultiplier));
+            int points = Math.Max(1, checked((actor.MaxMana / 3) * Math.Max(1,
+                skill.ExecutionProfile.ShieldMultiplier) + UnitCombatStatRules.AttributeContribution(
+                    actor.Unit.EffectiveAttributes, EffectiveRole(actor, skill), SkillEffectScalingKind.Shield)));
             updated = updated.WithDamageShield(new BattleDamageShieldState(points, skill.ExecutionProfile.ShieldAbsorbsAllDamage || skill.Level >= 2));
             var shieldEvents = new List<BattleEvent> { new SkillUsedEvent(actor.Unit.InstanceId, actor.Unit.InstanceId, skill.ContentId) };
             if (skill.ManaCost > 0) shieldEvents.Add(new ManaSpentEvent(actor.Unit.InstanceId, skill.ContentId, skill.ManaCost, updated.CurrentMana));
@@ -417,8 +428,21 @@ public sealed class SkillRuntimeService
         foreach (UnitInstanceId targetId in command.OrderedTargetIds)
         {
             if (!next.TryGetUnit(targetId, out BattleUnitState? target) || target is null || !target.IsAlive || !IsHostile(next, actor, target)) return Reject(state, actor, "invalid_ordered_target");
+            var random = new DeterministicRandom(next.RandomState);
+            int roll = random.NextInt(100);
+            int dodge = UnitCombatStatRules.Dodge(target.Unit.EffectiveAttributes) +
+                (target.HasCombatTechniquesLevelOne ? 30 : 0);
+            int chance = Math.Clamp((int)Math.Floor((UnitCombatStatRules.Accuracy(actor.Unit.EffectiveAttributes) -
+                dodge) * command.Definition.ExecutionProfile.AccuracyFactor), 0, 100);
+            bool missed = roll >= chance;
+            next = next.WithRandomState(random.State);
+            events.Add(new CombatRollResolvedEvent(actor.Unit.InstanceId, targetId, command.Definition.ContentId,
+                roll, dodge, missed ? "dodge" : "hit", random.State));
             int before = target.CurrentHealth;
-            BattleUnitState damaged = target.WithHealth(before - command.Definition.Damage);
+            int contribution = UnitCombatStatRules.AttributeContribution(actor.Unit.EffectiveAttributes,
+                EffectiveRole(actor, command.Definition), EffectiveScaling(command.Definition), multiHit: true);
+            int damage = missed ? 0 : checked(command.Definition.Damage + contribution);
+            BattleUnitState damaged = target.WithHealth(before - damage);
             next = next.WithUnit(damaged);
             events.Add(new DamageAppliedEvent(actor.Unit.InstanceId, targetId, command.Definition.ContentId, before - damaged.CurrentHealth, damaged.CurrentHealth));
             next = BattleDefeatResolver.Apply(next, target, damaged, events);
@@ -559,7 +583,7 @@ public sealed class SkillRuntimeService
     private static StatusDefinition StatusFor(SkillDefinition skill, ContentId statusId) => skill.ExecutionKind switch
     {
         SkillExecutionKind.Fireball or SkillExecutionKind.FireDemonAttack => new StatusDefinition(statusId, "Ignite", 2, true, StatusPolarity.Harmful, StatusEffectKind.Burning, StatusTriggerTiming.TurnStart, StatusRefreshStrategy.AddStacks, damagePerTurn: 1, elementKind: StatusElementKind.Fire),
-        SkillExecutionKind.IceBolt => new StatusDefinition(statusId, "Slow", 1, true, StatusPolarity.Harmful, StatusEffectKind.Slow, StatusTriggerTiming.None, StatusRefreshStrategy.RefreshDuration, speedModifier: -2f, elementKind: StatusElementKind.Ice),
+        SkillExecutionKind.IceBolt => new StatusDefinition(statusId, "Slow", 1, true, StatusPolarity.Harmful, StatusEffectKind.Slow, StatusTriggerTiming.None, StatusRefreshStrategy.RefreshDuration, elementKind: StatusElementKind.Ice, initiativeModifier: -4, movementModifier: -1),
         SkillExecutionKind.Lightning or SkillExecutionKind.Hellfire => new StatusDefinition(statusId, "Stun", 1, true, StatusPolarity.Harmful, StatusEffectKind.Stun, StatusTriggerTiming.None, StatusRefreshStrategy.RefreshDuration, elementKind: StatusElementKind.Lightning),
         SkillExecutionKind.AmplifyDamage => new StatusDefinition(statusId, "CurseDamageAmplifier", 5, true, StatusPolarity.Harmful, StatusEffectKind.CurseDamageAmplifier, StatusTriggerTiming.None, StatusRefreshStrategy.RefreshDuration, curseCategory: "damage-taken"),
         SkillExecutionKind.FearCurse => new StatusDefinition(statusId, "Fear", Math.Max(1, skill.StatusDuration), true, StatusPolarity.Harmful, StatusEffectKind.Fear, StatusTriggerTiming.None, StatusRefreshStrategy.RefreshDuration, curseCategory: "fear"),
@@ -568,6 +592,30 @@ public sealed class SkillRuntimeService
             StatusRefreshStrategy.RefreshDuration),
         _ => throw new InvalidOperationException($"Unsupported status contract for {skill.ExecutionKind}.")
     };
+
+    private static SkillEffectScalingKind EffectiveScaling(SkillDefinition skill)
+    {
+        if (skill.ExecutionProfile.EffectScaling != SkillEffectScalingKind.None)
+            return skill.ExecutionProfile.EffectScaling;
+        return skill.ExecutionKind switch
+        {
+            SkillExecutionKind.MeleeAttack or SkillExecutionKind.Thrust or SkillExecutionKind.MultiStab =>
+                SkillEffectScalingKind.MeleePhysical,
+            SkillExecutionKind.RangedAttack or SkillExecutionKind.HeavyShot or SkillExecutionKind.PoisonSpear =>
+                SkillEffectScalingKind.RangedPhysical,
+            SkillExecutionKind.MagicAttack or SkillExecutionKind.Fireball or SkillExecutionKind.IceBolt or
+                SkillExecutionKind.Lightning or SkillExecutionKind.BoneSpear or SkillExecutionKind.Bane or
+                SkillExecutionKind.Cleave or SkillExecutionKind.InfernalBlast or SkillExecutionKind.Hellfire =>
+                SkillEffectScalingKind.Magical,
+            SkillExecutionKind.RecoverSpear or SkillExecutionKind.DemonicRegeneration =>
+                SkillEffectScalingKind.Healing,
+            SkillExecutionKind.IceArmor or SkillExecutionKind.BoneShield => SkillEffectScalingKind.Shield,
+            _ => SkillEffectScalingKind.None
+        };
+    }
+
+    private static SkillRole EffectiveRole(BattleUnitState actor, SkillDefinition skill) =>
+        skill.Role == SkillRole.Any ? actor.Unit.CombatRole : skill.Role;
 
     private static BattleTransition Reject(BattleState state, BattleUnitState actor, string reason) => new(state, new BattleEvent[] { new CommandRejectedEvent(actor.Unit.InstanceId, reason) });
 

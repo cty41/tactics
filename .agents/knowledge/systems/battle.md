@@ -4,7 +4,7 @@ resource: https://github.com/cty41/tactics
 title: Battle System
 description: Godot Pure Run 的棋盘、回合、技能、状态、AI 合法性、结算与表现投影主链。
 tags: [gameplay, battle, turn-based, godot]
-timestamp: "2026-08-21T19:31:14+08:00"
+timestamp: "2026-08-22T13:25:23+08:00"
 status: active
 catalog_scope: battle-system
 repo_paths:
@@ -25,7 +25,7 @@ repo_paths:
   - godot/src/Tactics.Godot.Adapter/Runtime/GodotPlayableRunMain.cs
   - godot/tests/CoreGoldenVectorGodotTests.cs
 verified_revision: 04c75ec4
-source_fingerprint: sha256:808091427d0d6de9384f3894733319b531dbfe6ab8df74b6fa5cd4e9814d6fd7
+source_fingerprint: sha256:df4ebc2669504de5c4833f4d5a079afff79fd22a90b703a3606660be89dae6a2
 ---
 
 # Current State
@@ -35,6 +35,8 @@ source_fingerprint: sha256:808091427d0d6de9384f3894733319b531dbfe6ab8df74b6fa5cd
 棋盘绘制和 committed event 表现，不重新裁决玩法结果。
 
 跨引擎沿用的属性、状态、朝向与等距投影规则已整理为带稳定 Contract ID 的 Godot 权威文档。新角色或机制必须显式引用相关合同；旧 Unity 类名和编辑器结构不再作为规则来源。
+
+属性系统正在切换到六维统一战斗投影：装备后的有效属性参与技能贡献、命中、闪避和统一暴击，永久属性单独承担高级/大师解锁。敏捷决定先攻，体质决定移动，旧 Speed 覆写不再改变战斗行动值；减速独立施加先攻与移动修正。多段逐段判定并使用半额贡献，毒素冻结施加时总伤害后按前高后低分配。
 
 固定战场使用 10×10、零基坐标。单位实例身份使用 `UnitInstanceId`，不能用内容 `ContentId` 代替。合法性预览、
 AI 和真实 Transition 必须复用 Core 规则；表现 cue、Tween、伤害数字和 Sprite 姿态不能修改战斗状态。
@@ -71,7 +73,7 @@ Air 可越过动态占位与 flyover 障碍但不能停在其上；absolute 障�
 
 魔剑士 `Demonbound` 作为第四名开局候选但仍维持三人参战。Core 保存战斗局部 0–10 腐化、正念等级、冥想资格与附身控制状态；附身只切换控制者、不改变阵营，AI 优先攻击存活队友并在队友全 Down 后回退敌人。友军致命伤只进行一次确定性 25% Run 永久死亡判定；仅剩附身魔剑士且敌人全灭仍是玩家胜利。Godot 左上状态卡只绑定当前行动者，复用 Unit Resource 显示头像/名称/HP/MP，并由 nullable Corruption 投影可选连续特殊资源条；Hover/LOS 详情迁入鼠标旁输入穿透浮层。结构与语义已自动覆盖，视觉可读性仍待人工验收。
 
-厄运魔刃使用相邻方向输入并按近到远命中前方两格；墙体和第一格单位都不截断半月斩。Application 保存装备投影后的主属性伤害加值，只有显式启用缩放的技能读取该值。表现层把 Bane 编译为近战挥剑 Cue，并在半月斩抵达第一、第二格时依次插入受击和数字；规则提交仍早于表现，表现暂停或取消不改变结算。
+厄运魔刃使用相邻方向输入并按近到远命中前方两格；墙体和第一格单位都不截断半月斩。技能效果通过统一成长类型读取战斗有效属性，不再使用“高于中立值”的独立伤害加值。表现层把 Bane 编译为近战挥剑 Cue，并在半月斩抵达第一、第二格时依次插入受击和数字；规则提交仍早于表现，表现暂停或取消不改变结算。
 
 固定种子数值循环已有 Core 规则层诊断代理：三种 Demonbound 队伍标签各跑相同 10 seed，复用正式 `AiDecisionService`、`AiTurnService` 与 `BattleTransitionService`，记录终局、腐化峰值、冥想、首次附身、友伤、Down、永久死亡和技能次数，并验证同 seed 重放一致。其无尸体诊断夹具和简化队友策略只用于证明采样管线及发现规则问题；未接入生产 Run 路线、Resource 数值和完整职业策略前，不得视为完整平衡证据或人工体验替代。
 

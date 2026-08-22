@@ -304,7 +304,7 @@ public sealed class PureRunSessionService
 
     private static RunCharacterState CreateCharacter(PureRunPartyTemplate template, ContentId startingSkill)
     {
-        UnitDerivedStats stats = UnitDerivedStatRules.Calculate(template.Attributes, speed: 3f);
+        UnitDerivedStats stats = UnitDerivedStatRules.Calculate(template.Attributes);
         return new RunCharacterState(
             template.CharacterId, template.UnitContentId, template.Level, template.Attributes,
             stats.MaxHealth, stats.MaxHealth, stats.StartingMana, stats.MaxMana, false,
