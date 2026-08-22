@@ -3,7 +3,7 @@
 ## 2026-08-22
 * **Sync**: `roguelike-run` 已同步到来源指纹 `sha256:1ee16b47836a0112140e459db62391fc28979f0a3a29e03dab0d51bb6bc9b155`。
 * **Sync**: `project-architecture` 已同步到来源指纹 `sha256:660513ac25eacff995f27ed9a9933dafe9a1a6ac1c8da80effc5e43544a43a38`。
-* **Sync**: `godot-migration` 已同步到来源指纹 `sha256:a93050e57d2d02577bfee2ba368f6b8ecd76a7144106c514d7a217e1e1dd9455`。
+* **Sync**: `godot-migration` 已同步到来源指纹 `sha256:091195c7b24b8b9eda34c5a49bff39a4ae203e8daae13e1362dabb475008a7d0`。
 * **Sync**: `battle-system` 已同步到来源指纹 `sha256:3cfaccd7dcddb1b9e6a2003eeeb1aceedf25e7f3e7d4e8115a9a429b2279a1a7`。
 * **Sync**: `gameplay-test-framework` 已同步到来源指纹 `sha256:afb8ebae6cc89dd354e2bbacd65037ec0456a78c91b2ac715d38bc385c94a166`。
 * **Sync**: `project-documentation` 已同步到来源指纹 `sha256:d8b3035aae08e65f7069ee98843062b37447712a8d547a16163ce25f100108bb`。
@@ -436,4 +436,4 @@
 * **Update (2026-08-22)**: 属性系统切换到永久属性与战斗有效属性双投影；装备和临时变化影响实战但不影响高级/大师解锁，六维统一派生命法、行动、命中闪避暴击及技能贡献，旧 Speed/减速合同由属性行动合同替代。
 * **Fix (2026-08-22)**: 为公开根补充不依赖一次性 Unity DTO 的 Unit ResourceSaver 属性升级入口；12 个公式单位已刷新到 `ATTR-DERIVED-STATS-002`，显式派生的 Maw Bat 保持冻结例外，门禁同时验证幂等与 Godot 运行时合同。
 * **Fix (2026-08-22)**: `PresentationMiss` checkpoint 从新命中公式下会命中的 RNG state 2 调整为确定闪避的 state 6，并同步 semantic hash 与编译 plan；生产输入的 20 场景 acceptance batch 复跑通过。
-* **Fix (2026-08-22)**: Adventure gameplay pointer resolver 将 Board 本地目标转换为 Canvas 全局坐标后再注入 Viewport，修复 GitHub Windows 非单位 CanvasTransform 下 Hover 命中全屏 Board、实际点击却落到错误格的坐标误判。
+* **Fix (2026-08-22)**: Gameplay pointer resolver 同时应用 Screen/Canvas/Control transform，并要求本地鼠标位置精确命中目标点；修复 GitHub Windows 下全屏 Adventure/Battle surface 的宽泛 Hover 掩盖错误格坐标。

@@ -655,28 +655,43 @@ public sealed class GodotGameplayRuntimeContext(GodotGameplayScenarioPlan plan, 
             ? ButtonPointerCandidates(expectedControl.GetGlobalRect())
             : [logicalPoint];
         (Vector2 Point, bool Local)? resolved = null;
-        foreach (Vector2 logicalCandidate in logicalCandidates)
+        Vector2? observedLocalPoint = null;
+        void ObserveLocalPoint(InputEvent input)
         {
-            (Vector2 Point, bool Local)[] candidates =
-            [
-                (viewport.GetCanvasTransform() * logicalCandidate, false),
-                (logicalCandidate, true),
-                (logicalCandidate, false)
-            ];
-            foreach ((Vector2 candidatePoint, bool local) in candidates)
-            {
-                viewport.PushInput(new InputEventMouseMotion { Position = new Vector2(-100, -100), GlobalPosition = new Vector2(-100, -100) }, local);
-                await WaitFramesAsync(1, token);
-                viewport.PushInput(new InputEventMouseMotion { Position = candidatePoint, GlobalPosition = candidatePoint }, local);
-                await WaitFramesAsync(1, token);
-                Control? hovered = viewport.GuiGetHoveredControl();
-                if (hovered == expectedControl || hovered is not null && expectedControl.IsAncestorOf(hovered))
-                { resolved = (candidatePoint, local); break; }
-            }
-            if (resolved is not null) break;
+            if (input is InputEventMouseMotion motion) observedLocalPoint = motion.Position;
         }
+        expectedControl.GuiInput += ObserveLocalPoint;
+        try
+        {
+            foreach (Vector2 logicalCandidate in logicalCandidates)
+            {
+                (Vector2 Point, bool Local)[] candidates =
+                [
+                    (viewport.GetScreenTransform() * viewport.GetCanvasTransform() * logicalCandidate, false),
+                    (viewport.GetCanvasTransform() * logicalCandidate, true),
+                    (logicalCandidate, false)
+                ];
+                foreach ((Vector2 candidatePoint, bool local) in candidates)
+                {
+                    observedLocalPoint = null;
+                    viewport.PushInput(new InputEventMouseMotion { Position = new Vector2(-100, -100), GlobalPosition = new Vector2(-100, -100) }, local);
+                    await WaitFramesAsync(1, token);
+                    viewport.PushInput(new InputEventMouseMotion { Position = candidatePoint, GlobalPosition = candidatePoint }, local);
+                    await WaitFramesAsync(1, token);
+                    Control? hovered = viewport.GuiGetHoveredControl();
+                    Vector2 expectedLocal = expectedControl.GetGlobalTransform().AffineInverse() * logicalCandidate;
+                    bool exactSurfacePoint = expectedControl is Button ||
+                        observedLocalPoint is Vector2 observed && observed.DistanceTo(expectedLocal) <= 1f;
+                    if (exactSurfacePoint &&
+                        (hovered == expectedControl || hovered is not null && expectedControl.IsAncestorOf(hovered)))
+                    { resolved = (candidatePoint, local); break; }
+                }
+                if (resolved is not null) break;
+            }
+        }
+        finally { if (GodotObject.IsInstanceValid(expectedControl)) expectedControl.GuiInput -= ObserveLocalPoint; }
         if (resolved is null) throw new GodotGameplayScenarioException(GodotGameplayFailureKind.Action,
-            $"pointer_target_not_hovered:{identity}:logical={logicalPoint}:hovered={viewport.GuiGetHoveredControl()?.Name ?? "none"}:viewport={viewport.GetVisibleRect()}");
+            $"pointer_target_not_hovered:{identity}:logical={logicalPoint}:observedLocal={observedLocalPoint?.ToString() ?? "none"}:hovered={viewport.GuiGetHoveredControl()?.Name ?? "none"}:viewport={viewport.GetVisibleRect()}");
         return (viewport, resolved.Value.Point, resolved.Value.Local);
     }
 
@@ -696,8 +711,8 @@ public sealed class GodotGameplayRuntimeContext(GodotGameplayScenarioPlan plan, 
         Vector2 localPoint = map.NodeCenter(nodeId);
         (Vector2 Point, bool Local)[] candidates =
         [
-            (map.GetGlobalTransformWithCanvas() * localPoint, false),
-            (map.GetGlobalTransform() * localPoint, true),
+            (viewport.GetScreenTransform() * map.GetGlobalTransformWithCanvas() * localPoint, false),
+            (map.GetGlobalTransformWithCanvas() * localPoint, true),
             (map.GetGlobalTransform() * localPoint, false)
         ];
         string? hoveredNode = null;
