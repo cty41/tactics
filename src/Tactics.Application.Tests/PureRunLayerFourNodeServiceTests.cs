@@ -209,4 +209,29 @@ public sealed class PureRunLayerFourNodeServiceTests
         return new PureRunState("run", 42, 4, PureRunPhase.AwaitingLayerFourChoice, 2,
             new ContentId("encounter.pure-run.n3"), party, gold: gold);
     }
+
+    [Test]
+    public void BeginNodeBattle_ExcludesDeadCharactersFromCheckpointAndEncounterRequest()
+    {
+        PureRunState run = CreateRun();
+        RunCharacterState[] party = run.Party.Select((value, index) => index == 0
+            ? new RunCharacterState(value.CharacterId, value.UnitContentId, value.Level, value.Attributes, 0,
+                value.MaxHealth, value.CurrentMana, value.MaxMana, true, value.LearnedSkills)
+            : value).ToArray();
+        run = new PureRunState(run.RunId, run.Seed, run.Revision, run.Phase, run.EncounterIndex,
+            run.EncounterContentId, party, gold: run.Gold);
+        PureRunState selected = Select(run, "layer_04_battle").State;
+
+        LayerFourNodeResolution begun = _service.BeginN4(selected,
+            new ContentId("encounter.pure-run.n4"));
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(begun.Succeeded, Is.True);
+            Assert.That(begun.EncounterRequest, Is.Not.Null);
+            Assert.That(begun.EncounterRequest!.Party.Select(value => value.CharacterId), Is.EqualTo(new[] { "necro", "amazon" }));
+            Assert.That(begun.State.Checkpoint!.Party.Select(value => value.CharacterId), Is.EqualTo(new[] { "necro", "amazon" }));
+            Assert.That(begun.State.Party.Count, Is.EqualTo(3), "Full roster with tombstones stays on the run state.");
+        });
+    }
 }

@@ -151,9 +151,13 @@ public sealed class PureRunSessionService
             return Fail(loaded.ErrorCode ?? "run.no_active_run");
         if (run.Phase != PureRunPhase.Ready)
             return Fail("run.not_ready", loaded.Snapshot);
+        // Active party excludes permanently dead members (IsDead) so battles never
+        // re-create tombstones; the full roster stays on PureRunState.Party for
+        // settlement and the terminal Summary. Mirrors PureRunLayerFourNodeService.
+        RunCharacterState[] activeParty = run.Party.Where(character => !character.IsDead).ToArray();
         var checkpoint = new RunEncounterCheckpoint(
             run.EncounterContentId, run.EncounterIndex, run.Revision + 1,
-            run.Party.ToArray(), run.BackpackConsumables.ToArray(), run.BackpackEquipment.ToArray());
+            activeParty, run.BackpackConsumables.ToArray(), run.BackpackEquipment.ToArray());
         var pending = new PureRunState(
             run.RunId, run.Seed, run.Revision + 1, PureRunPhase.PendingBattle,
             run.EncounterIndex, run.EncounterContentId, run.Party, run.BackpackConsumables,

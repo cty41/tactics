@@ -218,6 +218,38 @@ public sealed class PureRunSessionServiceTests
     }
 
     [Test]
+    public void BeginEncounter_ExcludesPermanentlyDeadMemberFromCheckpoint()
+    {
+        var store = new MemoryRunStore();
+        var service = new PureRunSessionService(Definition(), store);
+        Assert.That(service.StartNewRun(42).Succeeded, Is.True);
+
+        RunSessionResult mutated = service.ApplyMutation(state => new RunMutationResult(true, null, new PureRunState(
+            state.RunId, state.Seed, state.Revision + 1, state.Phase, state.EncounterIndex, state.EncounterContentId,
+            state.Party.Select((member, index) => index == 1
+                ? new RunCharacterState(member.CharacterId, member.UnitContentId, member.Level, member.Attributes,
+                    0, member.MaxHealth, 0, member.MaxMana, true, member.LearnedSkills,
+                    member.Equipment, member.CarriedConsumables, member.LearnedSkillStates,
+                    member.StartingSkillContentId)
+                : member).ToArray())));
+        Assert.That(mutated.Succeeded, Is.True);
+        RunCharacterState[] roster = store.Snapshot!.ActiveRun!.Party.ToArray();
+        Assert.That(roster.Count(value => value.IsDead), Is.EqualTo(1));
+
+        RunSessionResult result = service.BeginEncounter();
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(result.Succeeded, Is.True);
+            Assert.That(result.EncounterRequest!.Party.Select(value => value.CharacterId),
+                Does.Not.Contain(roster.Single(value => value.IsDead).CharacterId));
+            Assert.That(result.EncounterRequest!.Party, Has.Count.EqualTo(roster.Length - 1));
+            // Full roster (with tombstone) is retained on the pending state for settlement/Summary.
+            Assert.That(store.Snapshot!.ActiveRun!.Party, Has.Count.EqualTo(roster.Length));
+        });
+    }
+
+    [Test]
     public void ResumePendingBattle_ReissuesSameCheckpoint()
     {
         var store = new MemoryRunStore();

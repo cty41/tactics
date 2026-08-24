@@ -49,9 +49,11 @@ public sealed class PlayableBattleSessionFactory
         var skillsByUnit = new Dictionary<UnitInstanceId, IReadOnlyList<SkillDefinition>>();
         var aiByUnit = new Dictionary<UnitInstanceId, AiDefinition>();
         var characterIds = new Dictionary<UnitInstanceId, string>();
+        int partyIndex = 0;
         for (int index = 0; index < request.Party.Count; index++)
         {
             RunCharacterState character = request.Party[index];
+            if (character.IsDead) continue;
             UnitDefinition definition = units[character.UnitContentId];
             var instanceId = new UnitInstanceId($"party-{character.CharacterId}");
             SkillDefinition[] learnedDefinitions = character.LearnedSkills
@@ -62,7 +64,7 @@ public sealed class PlayableBattleSessionFactory
             IEnumerable<ContentId> learned=new[] { basicId }.Concat(character.LearnedSkills);
             if(role == SkillRole.Amazon) learned=learned.Append(PickupSpearId);
             SkillDefinition[] unitSkills = learned.Distinct().Select(id => playableSkills[id]).ToArray();
-            BattleUnitState state = CreatePartyState(definition, character, instanceId, layout.PartySpawns[index], index,
+            BattleUnitState state = CreatePartyState(definition, character, instanceId, layout.PartySpawns[partyIndex], partyIndex,
                 balance, equipment, role);
             if (role == SkillRole.Demonbound)
             {
@@ -71,6 +73,7 @@ public sealed class PlayableBattleSessionFactory
                     .Select(skill => skill.Level).DefaultIfEmpty(0).Max();
                 state = state.WithDemonboundState(new DemonboundBattleState(mindfulnessLevel: mindfulnessLevel));
             }
+            partyIndex++;
             states.Add(state);
             characterIds.Add(instanceId, character.CharacterId);
             skillsByUnit.Add(instanceId, unitSkills);

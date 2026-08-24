@@ -662,6 +662,41 @@ public sealed class PlayableBattleSessionServiceTests
         });
     }
 
+    [Test]
+    public void PossessedDemonboundSnapshot_ProjectsLearnedSkillsToTheirHighestBranchLevel()
+    {
+        UnitInstanceId demonboundId = new("party-demonbound");
+        UnitInstanceId enemyId = new("enemy-goat");
+        SkillDefinition baneLv1 = new(new ContentId("skill.demonbound.bane.lv1"), "test.bane.lv1",
+            SkillRole.Demonbound, SkillKind.Active, 1, 3, 1, 2, SkillExecutionKind.Bane, 5,
+            SkillDamageKind.Magical, branchId: "skill.demonbound.bane",
+            executionProfile: new SkillExecutionProfile(CorruptionCost: 3));
+        SkillDefinition baneLv3 = new(new ContentId("skill.demonbound.bane.lv3"), "test.bane.lv3",
+            SkillRole.Demonbound, SkillKind.Active, 3, 3, 1, 2, SkillExecutionKind.Bane, 7,
+            SkillDamageKind.Magical, branchId: "skill.demonbound.bane",
+            executionProfile: new SkillExecutionProfile(CorruptionCost: 3));
+        BattleUnitState demonbound = Unit(demonboundId, "unit.pure-run.demonbound",
+                new GridPoint(1, 1), 0, 0, 20, 20)
+            .WithDemonboundState(new DemonboundBattleState(10, 3, isPossessed: true));
+        BattleUnitState enemy = Unit(enemyId, "unit.pure-run.goat-charger", new GridPoint(8, 8), 1, 1, 20, 20);
+
+        var service = new PlayableBattleSessionService(new PlayableBattleSessionContext(
+            State([demonbound, enemy], [demonboundId, enemyId]), 0,
+            new Dictionary<UnitInstanceId, IReadOnlyList<SkillDefinition>> { [demonboundId] = [baneLv1] },
+            new Dictionary<UnitInstanceId, AiDefinition> { [enemyId] = BasicAi("ai.enemy", baneLv1.ContentId) },
+            new Dictionary<ContentId, SkillDefinition> { [baneLv1.ContentId] = baneLv1, [baneLv3.ContentId] = baneLv3 }));
+
+        SkillDefinition? projected = service.CaptureSnapshot().ActiveSkills
+            .SingleOrDefault(skill => skill.BranchId == "skill.demonbound.bane");
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(projected, Is.Not.Null);
+            Assert.That(projected!.ContentId, Is.EqualTo(baneLv3.ContentId));
+            Assert.That(projected.Level, Is.EqualTo(3));
+        });
+    }
+
     private static PlayableBattleSessionService CreateService(
         out SkillDefinition playerSkill,
         out UnitInstanceId enemyId,

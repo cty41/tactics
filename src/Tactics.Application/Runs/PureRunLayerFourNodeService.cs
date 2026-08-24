@@ -301,7 +301,10 @@ public sealed class PureRunLayerFourNodeService
         if (!Validate(run, expectedKind, out LayerFourNodeResolution? failure)) return failure!;
         long revision = run.Revision + 1;
         int encounterIndex = run.Phase == PureRunPhase.ResolvingLayerSixNode ? 5 : 3;
-        var checkpoint = new RunEncounterCheckpoint(encounterId, encounterIndex, revision, run.Party.ToArray(),
+        // Active party excludes permanently dead characters so battles never re-create them;
+        // the full roster (with tombstones) stays on PureRunState.Party for settlement and the terminal Summary.
+        RunCharacterState[] activeParty = run.Party.Where(character => !character.IsDead).ToArray();
+        var checkpoint = new RunEncounterCheckpoint(encounterId, encounterIndex, revision, activeParty,
             run.BackpackConsumables.ToArray(), run.BackpackEquipment.ToArray());
         PureRunState pending = Copy(run, phase: PureRunPhase.PendingBattle, encounterId: encounterId,
             checkpoint: checkpoint, map: run.MapState! with { NodeLifecycle = RunNodeLifecycle.Pending });

@@ -60,7 +60,10 @@ public sealed class PureRunFullRunService
     private static FullRunTransitionResult BeginBattle(PureRunState state, ContentId encounter, int index, PureRunPhase phase)
     {
         long revision = state.Revision + 1;
-        var checkpoint = new RunEncounterCheckpoint(encounter, index, revision, state.Party.ToArray(),
+        // Active party excludes permanently dead members (IsDead) so late-layer
+        // battles never re-create tombstones; the full roster stays on the state.
+        RunCharacterState[] activeParty = state.Party.Where(character => !character.IsDead).ToArray();
+        var checkpoint = new RunEncounterCheckpoint(encounter, index, revision, activeParty,
             state.BackpackConsumables.ToArray(), state.BackpackEquipment.ToArray());
         PureRunState pending = Copy(state, phase, encounter, index, checkpoint: checkpoint);
         return new(true, null, pending, new EncounterRequest(state.RunId, revision, encounter, checkpoint.Party,

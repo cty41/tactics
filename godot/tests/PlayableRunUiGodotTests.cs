@@ -1,6 +1,7 @@
 using GdUnit4;
 using Godot;
 using System.Reflection;
+using Tactics.Core.Battle;
 using Tactics.Core.Content;
 using Tactics.Core.AI;
 using Tactics.Core.Board;
@@ -233,6 +234,36 @@ public class PlayableRunUiGodotTests
         AssertThat(possessed.Maximum).IsEqual(10);
         AssertThat(possessed.Pulsing).IsTrue();
         AssertThat(GodotBattleActiveUnitPanel.ProjectSpecialResource(BattleUnit())).IsNull();
+    }
+
+    [TestCase]
+    [RequireGodotRuntime]
+    public void ActiveUnitPanelShowsPossessedBoostedHealthManaAndPossessedSuffix()
+    {
+        using ImageTexture texture = ImageTexture.CreateFromImage(Image.CreateEmpty(8, 8, false, Image.Format.Rgba8));
+        var definition = new UnitDefinitionResource { DisplayName = "Demonbound", DownRightTexture = texture };
+        var panel = new GodotBattleActiveUnitPanel();
+        panel._Ready();
+        // Boosted resources as projected by DemonboundPossessedBoostService (20/20 -> 44/44, 18/18 -> 33/33).
+        BattleUiUnitSnapshot possessed = BattleUnit() with
+        {
+            CurrentHealth = 35,
+            MaxHealth = 44,
+            CurrentMana = 11,
+            MaxMana = 33,
+            Corruption = 10,
+            IsPossessed = true
+        };
+
+        panel.Bind(definition, possessed);
+
+        AssertThat(Descendants<Label>(panel).Single(value => value.Name == "HealthValue").Text)
+            .IsEqual("35/44");
+        AssertThat(Descendants<Label>(panel).Single(value => value.Name == "ManaValue").Text)
+            .IsEqual("11/33");
+        AssertThat(Descendants<Label>(panel).Single(value => value.Name == "SpecialValue").Text)
+            .IsEqual("Corruption  10/10  POSSESSED");
+        panel.Free();
     }
 
     [TestCase]
@@ -851,6 +882,72 @@ public class PlayableRunUiGodotTests
             foreach (T nested in Descendants<T>(child)) yield return nested;
         }
     }
+
+    [TestCase]
+    [RequireGodotRuntime]
+    public void MeditateActionButton_IsEnabledWhileSaneAndDisabledWhilePossessed()
+    {
+        var ui = new GodotPlayableRunMain();
+        ui._Ready();
+        var board = new GodotIsometricBattleBoard { Size = new Vector2(1200, 650) };
+        var panel = new HBoxContainer { CustomMinimumSize = new Vector2(1120, 90) };
+        ui.AddChild(board);
+        ui.AddChild(panel);
+        Type mainType = typeof(GodotPlayableRunMain);
+        mainType.GetField("_battle", BindingFlags.Instance | BindingFlags.NonPublic)!
+            .SetValue(ui, SaneDemonboundSession());
+        mainType.GetField("_board", BindingFlags.Instance | BindingFlags.NonPublic)!
+            .SetValue(ui, board);
+        mainType.GetField("_skillPanel", BindingFlags.Instance | BindingFlags.NonPublic)!
+            .SetValue(ui, panel);
+        MethodInfo refresh = mainType.GetMethod("RefreshBattle", BindingFlags.Instance | BindingFlags.NonPublic)!;
+
+        BattleUiSnapshot sane = Snapshot(new BattleUiSkillAvailability(
+            new ContentId("skill.demonbound.meditation"), true, null));
+        refresh.Invoke(ui, new object?[] { sane });
+        Button enabled = Descendants<Button>(ui).Single(button => button.Name == "MeditateAction");
+        AssertThat(enabled.Disabled).IsFalse();
+        AssertThat(enabled.Text).Contains("Meditate");
+
+        BattleUiSnapshot possessed = Snapshot(new BattleUiSkillAvailability(
+            new ContentId("skill.demonbound.meditation"), false, "meditation_possessed"));
+        refresh.Invoke(ui, new object?[] { possessed });
+        Button disabled = Descendants<Button>(ui).Single(button => button.Name == "MeditateAction");
+        AssertThat(disabled.Disabled).IsTrue();
+        AssertThat(disabled.TooltipText).IsEqual("meditation_possessed");
+
+        ui.Free();
+    }
+
+    /// <summary>A minimal unpossessed demonbound session used only as a non-null battle placeholder.</summary>
+    private static PlayableBattleSessionService SaneDemonboundSession()
+    {
+        var cells = new Dictionary<GridPoint, CellState>();
+        for (int x = 0; x < 10; x++) for (int y = 0; y < 10; y++)
+            cells[new GridPoint(x, y)] = new CellState();
+        var id = new UnitInstanceId("party-demonbound");
+        BattleUnitState demonbound = new(new UnitState(id, new ContentId("unit.pure-run.demonbound"),
+            new GridPoint(1, 1), 0, 5, 0, 0), 20, 20, maxMana: 10, currentMana: 10,
+            demonboundState: new DemonboundBattleState(7, 1));
+        var state = new BattleState(new BoardSnapshot(cells), [demonbound], [id], randomState: 7);
+        return new PlayableBattleSessionService(new PlayableBattleSessionContext(
+            state, 0,
+            new Dictionary<UnitInstanceId, IReadOnlyList<SkillDefinition>>(),
+            new Dictionary<UnitInstanceId, AiDefinition>(),
+            new Dictionary<ContentId, SkillDefinition>()));
+    }
+
+    /// <summary>Snapshot with a single alive demonbound unit (empty other pools) and the given meditation availability.</summary>
+    private static BattleUiSnapshot Snapshot(BattleUiSkillAvailability meditation) => new(
+        PlayableBattlePhase.PlayerTurn, 1, new UnitInstanceId("party-demonbound"),
+        BattleTargetingMode.None, null,
+        [BattleUnit()], Array.Empty<SkillDefinition>(),
+        Array.Empty<GridPoint>(), Array.Empty<BattleUiTarget>(), null,
+        Array.Empty<GridPoint>(), new Dictionary<UnitInstanceId, GridPoint>(),
+        Array.Empty<Tactics.Core.Battle.BattleEvent>(),
+        [new UnitInstanceId("party-demonbound")], 0, null,
+        MoveAvailability: new BattleUiMoveAvailability(true, null),
+        MeditationAvailability: meditation);
 
     private static void AssertFormalPanel(PanelContainer panel)
     {

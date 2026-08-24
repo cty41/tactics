@@ -32,6 +32,8 @@ public partial class GodotPlayableRunMain : Control
         };
     public static readonly Vector2 UnitMeterSize = new(44, 18);
     public const int UnitMeterBarHeight = 7;
+    /// <summary>Possessed-form body tint: distinct crimson-violet matched to the critical corruption bar.</summary>
+    public static readonly Color PossessedFormTint = new("d54fa5");
     private readonly Dictionary<ContentId, UnitDefinition> _units = new();
     private readonly Dictionary<ContentId, UnitDefinitionResource> _unitResources = new();
     private readonly Dictionary<ContentId, SkillDefinition> _skills = new();
@@ -798,7 +800,7 @@ public partial class GodotPlayableRunMain : Control
             {actor=GodotUnitFactory.InstantiateActor(_unitResources[unit.DefinitionId]);actor.ConfigureInstanceIdentity(unit.UnitId.Value);actor.Scale=Vector2.One*.34f;actor.SetFacing(GodotPresentationFacingResolver.Initial(unit.PlayerNumber));actor.ConfigurePresentation(_presentationProfile??new StandardUnitPresentationResource());_board.AddChild(actor);_actors[unit.UnitId]=actor;}
             if(!(_presentationPlayer?.IsPlaying??false))actor.Position = IsometricBattleBoardLayout.GridToScreen(unit.Cell);
             actor.SetDeathVisual(!unit.IsAlive);
-            actor.Modulate = unit.IsPossessed ? new Color(1.25f, .55f, 1.35f) : Colors.White;
+            actor.Modulate = unit.IsPossessed ? PossessedFormTint : Colors.White;
             actor.SetSpearHeld(unit.DefinitionId.Value != "unit.pure-run.amazon" || !snapshot.DroppedSpears.ContainsKey(unit.UnitId));
             StatusPresentationResource statusProfile = _statusPresentationProfile ?? new StatusPresentationResource();
             actor.SetStatuses(unit.IsAlive ? unit.Statuses : Array.Empty<BattleUiStatusSnapshot>(),

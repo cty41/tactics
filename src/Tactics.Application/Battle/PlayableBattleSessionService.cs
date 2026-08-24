@@ -408,15 +408,8 @@ public sealed class PlayableBattleSessionService
                 continue;
             }
             bool possessed = active.DemonboundState?.IsPossessed == true;
-            bool possessedTargetsAllies = possessed && State.Units.Values.Any(unit => unit.IsAlive &&
-                unit.Unit.PlayerNumber == active.Unit.PlayerNumber &&
-                unit.Unit.InstanceId != active.Unit.InstanceId);
             AiDefinition? definition = possessed
-                ? new AiDefinition(new ContentId("ai.demonbound.possessed"), AiArchetype.Charger,
-                    new AiProfileDefinition(5, 3, 2, 1),
-                    SkillsFor(active).Where(skill => !skill.IsPassive &&
-                        skill.ExecutionKind != SkillExecutionKind.Meditation).Select(skill => skill.ContentId).ToArray(),
-                    Array.Empty<ContentId>())
+                ? DemonboundPossessedAi.For(SkillsFor(active))
                 : summonController is null
                     ? null
                     : summonController.Ai with { SkillIds = SkillsFor(active).Select(skill => skill.ContentId).ToArray() };
@@ -427,7 +420,7 @@ public sealed class PlayableBattleSessionService
             }
             int patternIndex = _patternIndices.GetValueOrDefault(active.Unit.InstanceId);
             AiTurnPlan plan = _decisions.Decide(State, definition, _context.SkillCatalog, patternIndex,
-                targetOwnFaction: possessedTargetsAllies,
+                possessed ? TargetRelationshipStrategy.UnifiedAll : TargetRelationshipStrategy.StandardHostile,
                 priorityTargetId: active.Unit.PlayerNumber == _context.PlayerNumber ? null : _context.ProtectedNpcUnitId);
             AiPlanExecutionResult result = _aiTurns.Execute(State, plan, _context.SkillCatalog);
             _automaticFrames.Enqueue(("Decision",State,result.Decision,Array.Empty<BattleEvent>()));
@@ -596,7 +589,9 @@ public sealed class PlayableBattleSessionService
     private void Append(IEnumerable<BattleEvent> events) => _recentEvents.AddRange(events);
     private IReadOnlyList<SkillDefinition> SkillsFor(BattleUnitState unit)
     {
-        if (_context.SkillsByUnit.TryGetValue(unit.Unit.InstanceId, out IReadOnlyList<SkillDefinition>? skills)) return skills;
+        IReadOnlyList<SkillDefinition>? skills;
+        if (_context.SkillsByUnit.TryGetValue(unit.Unit.InstanceId, out skills))
+            return DemonboundPossessedSkillProjection.Project(skills, _context.SkillCatalog, unit.DemonboundState?.IsPossessed == true);
         if (ControllerFor(unit) is SummonControllerDefinition controller)
         {
             int level = 1;

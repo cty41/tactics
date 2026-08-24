@@ -34,6 +34,36 @@ public sealed class PureRunFullRunServiceTests
     }
 
     [Test]
+    public void BeginBoss_ExcludesPermanentlyDeadRosterFromCheckpointWhileKeepingTombstone()
+    {
+        PureRunFullRunService service = new();
+        PureRunState ready = Run(PureRunPhase.ReadyForBoss);
+        RunCharacterState[] roster = ready.Party.Select((member, index) => index == 1
+            ? new RunCharacterState(member.CharacterId, member.UnitContentId, member.Level, member.Attributes,
+                0, member.MaxHealth, 0, member.MaxMana, true, member.LearnedSkills,
+                member.Equipment, member.CarriedConsumables, member.LearnedSkillStates,
+                member.StartingSkillContentId)
+            : member).ToArray();
+        PureRunState run = new(ready.RunId, ready.Seed, ready.Revision, ready.Phase, ready.EncounterIndex,
+            ready.EncounterContentId, roster, pendingProgression: ready.PendingProgression,
+            battlesCompleted: ready.BattlesCompleted, mapState: ready.MapState);
+
+        FullRunTransitionResult pending = service.BeginBoss(run, Map());
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(pending.Succeeded, Is.True);
+            Assert.That(pending.State.Checkpoint!.Party.Select(value => value.CharacterId),
+                Is.EqualTo(new[] { "mage", "amazon" }));
+            Assert.That(pending.EncounterRequest!.Party.Select(value => value.CharacterId),
+                Is.EqualTo(new[] { "mage", "amazon" }));
+            // Full roster (with tombstone) is retained on the state for settlement/Summary.
+            Assert.That(pending.State.Party.Select(value => value.CharacterId),
+                Is.EqualTo(new[] { "mage", "necro", "amazon" }));
+        });
+    }
+
+    [Test]
     public void BossVictoryProducesTerminalBossSummaryWithoutProgression()
     {
         PureRunFullRunService service = new();
