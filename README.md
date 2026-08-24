@@ -1,54 +1,57 @@
 # Tactics
 
-Tactics 是一个使用 Godot 4.7 C# 开发的回合制战棋 Roguelike。当前核心模式 **Pure Run** 围绕法师、死灵法师与亚马逊女战士组成的固定三人小队展开：玩家需要在七层路线中完成战斗、事件与服务节点，在单局内组合技能、属性、装备和消耗品，并把队伍带到最终 Boss。
+> [English](README.md) · [中文](README.zh-CN.md)
 
-> 项目状态：开发中原型。主要流程与自动化回归已经建立，但视觉、操作体验和正式发布仍需持续人工验收；当前构建不代表最终发行版本。
 
-## 开源许可
+Tactics is a turn-based tactical Roguelike built with Godot 4.7 C#. The current core mode, **Pure Run**, centers on a fixed three-character party of Mage, Necromancer, and Amazon: players pick a path through seven floors of battle, event, and service nodes, combine skills, attributes, gear, and consumables within a single run, and bring the party to the final boss.
 
-- 源代码、文档与仓库工具按 [Apache License 2.0](LICENSE) 发布。
-- `godot/assets/` 以及来源清单明确列出的项目自有图像按 [CC BY 4.0](ASSET_LICENSE.md) 发布，署名为 `cty41`。
-- 项目名称、标识及发行品牌不因代码或资产许可而授予商标使用权，详见 [TRADEMARKS.md](TRADEMARKS.md)。
-- 第三方组件及其许可见 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)。逐文件资产来源与哈希记录在 `Tools/public-release/asset-provenance.json`。
+> Project status: in-development prototype. The main loop and automated regression are established, but visuals, feel, and the release experience still require continuous manual acceptance; the current build does not represent a final release.
 
-许可声明只覆盖仓库中明确纳入公开来源清单的内容，不覆盖私有历史归档中的 Unity 工程、候选美术、逆向分析材料或第三方参考载荷。
+## Open-source license
 
-## 核心内容
+- Source code, documentation, and repository tooling are released under the [Apache License 2.0](LICENSE).
+- `godot/assets/` and project-owned images explicitly listed in the provenance manifest are released under [CC BY 4.0](ASSET_LICENSE.md), attributed to `cty41`.
+- The project name, logos, and release branding are not granted as trademarks by the code or asset licenses; see [TRADEMARKS.md](TRADEMARKS.md).
+- Third-party components and their licenses are documented in [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md). Per-file asset provenance and hashes are recorded in `Tools/public-release/asset-provenance.json`.
 
-- 确定性的网格战斗、回合顺序、技能效果、状态与敌方 AI。
-- 七层 Pure Run 地图，包含普通战斗、Elite、Rest、Store、Mystery、Treasure 与 Boss。
-- 三职业 Lv1–Lv3 技能成长、属性分配、装备、消耗品与持续 Buff。
-- Save V6 检查点、异常恢复和可重复验证的 Run 状态。
-- Godot 原生 UI、等距棋盘、程序化战斗表现与 Content Workbench。
-- NUnit、Frozen Oracle、GdUnit、Gameplay Specs 和双渲染器 smoke 组成的回归链。
+The license statements cover only content explicitly included in the repository's public provenance manifest. They do not cover Unity projects, candidate art, reverse-engineering material, or third-party reference payloads kept in private historical archives.
 
-## 技术架构
+## Core content
+
+- Deterministic grid combat, turn order, skill effects, statuses, and enemy AI.
+- A seven-floor Pure Run map with normal battle, Elite, Rest, Store, Mystery, Treasure, and Boss nodes.
+- Three classes with Lv1–Lv3 skill growth, attribute allocation, gear, consumables, and persistent buffs.
+- Save V6 checkpoints, crash recovery, and repeatably verifiable run state.
+- Godot-native UI, isometric board, procedural battle presentation, and the Content Workbench.
+- A regression chain of NUnit, Frozen Oracle, GdUnit, Gameplay Specs, and dual-renderer smoke.
+
+## Technical architecture
 
 ```text
 src/Tactics.Core
-    纯 .NET 9 玩法规则、确定性 RNG、Battle 与 Run 状态
+    Pure .NET 9 gameplay rules, deterministic RNG, Battle and Run state
             ↓
 src/Tactics.Application
-    用例、内容编译、保存与运行时投影
+    Use cases, content compilation, save and runtime projection
             ↓
 godot/src/Tactics.Godot.Adapter
-    Godot Node、Resource、Scene、UI、Input 与 Presentation
+    Godot Nodes, Resources, Scenes, UI, Input and Presentation
             ↓
 godot/project.godot + godot/content + godot/scenes
 ```
 
-`Tactics.Core` 和 `Tactics.Application` 不依赖 Godot。引擎对象、资源加载、文件系统和界面逻辑集中在 Adapter 层；运行时内容由 Godot Resource、PackedScene 和 Catalog 驱动。
+`Tactics.Core` and `Tactics.Application` do not depend on Godot. Engine objects, resource loading, filesystem work, and UI logic are concentrated in the Adapter layer; runtime content is driven by Godot Resources, PackedScenes, and Catalogs.
 
-## 快速开始
+## Quick start
 
-### 环境要求
+### Requirements
 
 - Windows
 - [Git LFS](https://git-lfs.com/)
-- Godot `4.7.1-stable` Mono/.NET 版本
-- .NET SDK `9.0.312`，或同一 feature band 中兼容的更新 patch
+- Godot `4.7.1-stable` Mono/.NET build
+- .NET SDK `9.0.312`, or a compatible newer patch within the same feature band
 
-### 获取与运行
+### Get and run
 
 ```powershell
 git clone git@github.com:cty41/wooftactics.git
@@ -56,40 +59,40 @@ Set-Location wooftactics
 git lfs pull --include="godot/**" --exclude=""
 ```
 
-在 Godot Project Manager 中导入并打开：
+Import and open in the Godot Project Manager:
 
 ```text
 godot/project.godot
 ```
 
-项目主场景是 `godot/scenes/Main.tscn`。首次打开时等待 Godot 完成资源导入和 C# 编译，再从编辑器运行项目。
+The project's main scene is `godot/scenes/Main.tscn`. On first open, wait for Godot to finish resource import and C# compilation, then run from the editor.
 
-## 验证
+## Verification
 
-仓库的统一验证入口会串行执行 locked restore、.NET build、NUnit、Frozen Oracle、Gameplay Specs、GdUnit、Headless Runtime/Editor、Catalog ownership、OKF 和渲染兼容性检查：
+The repository's unified verification entry point runs, in sequence: locked restore, .NET build, NUnit, Frozen Oracle, Gameplay Specs, GdUnit, headless Runtime/Editor, catalog ownership, OKF, and rendering compatibility checks:
 
 ```powershell
 pwsh -NoProfile -File .\Tools\godot\Verify-GodotProject.ps1 `
   -GodotExecutable "D:\path\to\Godot_v4.7.1-stable_mono_win64_console.exe"
 ```
 
-完整门禁还需要仓库工具使用的 Python、Node.js/npm 依赖。脚本会在缺少必要工具或版本不匹配时停止并报告原因。
+The full gate also requires the Python and Node.js/npm dependencies used by repository tooling. The script stops and reports the reason when required tools are missing or versions mismatch.
 
-## LLM 辅助策划与开发
+## LLM-assisted design and development
 
-项目支持将自然语言策划需求整理为稳定 `gameplay-contract`，再通过 OpenCode Go 或本地 Ollama 提出带原文证据的合同与测试候选，并由严格 Schema、capability、compiler、typed authoring 和 Godot ResourceSaver 确定性把关。外接 LLM 是可替换、可批处理、可审计的候选生成层，不替代 Codex/开发者判断，也不能直接写 Resource、运行时代码或批准人工体验。
+The project supports turning natural-language design requests into stable `gameplay-contract`s, then proposing contract and test candidates with source-quoted evidence through OpenCode Go or a local Ollama, gated deterministically by strict Schema, capability, compiler, typed-authoring, and Godot ResourceSaver checks. The external LLM is a replaceable, batchable, auditable candidate-generation layer — it does not replace Codex/developer judgment, and it must not write Resources, runtime code, or approve human acceptance directly.
 
-从需求收束、Provider 配置到 Scenario/Enemy Draft、Godot 写入、自动测试和人工验收的完整操作见 [LLM 辅助策划到 Godot 开发](.agents/docs/gameplay-design-to-development-workflow.md)。
+For the full workflow from requirement convergence and provider configuration through Scenario/Enemy Draft, Godot authoring, automated tests, and manual acceptance, see [LLM-assisted design to Godot development](.agents/docs/gameplay-design-to-development-workflow.md).
 
-## Windows 构建
+## Windows builds
 
-GitHub Actions 的 **Godot Windows Debug and Release build** 工作流支持手动选择：
+The **Godot Windows Debug and Release build** workflow on GitHub Actions lets you choose manually:
 
-- `debug`：开发调试包，使用 Godot Debug Export。
-- `release`：接近玩家交付形态的 Release 候选包。
-- `both`：在同一次公共验证后依次生成两档，默认选项。
+- `debug`: development/debug package using the Godot Debug export.
+- `release`: a Release-candidate package close to the player-deliverable form.
+- `both`: builds both flavors in sequence after one shared verification; the default option.
 
-安装对应版本的 Godot Export Templates 后，也可以在本地构建：
+You can also build locally after installing the matching Godot Export Templates:
 
 ```powershell
 pwsh -NoProfile -File .\Tools\godot\Build-GodotWindows.ps1 `
@@ -97,32 +100,32 @@ pwsh -NoProfile -File .\Tools\godot\Build-GodotWindows.ps1 `
   -BuildFlavor Both
 ```
 
-输出位于 `Build/Godot/Windows-Debug` 和 `Build/Godot/Windows-Release`。构建包的自动 smoke 不能替代干净 Windows 环境中的人工启动与玩法验收。
+Output goes to `Build/Godot/Windows-Debug` and `Build/Godot/Windows-Release`. The build package's automated smoke cannot replace manual launch and gameplay acceptance in a clean Windows environment.
 
-## 仓库导航
+## Repository map
 
-| 路径 | 职责 |
+| Path | Responsibility |
 |---|---|
-| `src/Tactics.Core` | 引擎无关的玩法规则与确定性状态 |
-| `src/Tactics.Application` | 应用用例、内容转换和保存边界 |
-| `godot/` | 唯一 Godot 项目、Adapter、Scene、Resource 和测试宿主 |
-| `Tools/godot/` | 主线验证、Windows 构建、包审计和启动 smoke |
-| `Tools/gameplay-test-spec/` | 玩法合同、LLM 候选、Gameplay Spec 与确定性编译工具 |
-| `Tests/gameplay-specs/` | 平台中立的 Gameplay Spec 与 Godot 执行计划 |
-| `.agents/docs/` | 当前设计、验收边界和项目约束 |
-| `.agents/knowledge/` | OKF 项目知识索引与跨系统导航 |
-| `.agents/skills/` | 项目专属 Agent 技能；通用技能来自全局共享仓（见「共享 Agent 技能」） |
+| `src/Tactics.Core` | Engine-agnostic gameplay rules and deterministic state |
+| `src/Tactics.Application` | Application use cases, content conversion, and save boundaries |
+| `godot/` | The single Godot project: Adapter, Scenes, Resources, and test host |
+| `Tools/godot/` | Mainline verification, Windows builds, package audit, and launch smoke |
+| `Tools/gameplay-test-spec/` | Gameplay contracts, LLM candidates, Gameplay Spec, and deterministic compilation tooling |
+| `Tests/gameplay-specs/` | Platform-neutral Gameplay Specs and Godot execution plans |
+| `.agents/docs/` | Current design, acceptance boundaries, and project constraints |
+| `.agents/knowledge/` | OKF project knowledge index and cross-system navigation |
+| `.agents/skills/` | Project-specific agent skills; generic skills come from the global shared repo (see "Shared Agent Skills") |
 
-## 共享 Agent 技能
+## Shared Agent Skills
 
-通用 Agent 工作流技能（`grill-me`/`grilling`、`brainstorming`、`make-dev-plan`、`plan-mode-plan-writer`、`project-doc-organization`、`skill-writing` 等）从公开仓 [`cty41/skills`](https://github.com/cty41/skills) 安装到用户级 `~/.agents/skills`（`git clone git@github.com:cty41/skills.git` 后运行该 checkout 的 `scripts/install-user.ps1`；macOS/Linux 在 pwsh 下运行同一脚本）。它们不随本仓库 vendored；更新方式为 `git -C <skills-checkout> pull` 后重跑安装脚本。
+Generic agent workflow skills (`grill-me`/`grilling`, `brainstorming`, `make-dev-plan`, `plan-mode-plan-writer`, `project-doc-organization`, `skill-writing`, and others) are installed user-globally at `~/.agents/skills` from the public [`cty41/skills`](https://github.com/cty41/skills) repository (`git clone git@github.com:cty41/skills.git`, then run `scripts/install-user.ps1` in that checkout; macOS/Linux run the same script under pwsh). They are not vendored here; update by running `git -C <skills-checkout> pull` and re-running the installer.
 
-本仓库 `.agents/skills/` 只保留项目专属技能（`godot-*`、`gameplay-*`、`artworks-prompt-library`、`pure-run-artwork-pipeline`）与 `knowledge-maintenance`（完整 `Tools/okf`）、`manual-qa-handoff`（被 `Tools/agent-policy` 硬引用）两个有意特化；项目本地技能优先于全局安装。详细契约见 [AGENTS.md](AGENTS.md) 的「共享 Agent 技能」章节。
+This repository's `.agents/skills/` keeps only project-specific skills (`godot-*`, `gameplay-*`, `artworks-prompt-library`, `pure-run-artwork-pipeline`) plus two intentional specializations — `knowledge-maintenance` (full `Tools/okf`) and `manual-qa-handoff` (hard-referenced by `Tools/agent-policy`). Project-local skills take precedence over the global install. See the "Shared agent skills" section in [AGENTS.md](AGENTS.md) for the full contract.
 
-## 项目历史与协作
+## Project history and collaboration
 
-当前 `main` 的产品与运行权威是 Godot。旧 Unity 工程已经退役；永久 Tag `unity-final-2026-08-08`、Frozen Oracle、Golden 和迁移 receipt 只用于历史行为与来源审计，不参与当前运行时。
+On `main`, Godot is the product and runtime authority. The legacy Unity project has been retired; the permanent tag `unity-final-2026-08-08`, Frozen Oracle, Golden, and migration receipts are used only for historical behavior and provenance audits, not for the current runtime.
 
-在修改项目之前请阅读 [AGENTS.md](AGENTS.md)。其中定义了唯一 Godot 项目、C# 分层、Resource 写入、Editor 生命周期、验证和 dirty worktree 保护规则。
+Please read [AGENTS.md](AGENTS.md) before modifying the project. It defines the single Godot project, C# layering, Resource writing, Editor lifecycle, verification, and dirty-worktree protection rules.
 
-欢迎提交 Issue 和 Pull Request。开发环境、验证要求、资产贡献条件和提交边界见 [CONTRIBUTING.md](CONTRIBUTING.md)；安全问题请按 [SECURITY.md](SECURITY.md) 私下报告。
+Issues and pull requests are welcome. Development environment, verification requirements, asset contribution conditions, and commit boundaries are described in [CONTRIBUTING.md](CONTRIBUTING.md); report security issues privately per [SECURITY.md](SECURITY.md).
