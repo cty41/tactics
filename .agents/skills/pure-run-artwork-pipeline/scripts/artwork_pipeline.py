@@ -487,6 +487,57 @@ def create_contract(store: Store, args: argparse.Namespace) -> dict[str, Any]:
             "foreheadBlazeMinIou": getattr(args, "forehead_blaze_min_iou", 0.45),
             "foreheadBlazeAreaRatio": [0.65, 1.45],
         }
+    master_width = getattr(args, "master_width", 256)
+    master_height = getattr(args, "master_height", 256)
+    if master_width <= 0 or master_height <= 0:
+        raise PipelineError("master dimensions must be positive")
+    placement_values = {
+        "footprint_width": getattr(args, "footprint_width", None),
+        "footprint_height": getattr(args, "footprint_height", None),
+        "display_scale": getattr(args, "display_scale", None),
+        "ground_anchor_x": getattr(args, "ground_anchor_x", None),
+        "ground_anchor_y": getattr(args, "ground_anchor_y", None),
+        "anchor_mode": getattr(args, "anchor_mode", None),
+    }
+    requested_board_role = getattr(args, "board_role", None)
+    requested_screen_facing = getattr(args, "screen_facing", None)
+    if not any(value is not None for value in placement_values.values()) and (
+            requested_board_role is not None or requested_screen_facing is not None):
+        raise PipelineError("board orientation requires tile placement")
+    tile_placement = None
+    if any(value is not None for value in placement_values.values()):
+        if any(value is None for value in placement_values.values()):
+            raise PipelineError("tile placement requires footprint, display scale, ground anchor, and anchor mode")
+        footprint_width = placement_values["footprint_width"]
+        footprint_height = placement_values["footprint_height"]
+        display_scale = placement_values["display_scale"]
+        anchor_x = placement_values["ground_anchor_x"]
+        anchor_y = placement_values["ground_anchor_y"]
+        if footprint_width <= 0 or footprint_height <= 0:
+            raise PipelineError("tile footprint dimensions must be positive")
+        if display_scale <= 0:
+            raise PipelineError("tile placement display scale must be positive")
+        if not 0 <= anchor_x < master_width or not 0 <= anchor_y < master_height:
+            raise PipelineError("tile placement ground anchor must be inside the master canvas")
+        tile_placement = {
+            "footprintTiles": [footprint_width, footprint_height],
+            "displayScale": display_scale,
+            "groundAnchorPx": [anchor_x, anchor_y],
+            "anchorMode": placement_values["anchor_mode"],
+        }
+        board_role = requested_board_role
+        screen_facing = requested_screen_facing
+        if (board_role is None) != (screen_facing is None):
+            raise PipelineError("tile placement board role and screen facing must be declared together")
+        if board_role is not None:
+            allowed_facing = {
+                "target": {"down_left", "non_directional"},
+                "player": {"up_right", "non_directional"},
+                "neutral": {"non_directional"},
+            }
+            if screen_facing not in allowed_facing[board_role]:
+                raise PipelineError(f"screen facing {screen_facing} is invalid for board role {board_role}")
+            tile_placement.update({"boardRole": board_role, "screenFacing": screen_facing})
     payload = {
         "assetId": args.asset_id,
         "approvedAssetId": args.approved_asset_id or args.asset_id,
@@ -502,6 +553,8 @@ def create_contract(store: Store, args: argparse.Namespace) -> dict[str, Any]:
         "identitySpec": identity_spec,
         "requiresInvocation": ((writes_v2 and high_risk and source_mode != "derived")
                                or (asset_role == "component" and source_mode == "generated")),
+        "canvasSpec": {"masterSize": [master_width, master_height]},
+        "tilePlacementSpec": tile_placement,
         "tolerances": {"sizePx": args.size_tolerance, "centerPx": args.center_tolerance},
         "outputs": {"master": store.relative(args.output_master), "preview": store.relative(args.output_preview)},
         "rights": {"rightsHolder": args.rights_holder, "license": args.license, "provenance": args.provenance},
@@ -1018,14 +1071,15 @@ def anchor_core_bbox(image: Image.Image) -> tuple[int, int, int, int] | None:
     return None
 
 
-def inspect_technical(path: Path, kind: str, *, require_master_canvas: bool = True) -> tuple[dict[str, Any], list[str]]:
+def inspect_technical(path: Path, kind: str, *, require_master_canvas: bool = True,
+                      expected_master_size: tuple[int, int] = (256, 256)) -> tuple[dict[str, Any], list[str]]:
     image = Image.open(path).convert("RGBA")
     pixels = pixel_data(image)
     alpha = image.getchannel("A")
     bbox = alpha.getbbox()
     issues = []
-    if require_master_canvas and image.size != (256, 256):
-        issues.append("master_not_256x256")
+    if require_master_canvas and image.size != expected_master_size:
+        issues.append("master_size_mismatch")
     max_x, max_y = image.width - 1, image.height - 1
     if require_master_canvas and any(image.getpixel(point)[3] != 0 for point in ((0, 0), (max_x, 0), (0, max_y), (max_x, max_y))):
         issues.append("corner_not_transparent")
@@ -1353,7 +1407,8 @@ def validate_attempt(store: Store, args: argparse.Namespace) -> dict[str, Any]:
     candidate = candidate_artifact(attempt)
     prepared = store.absolute(candidate["path"], must_exist=True)
     technical, issues = inspect_technical(
-        prepared, contract["kind"], require_master_canvas=contract.get("assetRole") != "component")
+        prepared, contract["kind"], require_master_canvas=contract.get("assetRole") != "component",
+        expected_master_size=tuple(contract.get("canvasSpec", {}).get("masterSize", [256, 256])))
     if contract.get("assetRole") == "component" and contract.get("componentKind") != "body":
         mask_artifact = candidate_mask_artifact(attempt)
         geometry = {"componentKind": contract.get("componentKind")}
@@ -1388,6 +1443,78 @@ def make_preview(master: Image.Image) -> Image.Image:
     preview.putdata([(0, 0, 0, 0) if alpha < 8 else (red, green, blue, alpha)
                      for red, green, blue, alpha in pixel_data(preview)])
     return preview
+
+
+def render_tile_placement_review(prepared: Image.Image, spec: dict[str, Any]) -> tuple[Image.Image, dict[str, Any]]:
+    tile_width, tile_height = 64, 32
+    footprint_width, footprint_height = spec["footprintTiles"]
+    scale = float(spec["displayScale"])
+    anchor_x, anchor_y = spec["groundAnchorPx"]
+    scaled_size = (round(prepared.width * scale), round(prepared.height * scale))
+    scaled = prepared.resize(scaled_size, Image.Resampling.LANCZOS)
+    board_role = spec.get("boardRole")
+    screen_facing = spec.get("screenFacing")
+    contextual = board_role in {"player", "target"}
+    canvas_width = max(320 if contextual else 256, scaled_size[0] + (128 if contextual else tile_width))
+    canvas_height = max(224 if contextual else 160, scaled_size[1] + (96 if contextual else tile_height * 2))
+    if board_role == "target":
+        front_center = (canvas_width // 2 + 48, canvas_height - 80)
+        reference_center = (front_center[0] - 96, front_center[1] + 48)
+    elif board_role == "player":
+        front_center = (canvas_width // 2 - 48, canvas_height - 32)
+        reference_center = (front_center[0] + 96, front_center[1] - 48)
+    else:
+        front_center = (canvas_width // 2, canvas_height - tile_height)
+        reference_center = None
+    scaled_anchor = (round(anchor_x * scale), round(anchor_y * scale))
+    sprite_origin = (front_center[0] - scaled_anchor[0], front_center[1] - scaled_anchor[1])
+    review = Image.new("RGBA", (canvas_width, canvas_height), (36, 36, 42, 255))
+    draw = ImageDraw.Draw(review)
+    if reference_center is not None:
+        draw.polygon(((reference_center[0] - tile_width // 2, reference_center[1]),
+                      (reference_center[0], reference_center[1] - tile_height // 2),
+                      (reference_center[0] + tile_width // 2, reference_center[1]),
+                      (reference_center[0], reference_center[1] + tile_height // 2)),
+                     fill=(76, 62, 46, 255), outline=(226, 181, 92, 255), width=2)
+        start, end = (reference_center, front_center) if board_role == "target" else (front_center, reference_center)
+        draw.line((*start, *end), fill=(226, 181, 92, 255), width=2)
+    tile_centers = []
+    for row in range(footprint_height):
+        for column in range(footprint_width):
+            center = (
+                front_center[0] + (column - row - (footprint_width - footprint_height)) * tile_width // 2,
+                front_center[1] - ((footprint_width - 1 - column) + (footprint_height - 1 - row)) * tile_height // 2,
+            )
+            tile_centers.append(list(center))
+            draw.polygon(((center[0] - tile_width // 2, center[1]),
+                          (center[0], center[1] - tile_height // 2),
+                          (center[0] + tile_width // 2, center[1]),
+                          (center[0], center[1] + tile_height // 2)),
+                         fill=(53, 66, 82, 255), outline=(157, 180, 204, 255), width=2)
+    review.alpha_composite(scaled, sprite_origin)
+    draw.line((front_center[0] - 5, front_center[1], front_center[0] + 5, front_center[1]),
+              fill=(255, 80, 80, 255), width=1)
+    draw.line((front_center[0], front_center[1] - 5, front_center[0], front_center[1] + 5),
+              fill=(255, 80, 80, 255), width=1)
+    metrics = {
+        "masterSize": list(prepared.size),
+        "displayScale": scale,
+        "displaySize": list(scaled_size),
+        "footprintTiles": [footprint_width, footprint_height],
+        "tileCenters": tile_centers,
+        "logicalTileCenter": list(front_center),
+        "groundAnchorPx": [anchor_x, anchor_y],
+        "scaledGroundAnchorPx": list(scaled_anchor),
+        "spriteOrigin": list(sprite_origin),
+        "anchorScreenPoint": [sprite_origin[0] + scaled_anchor[0], sprite_origin[1] + scaled_anchor[1]],
+        "anchorMode": spec["anchorMode"],
+        "boardRole": board_role,
+        "screenFacing": screen_facing,
+        "playerReferenceTileCenter": list(reference_center) if board_role == "target" else None,
+        "targetReferenceTileCenter": list(reference_center) if board_role == "player" else list(front_center) if board_role == "target" else None,
+        "explorationDirection": "up_right" if contextual else None,
+    }
+    return review, metrics
 
 
 def render_anchor_tile_compare(prepared: Image.Image, anchor: Image.Image,
@@ -1428,17 +1555,23 @@ def render_review(store: Store, args: argparse.Namespace) -> dict[str, Any]:
     job = load_json(store.record("jobs", attempt["jobId"]))
     contract = load_json(store.record("contracts", job["contractId"]))
     anchor_art = contract.get("anchor")
-    review = Image.new("RGBA", (768 if anchor_art else 512, 256), (36, 36, 42, 255))
+    panel_width, panel_height = prepared.size
+    review = Image.new(
+        "RGBA", (panel_width * (3 if anchor_art else 2), panel_height), (36, 36, 42, 255))
     review.alpha_composite(prepared, (0, 0))
-    review.alpha_composite(overlay, (256, 0))
+    review.alpha_composite(overlay, (panel_width, 0))
     if anchor_art:
         anchor = Image.open(store.absolute(anchor_art["path"], must_exist=True)).convert("RGBA")
-        review.alpha_composite(anchor, (512, 0))
-    tile = Image.new("RGBA", (256, 160), (36, 36, 42, 255))
-    tile_draw = ImageDraw.Draw(tile)
-    tile_draw.polygon(((96, 144), (128, 128), (160, 144), (128, 159)), fill=(94, 96, 104, 255), outline=(160, 162, 170, 255))
+        review.alpha_composite(anchor, (panel_width * 2, 0))
     preview = make_preview(prepared)
-    tile.alpha_composite(preview, (64, 26))  # preview anchor (64,118) -> tile center (128,144)
+    placement_metrics = None
+    if contract.get("tilePlacementSpec"):
+        tile, placement_metrics = render_tile_placement_review(prepared, contract["tilePlacementSpec"])
+    else:
+        tile = Image.new("RGBA", (256, 160), (36, 36, 42, 255))
+        tile_draw = ImageDraw.Draw(tile)
+        tile_draw.polygon(((96, 144), (128, 128), (160, 144), (128, 159)), fill=(94, 96, 104, 255), outline=(160, 162, 170, 255))
+        tile.alpha_composite(preview, (64, 26))  # preview anchor (64,118) -> tile center (128,144)
     out_dir = store.pipeline / "reviews" / attempt["attemptId"]
     out_dir.mkdir(parents=True, exist_ok=True)
     review_images = [("overlay", review), ("preview128", preview), ("tile64x32", tile)]
@@ -1497,6 +1630,11 @@ def render_review(store: Store, args: argparse.Namespace) -> dict[str, Any]:
         else:
             image.save(path, format="PNG", optimize=False, compress_level=9)
         outputs[name] = {"path": store.relative(path), "sha256": sha256_file(path)}
+    if placement_metrics is not None:
+        metrics_path = out_dir / "tilePlacementMetrics.json"
+        write_json_idempotent(metrics_path, {"schemaVersion": 1, "attemptId": attempt["attemptId"], **placement_metrics})
+        attempt["artifacts"]["tilePlacementMetrics"] = {
+            "path": store.relative(metrics_path), "sha256": sha256_file(metrics_path)}
     attempt["artifacts"]["review"] = outputs
     register_public_artifacts(store, list(outputs.values()), "project-owned-artwork-review")
     save_attempt(store, attempt)
@@ -3269,6 +3407,16 @@ def build_parser() -> argparse.ArgumentParser:
     create.add_argument("--no-arms", action="store_true"); create.add_argument("--size-tolerance", type=int, default=3)
     create.add_argument("--near-hand-side", choices=("left", "right")); create.add_argument("--far-hand-side", choices=("left", "right"))
     create.add_argument("--center-tolerance", type=int, default=2); create.add_argument("--output-master", required=True)
+    create.add_argument("--master-width", type=int, default=256)
+    create.add_argument("--master-height", type=int, default=256)
+    create.add_argument("--footprint-width", type=int)
+    create.add_argument("--footprint-height", type=int)
+    create.add_argument("--display-scale", type=float)
+    create.add_argument("--ground-anchor-x", type=float)
+    create.add_argument("--ground-anchor-y", type=float)
+    create.add_argument("--anchor-mode", choices=("contact_shape_center", "virtual_ground_point", "visual_bounds_center", "texture_center"))
+    create.add_argument("--board-role", choices=("player", "target", "neutral"))
+    create.add_argument("--screen-facing", choices=("up_right", "down_left", "non_directional"))
     create.add_argument("--layer-rule", action="append", default=[])
     create.add_argument("--visibility-cap", action="append", default=[])
     create.add_argument("--composition-id")

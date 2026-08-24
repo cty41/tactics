@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 2,
+  "feedbackId": "feedback-729620f3d781230e",
+  "attemptId": "job-897833991fd2f552-a015",
+  "candidateSha256": "9cbed15b75152d998dfa257bbc3bf391ae4a21fc7d3cdfc915ec0e2f3d562d0a",
+  "reviewer": "codex",
+  "verdict": "technical_failed",
+  "strengths": [],
+  "defects": [
+    "CopyOpacity made unlabeled subject pixels opaque black, which is not a semantic label."
+  ],
+  "nextPromptDelta": "Convert binary grayscale to an alpha gate, multiply it with draft label alpha, and keep unlabeled pixels transparent.",
+  "recordedAt": "2026-08-24T01:54:47.5485703Z",
+  "authorType": "agent",
+  "categories": [
+    "processing"
+  ],
+  "disposition": "technical_failed",
+  "frozenInvariants": [],
+  "pendingFixes": [
+    "CopyOpacity made unlabeled subject pixels opaque black, which is not a semantic label."
+  ]
+}

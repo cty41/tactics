@@ -1,0 +1,18 @@
+{
+  "schemaVersion": 2,
+  "approvalId": "approval-dae37e38680397e5",
+  "attemptId": "job-dedc974b94887acd-a004",
+  "candidateSha256": "aeefef01b292ef0fb1e984893d893b2cef7fcba8b286ce519b0e340350766047",
+  "maskSha256": null,
+  "reviewer": "cty41",
+  "reviewSha256": {
+    "overlay": "434b34c4552aa46f378a1f1c66c11d61bd2d6e60c16f6a2d6e0e4115562cece3",
+    "preview128": "a3639d7151f40e4c6e4a1e2dad32541f19e48ba85c63de7055f6ddbb319fc0a1",
+    "tile64x32": "89823933ed8aca8db9c5096af2c0a121d3e5a77b9c8619240b55d6317fc17c28"
+  },
+  "decision": "approved",
+  "reason": "User explicitly confirmed the monochrome mask-style normal battle icon, selected a unified node-icon color, and requested promote.",
+  "decidedAt": "2026-08-23T11:30:06.9777621+08:00",
+  "annotation": null,
+  "reportSha256": "fa0429d377558ca7999e9d2416b33b421ef5d3cd8a15b8298adb6c7453e6eee8"
+}

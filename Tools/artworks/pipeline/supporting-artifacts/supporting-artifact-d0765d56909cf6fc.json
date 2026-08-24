@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 2,
+  "supportingArtifactId": "supporting-artifact-d0765d56909cf6fc",
+  "artifact": {
+    "path": "Tools/artworks/pipeline/reviews/job-4b305eeeb547c4db-a002/tilemap_exit_portal_red_shiba_amazon_ul_compare_v02.png",
+    "sha256": "c2630fb9af82d4fb17b1997b24f7f88739df4500d6c2d2e99d800efd27702c5a"
+  },
+  "role": "tilemap-player-target-facing-comparison",
+  "note": "Corrected V02: mirrored red-shiba Amazon UL stands lower-left facing upper-right; enlarged exit portal stands upper-right facing down-left. Scale and contact anchors are unchanged."
+}

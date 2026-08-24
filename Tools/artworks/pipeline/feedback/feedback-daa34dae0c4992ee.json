@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 2,
+  "feedbackId": "feedback-daa34dae0c4992ee",
+  "attemptId": "job-897833991fd2f552-a007",
+  "candidateSha256": "e38f15050c55fad5c3f80966acbcf1f78fbced5c0c5e0a8f6141b5a434330a3b",
+  "reviewer": "cty41",
+  "verdict": "retry",
+  "strengths": [],
+  "defects": [
+    "The nominal +20 and +40 candidates do not materially change the viewing angle."
+  ],
+  "nextPromptDelta": "Discard incremental yaw prompts; redraw a strong 65-70 degree right-facing near-profile endpoint with measurable far-feature occlusion.",
+  "recordedAt": "2026-08-24T01:44:48.1104156Z",
+  "authorType": "human",
+  "categories": [
+    "pose_axis"
+  ],
+  "disposition": "retry",
+  "frozenInvariants": [],
+  "pendingFixes": [
+    "The nominal +20 and +40 candidates do not materially change the viewing angle."
+  ]
+}

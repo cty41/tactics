@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 2,
+  "feedbackId": "feedback-eccfe850ec9fe6b6",
+  "attemptId": "job-897833991fd2f552-a004",
+  "candidateSha256": "9f28e4a917bf4fc96da1f4e8aca509b843999c8d45d8fa383cae4e2d4fba65c4",
+  "reviewer": "cty41",
+  "verdict": "retry",
+  "strengths": [],
+  "defects": [
+    "The candidate is the horizontal mirror of the required DR direction; DR must match the approved red-shiba orientation."
+  ],
+  "nextPromptDelta": "Mirror the accepted isometric body horizontally so the muzzle points screen right like the red-shiba DR reference.",
+  "recordedAt": "2026-08-24T01:16:05.5396990Z",
+  "authorType": "human",
+  "categories": [
+    "pose_axis"
+  ],
+  "disposition": "retry",
+  "frozenInvariants": [],
+  "pendingFixes": [
+    "The candidate is the horizontal mirror of the required DR direction; DR must match the approved red-shiba orientation."
+  ]
+}

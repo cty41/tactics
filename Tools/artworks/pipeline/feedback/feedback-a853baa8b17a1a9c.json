@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 2,
+  "feedbackId": "feedback-a853baa8b17a1a9c",
+  "attemptId": "job-cbb1950d8d0c175c-a001",
+  "candidateSha256": "97920d4d76a58fa9fe36184c75a21ff17e1c4cddf6cd204e52106430a2f3dd6f",
+  "reviewer": "cty41",
+  "verdict": "retry",
+  "strengths": [
+    "既有宝箱造型、1x1 footprint与接地点通过"
+  ],
+  "defects": [
+    "透视朝向错误，应与祭坛一致朝屏幕左下"
+  ],
+  "nextPromptDelta": "保持箱体和placement，仅水平翻转为左下朝向",
+  "recordedAt": "2026-08-23T16:04:23Z",
+  "authorType": "human",
+  "categories": [],
+  "disposition": "retry",
+  "frozenInvariants": [],
+  "pendingFixes": [
+    "透视朝向错误，应与祭坛一致朝屏幕左下"
+  ]
+}

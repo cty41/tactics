@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 2,
+  "supportingArtifactId": "supporting-artifact-a359a548d84b2c49",
+  "artifact": {
+    "path": "Tools/artworks/pure_run/villager/reviews/villager_idle_dr_direction_correction_comparison_v02.png",
+    "sha256": "2bc7ac37890889c58291f2402bbc278d6edbc93a397403cb02e4f70e7b1cc552"
+  },
+  "role": "direction-comparison",
+  "note": "Corrected-scale comparison: V06 is the wrong-way profile turn; V07 turns from V03 toward viewer/screen-bottom and is normalized using the visible 50-percent alpha boundary."
+}

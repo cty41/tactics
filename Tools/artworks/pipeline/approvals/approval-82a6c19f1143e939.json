@@ -1,0 +1,18 @@
+{
+  "schemaVersion": 2,
+  "approvalId": "approval-82a6c19f1143e939",
+  "attemptId": "job-8c0260edd8abdb68-a005",
+  "candidateSha256": "de059797a41bc9c1a17952a5aa3c1e492ea8032a7866a7d98358d9a540d236d6",
+  "maskSha256": null,
+  "reviewer": "cty41",
+  "reviewSha256": {
+    "overlay": "c3f2bcb3cbfca18e9551fc5ff5912d3facb80e66f5e62111d2db053ce982d649",
+    "preview128": "29202416014d4a545803a101828852247a1b2d8770bb3bc1225447815e9e60c9",
+    "tile64x32": "32dfe28784410430a3f4b1a6a905f93859bf2ff49ae629c60c01da66b33a8069"
+  },
+  "decision": "approved",
+  "reason": "User explicitly confirmed the revised 45-degree top-down lucky ring, gemstone emphasis, and smaller-than-potion scale, then requested promote.",
+  "decidedAt": "2026-08-23T01:15:31.5898324+08:00",
+  "annotation": null,
+  "reportSha256": "095aaf61c8e1dc84ee4b984234dd6253ae0ac740eba28337827aa959767f7b3e"
+}

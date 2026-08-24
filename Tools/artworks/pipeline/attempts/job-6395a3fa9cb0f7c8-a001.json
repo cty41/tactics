@@ -1,0 +1,63 @@
+{
+  "schemaVersion": 2,
+  "attemptId": "job-6395a3fa9cb0f7c8-a001",
+  "jobId": "job-6395a3fa9cb0f7c8",
+  "ordinal": 1,
+  "parentAttemptId": null,
+  "retryFeedbackId": null,
+  "promptDelta": null,
+  "technicalRemediation": false,
+  "state": "promoted",
+  "artifacts": {
+    "source": {
+      "path": "Tools/artworks/pure_run/props/concepts/pure_run_prop_merchant_trade_v02_left_down_source.png",
+      "sha256": "9e84399bab71b284f336ec259440906bd53cac926d48954ce692e0bdbbfb0eef"
+    },
+    "raw": {
+      "path": "Tools/artworks/pipeline/artifacts/job-6395a3fa9cb0f7c8/job-6395a3fa9cb0f7c8-a001/raw.png",
+      "sha256": "9e84399bab71b284f336ec259440906bd53cac926d48954ce692e0bdbbfb0eef"
+    },
+    "prepared": {
+      "path": "Tools/artworks/pipeline/artifacts/job-6395a3fa9cb0f7c8/job-6395a3fa9cb0f7c8-a001/prepared.png",
+      "sha256": "1bfa06c29058be81861d223be8064fb7bb3cf21237802b44d1f91febd169baf7"
+    },
+    "tilePlacementMetrics": {
+      "path": "Tools/artworks/pipeline/reviews/job-6395a3fa9cb0f7c8-a001/tilePlacementMetrics.json",
+      "sha256": "dd4e583c41825894f3f47a31c49e1658a6320a10910d2023ea4d3dcdc9295b46"
+    },
+    "review": {
+      "overlay": {
+        "path": "Tools/artworks/pipeline/reviews/job-6395a3fa9cb0f7c8-a001/overlay.png",
+        "sha256": "989d06eb702822858130e2a7e7fd97666b694db1d54f8bbdda5c0879f29b8b32"
+      },
+      "preview128": {
+        "path": "Tools/artworks/pipeline/reviews/job-6395a3fa9cb0f7c8-a001/preview128.png",
+        "sha256": "e0a4272a540fce4c37d61928ff8305851c3431e746a756069f00607fac4bbc30"
+      },
+      "tile64x32": {
+        "path": "Tools/artworks/pipeline/reviews/job-6395a3fa9cb0f7c8-a001/tile64x32.png",
+        "sha256": "e9b391c5c12e5fdca25aa21a7c34eafe8fa4c70905ac1aa0d1821b7e36532a0b"
+      }
+    },
+    "promoted": {
+      "master": {
+        "path": "Tools/artworks/pure_run/props/approved/pure_run_prop_merchant_trade_v02.png",
+        "sha256": "1bfa06c29058be81861d223be8064fb7bb3cf21237802b44d1f91febd169baf7"
+      },
+      "preview": {
+        "path": "Tools/artworks/pure_run/props/approved/pure_run_prop_merchant_trade_v02_128.png",
+        "sha256": "e0a4272a540fce4c37d61928ff8305851c3431e746a756069f00607fac4bbc30"
+      }
+    }
+  },
+  "report": {
+    "path": "Tools/artworks/pipeline/reports/report-d312783b70c3f631.json",
+    "sha256": "b25a868d410997d33b2a20c72db152ac015306196a2ab4681a0c38916dfcfdc4"
+  },
+  "approvalId": "approval-37b687e32274c511",
+  "feedbackId": null,
+  "preparation": {
+    "chroma": null,
+    "chromaTolerance": 0
+  }
+}

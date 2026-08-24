@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 2,
+  "feedbackId": "feedback-657e9c0ee7a46948",
+  "attemptId": "job-a3130635f06ad42d-a002",
+  "candidateSha256": "7c55297aa2e802b08ef4d2c447820e448dc0c0fb5de602cd96014d476fd0f19f",
+  "reviewer": "cty41",
+  "verdict": "retry",
+  "strengths": [],
+  "defects": [
+    "The hit reaction is missing the project's signature horizontal streaming tears."
+  ],
+  "nextPromptDelta": "Keep the accepted grounded recoil and identity; add one readable light-blue tear stream shooting outward from each eye.",
+  "recordedAt": "2026-08-24T02:08:34.4671730Z",
+  "authorType": "human",
+  "categories": [
+    "pose_axis"
+  ],
+  "disposition": "retry",
+  "frozenInvariants": [],
+  "pendingFixes": [
+    "The hit reaction is missing the project's signature horizontal streaming tears."
+  ]
+}

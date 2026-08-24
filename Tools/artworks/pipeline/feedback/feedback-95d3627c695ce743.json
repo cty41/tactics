@@ -1,0 +1,28 @@
+{
+  "schemaVersion": 2,
+  "feedbackId": "feedback-95d3627c695ce743",
+  "attemptId": "job-ed5f76ac4fb68184-a002",
+  "candidateSha256": "a19046dd4b6a63a2ffb7ccbe7a6513121b27d0d29a120d03832d79247bc24195",
+  "reviewer": "cty41",
+  "verdict": "retry",
+  "strengths": [
+    "右下朝向、空手状态、腰侧钱袋和静态可读性尚可"
+  ],
+  "defects": [
+    "角色是人类兜帽商人，完全偏离 Pure Run 犬类加刚性胶囊体契约"
+  ],
+  "nextPromptDelta": "重生为无服饰无道具的伯恩山犬裸身份母图；标准等宽刚性胶囊体，无手臂无腿，四只短爪直接贴体；黑白暖棕毛色，短垂耳，沉稳友善闭嘴表情",
+  "recordedAt": "2026-08-23T11:37:59Z",
+  "authorType": "human",
+  "categories": [
+    "identity",
+    "core_geometry"
+  ],
+  "disposition": "retry",
+  "frozenInvariants": [
+    "idle DR 右下45度、256x256 RGBA、x=128、脚底y=236、粗深色轮廓、扁平色块、单张静态审阅"
+  ],
+  "pendingFixes": [
+    "伯恩山犬身份、刚性胶囊体、无服饰无道具、四爪多像素贴体"
+  ]
+}

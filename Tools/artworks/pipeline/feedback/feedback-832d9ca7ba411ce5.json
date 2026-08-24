@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 2,
+  "feedbackId": "feedback-832d9ca7ba411ce5",
+  "attemptId": "job-7a32a988b5b56657-a004",
+  "candidateSha256": "e87562a8f3184d0f6a9ead468abf9d35b4a740a356ac79c8a6a054603fb7ffef",
+  "reviewer": "codex",
+  "verdict": "technical_failed",
+  "strengths": [],
+  "defects": [
+    "An axis-aligned core remains disconnected after alpha intersection with the diagonal fallen capsule."
+  ],
+  "nextPromptDelta": "Keep candidate unchanged; align an equal-width parallelogram core to the corpse axis and place paw labels at its edges.",
+  "recordedAt": "2026-08-24T02:31:52.3638205Z",
+  "authorType": "agent",
+  "categories": [
+    "processing"
+  ],
+  "disposition": "technical_failed",
+  "frozenInvariants": [],
+  "pendingFixes": [
+    "An axis-aligned core remains disconnected after alpha intersection with the diagonal fallen capsule."
+  ]
+}

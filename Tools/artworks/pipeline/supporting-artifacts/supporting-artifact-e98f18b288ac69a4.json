@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 2,
+  "supportingArtifactId": "supporting-artifact-e98f18b288ac69a4",
+  "artifact": {
+    "path": "Tools/artworks/pipeline/reviews/job-a95411a55ccd0bbe-a001/tilemap_altar_2x2_red_shiba_amazon_compare_v02.png",
+    "sha256": "7834900228e2e7000a50e610cb6a2bc3b70a08ad38b6cc27e0399af2ad4036c9"
+  },
+  "role": "superseded-tilemap-comparison",
+  "note": "Superseded V02 comparison; both subjects were 16 pixels above their intended Tile centers."
+}

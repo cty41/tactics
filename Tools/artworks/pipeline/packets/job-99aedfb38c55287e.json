@@ -1,0 +1,21 @@
+{
+  "schemaVersion": 2,
+  "jobId": "job-99aedfb38c55287e",
+  "state": "ready",
+  "contractId": "contract-8eaaabdbeb095b4d",
+  "contractSha256": "9a119a1a0ad18d09c18e33550e0f23677740765547698b5bbc84f99b77acdc05",
+  "prompt": {
+    "path": "Tools/artworks/pure_run/node_icons/prompt_node-elite.md",
+    "sha256": "861fd440f263096fee6a5ecf88dbae17822787abef4ab95b7132207a78d5ce19"
+  },
+  "inputs": [],
+  "target": {
+    "direction": "down-right",
+    "pose": "icon"
+  },
+  "series": null,
+  "conceptOnly": false,
+  "contractRequirements": null,
+  "requiresInvocation": false,
+  "poseGuide": null
+}

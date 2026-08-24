@@ -1,0 +1,21 @@
+{
+  "schemaVersion": 2,
+  "jobId": "job-7a32a988b5b56657",
+  "state": "ready",
+  "contractId": "contract-700692c962b15db2",
+  "contractSha256": "739b51953ea7856673baa4315677068e471d068fc35db8ad0ee69a318f5eac8a",
+  "prompt": {
+    "path": "Tools/artworks/pure_run/villager/prompt_death_v02.md",
+    "sha256": "debc86bf6004d14724e09167088561aba4c691fb7d0ecc9bad2967ad8ae473b9"
+  },
+  "inputs": [],
+  "target": {
+    "direction": "down-right",
+    "pose": "death"
+  },
+  "series": null,
+  "conceptOnly": false,
+  "contractRequirements": null,
+  "requiresInvocation": false,
+  "poseGuide": null
+}

@@ -1,0 +1,53 @@
+{
+  "schemaVersion": 2,
+  "attemptId": "job-b82a70ea2f262416-a001",
+  "jobId": "job-b82a70ea2f262416",
+  "ordinal": 1,
+  "parentAttemptId": null,
+  "retryFeedbackId": null,
+  "promptDelta": null,
+  "technicalRemediation": false,
+  "state": "review_pending",
+  "artifacts": {
+    "source": {
+      "path": "Tools/artworks/pure_run/props/concepts/pure_run_prop_exit_portal_v01_transparent_source_v01.png",
+      "sha256": "b569fc432e469cd4290f26ed50d15708df980185f247911a728960657a43777c"
+    },
+    "raw": {
+      "path": "Tools/artworks/pipeline/artifacts/job-b82a70ea2f262416/job-b82a70ea2f262416-a001/raw.png",
+      "sha256": "b569fc432e469cd4290f26ed50d15708df980185f247911a728960657a43777c"
+    },
+    "prepared": {
+      "path": "Tools/artworks/pipeline/artifacts/job-b82a70ea2f262416/job-b82a70ea2f262416-a001/prepared.png",
+      "sha256": "31eca2140a991ab4e9c3c2b2007920ebda9eeee7e9a7694c327903f477e765c3"
+    },
+    "tilePlacementMetrics": {
+      "path": "Tools/artworks/pipeline/reviews/job-b82a70ea2f262416-a001/tilePlacementMetrics.json",
+      "sha256": "4211ddb88346cfaba44ba87428c68607c0615955a1a9febc24b17ec7020dfe12"
+    },
+    "review": {
+      "overlay": {
+        "path": "Tools/artworks/pipeline/reviews/job-b82a70ea2f262416-a001/overlay.png",
+        "sha256": "71208672a8324093bf6da13da1e3c94b5c3f57d769e87b56c91760ab3005a211"
+      },
+      "preview128": {
+        "path": "Tools/artworks/pipeline/reviews/job-b82a70ea2f262416-a001/preview128.png",
+        "sha256": "29ed36fa0eac033426924bddb49f668cbfa96adfc984f34a3dfd9ab33ad52f05"
+      },
+      "tile64x32": {
+        "path": "Tools/artworks/pipeline/reviews/job-b82a70ea2f262416-a001/tile64x32.png",
+        "sha256": "42de56f93f04163bca71ebfec2041451fe283c2cdd09ea5dc2fab574a33d188d"
+      }
+    }
+  },
+  "report": {
+    "path": "Tools/artworks/pipeline/reports/report-95e163c14c740cb6.json",
+    "sha256": "4d5b4b8607afec4e00dc6fffe106788b0cb9653d5bd91c9cd33d1c31efa10d52"
+  },
+  "approvalId": null,
+  "feedbackId": "feedback-db51c4009875360d",
+  "preparation": {
+    "chroma": "00ff00",
+    "chromaTolerance": 72
+  }
+}

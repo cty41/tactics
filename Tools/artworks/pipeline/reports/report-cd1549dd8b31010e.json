@@ -1,0 +1,86 @@
+{
+  "schemaVersion": 1,
+  "attemptId": "job-897833991fd2f552-a011",
+  "inputSha256": "9cbed15b75152d998dfa257bbc3bf391ae4a21fc7d3cdfc915ec0e2f3d562d0a",
+  "maskSha256": "aadba3fb936aff5fcc09d7ff81d47ac76b2d9dba5106af83138c6f9540243407",
+  "technical": {
+    "size": [
+      256,
+      256
+    ],
+    "alphaBbox": [
+      94,
+      115,
+      161,
+      237
+    ]
+  },
+  "geometry": {
+    "boxes": {
+      "core": [
+        112,
+        151,
+        144,
+        220
+      ],
+      "head_appendage": null,
+      "near_hand": [
+        146,
+        174,
+        156,
+        188
+      ],
+      "far_hand": [
+        99,
+        175,
+        109,
+        189
+      ],
+      "near_foot": [
+        139,
+        223,
+        151,
+        235
+      ],
+      "far_foot": [
+        113,
+        224,
+        125,
+        236
+      ],
+      "equipment": null,
+      "wings": null,
+      "effect": null,
+      "near_arm": null,
+      "far_arm": null,
+      "near_leg": null,
+      "far_leg": null
+    },
+    "core": {
+      "bbox": [
+        112,
+        151,
+        144,
+        220
+      ],
+      "center": [
+        128.0,
+        185.5
+      ],
+      "bandMaxWidths": [
+        33,
+        33,
+        33
+      ]
+    }
+  },
+  "issues": [
+    "far_foot_contact_lt_3",
+    "far_hand_contact_lt_3",
+    "near_foot_contact_lt_3",
+    "near_hand_contact_lt_3",
+    "semantic_mask_outside_subject",
+    "semantic_mask_unknown_color"
+  ],
+  "passed": false
+}

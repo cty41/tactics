@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 2,
+  "feedbackId": "feedback-d834613100e7a004",
+  "attemptId": "job-7a32a988b5b56657-a002",
+  "candidateSha256": "932db1b65b9a40c673b874d5bc0dfc6e3cea1ca274a31742c7ee6ab61a703931",
+  "reviewer": "cty41",
+  "verdict": "retry",
+  "strengths": [],
+  "defects": [
+    "Death sprite is visibly too large and not flattened enough compared with the project death-pose language."
+  ],
+  "nextPromptDelta": "Keep identity and head-upper-right axis; reduce visible AABB from 150x140 to about 120x78, centered on the tile.",
+  "recordedAt": "2026-08-24T02:22:47.3476983Z",
+  "authorType": "human",
+  "categories": [
+    "core_geometry"
+  ],
+  "disposition": "retry",
+  "frozenInvariants": [],
+  "pendingFixes": [
+    "Death sprite is visibly too large and not flattened enough compared with the project death-pose language."
+  ]
+}

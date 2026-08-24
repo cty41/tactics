@@ -1,0 +1,27 @@
+{
+  "schemaVersion": 2,
+  "feedbackId": "feedback-4064356e963a4a9c",
+  "attemptId": "job-7a32a988b5b56657-a006",
+  "candidateSha256": "e87562a8f3184d0f6a9ead468abf9d35b4a740a356ac79c8a6a054603fb7ffef",
+  "reviewer": "cty41",
+  "verdict": "selected",
+  "strengths": [
+    "Approved smaller flatter death V03, four-paw topology, head-upper-right axis, and centered AABB placement."
+  ],
+  "defects": [
+    "Legacy ground-character contract expects standing baseline y=236, which is inapplicable to a centered death pose."
+  ],
+  "nextPromptDelta": "",
+  "recordedAt": "2026-08-24T02:33:36.4434991Z",
+  "authorType": "human",
+  "categories": [
+    "core_geometry"
+  ],
+  "disposition": "selected",
+  "frozenInvariants": [
+    "120x78 visible AABB centered on tile"
+  ],
+  "pendingFixes": [
+    "Waive baseline_not_236 for centered death pose"
+  ]
+}

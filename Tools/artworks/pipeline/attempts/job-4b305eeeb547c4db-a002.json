@@ -1,0 +1,63 @@
+{
+  "schemaVersion": 2,
+  "attemptId": "job-4b305eeeb547c4db-a002",
+  "jobId": "job-4b305eeeb547c4db",
+  "ordinal": 2,
+  "parentAttemptId": "job-4b305eeeb547c4db-a001",
+  "retryFeedbackId": "feedback-4207e296b1f737ac",
+  "promptDelta": null,
+  "technicalRemediation": false,
+  "state": "promoted",
+  "artifacts": {
+    "source": {
+      "path": "Tools/artworks/pure_run/props/concepts/pure_run_prop_exit_portal_v01_transparent_source_v03_left_down_large.png",
+      "sha256": "98a49f926b0335a0ccf62931a67839db58684c0789a1d413f9d9bf2f9de24443"
+    },
+    "raw": {
+      "path": "Tools/artworks/pipeline/artifacts/job-4b305eeeb547c4db/job-4b305eeeb547c4db-a002/raw.png",
+      "sha256": "98a49f926b0335a0ccf62931a67839db58684c0789a1d413f9d9bf2f9de24443"
+    },
+    "prepared": {
+      "path": "Tools/artworks/pipeline/artifacts/job-4b305eeeb547c4db/job-4b305eeeb547c4db-a002/prepared.png",
+      "sha256": "a3de110447c55bb5bcacdaa7c115f7e3a46cc90b92fe7705c42e8624747e879e"
+    },
+    "tilePlacementMetrics": {
+      "path": "Tools/artworks/pipeline/reviews/job-4b305eeeb547c4db-a002/tilePlacementMetrics.json",
+      "sha256": "c3c0dcc28da5baebcbc98ab1a607d123565dead8db07c06b5a9f7ac61dcf5a6d"
+    },
+    "review": {
+      "overlay": {
+        "path": "Tools/artworks/pipeline/reviews/job-4b305eeeb547c4db-a002/overlay.png",
+        "sha256": "46b116c5181cd3df9a95aa64ed22ff91aa1fe748ad6f239da0da1699a5cbf43c"
+      },
+      "preview128": {
+        "path": "Tools/artworks/pipeline/reviews/job-4b305eeeb547c4db-a002/preview128.png",
+        "sha256": "8f7574a36844d5658545056d484491c351c32f1f801d005d513246bb9fd9e86a"
+      },
+      "tile64x32": {
+        "path": "Tools/artworks/pipeline/reviews/job-4b305eeeb547c4db-a002/tile64x32.png",
+        "sha256": "ec10aa7ecaa49840ee89a0065a5f9d7f74254f3bdebbdf6ef460b9b435550f07"
+      }
+    },
+    "promoted": {
+      "master": {
+        "path": "Tools/artworks/pure_run/props/approved/pure_run_prop_exit_portal_v01.png",
+        "sha256": "a3de110447c55bb5bcacdaa7c115f7e3a46cc90b92fe7705c42e8624747e879e"
+      },
+      "preview": {
+        "path": "Tools/artworks/pure_run/props/approved/pure_run_prop_exit_portal_v01_128.png",
+        "sha256": "8f7574a36844d5658545056d484491c351c32f1f801d005d513246bb9fd9e86a"
+      }
+    }
+  },
+  "report": {
+    "path": "Tools/artworks/pipeline/reports/report-1aaec4e470628834.json",
+    "sha256": "bdaafe7a22e33c6af9c404a15514845c98f32145e1bab3c3b2c241efbc54288f"
+  },
+  "approvalId": "approval-b48824b526b42fa0",
+  "feedbackId": null,
+  "preparation": {
+    "chroma": null,
+    "chromaTolerance": 0
+  }
+}

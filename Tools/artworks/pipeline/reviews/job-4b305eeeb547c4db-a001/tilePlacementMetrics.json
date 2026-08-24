@@ -1,0 +1,55 @@
+{
+  "schemaVersion": 1,
+  "attemptId": "job-4b305eeeb547c4db-a001",
+  "masterSize": [
+    256,
+    256
+  ],
+  "displayScale": 0.5,
+  "displaySize": [
+    128,
+    128
+  ],
+  "footprintTiles": [
+    1,
+    1
+  ],
+  "tileCenters": [
+    [
+      208,
+      144
+    ]
+  ],
+  "logicalTileCenter": [
+    208,
+    144
+  ],
+  "groundAnchorPx": [
+    128.0,
+    230.0
+  ],
+  "scaledGroundAnchorPx": [
+    64,
+    115
+  ],
+  "spriteOrigin": [
+    144,
+    29
+  ],
+  "anchorScreenPoint": [
+    208,
+    144
+  ],
+  "anchorMode": "contact_shape_center",
+  "boardRole": "target",
+  "screenFacing": "down_left",
+  "playerReferenceTileCenter": [
+    112,
+    192
+  ],
+  "targetReferenceTileCenter": [
+    208,
+    144
+  ],
+  "explorationDirection": "up_right"
+}

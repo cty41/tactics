@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 2,
+  "feedbackId": "feedback-d6ab564e43708376",
+  "attemptId": "job-a3130635f06ad42d-a001",
+  "candidateSha256": "b13f3b60b452444e76835b9ef4ba8fdf94381431cbd87c3592a802b420401f3e",
+  "reviewer": "codex",
+  "verdict": "retry",
+  "strengths": [],
+  "defects": [
+    "The overnight hit DR draft predates the promoted villager identity and approved DR direction."
+  ],
+  "nextPromptDelta": "Regenerate from the promoted villager DR anchor with grounded comic recoil and no tears or VFX.",
+  "recordedAt": "2026-08-24T02:05:09.1272976Z",
+  "authorType": "agent",
+  "categories": [
+    "identity",
+    "pose_axis"
+  ],
+  "disposition": "retry",
+  "frozenInvariants": [],
+  "pendingFixes": [
+    "The overnight hit DR draft predates the promoted villager identity and approved DR direction."
+  ]
+}

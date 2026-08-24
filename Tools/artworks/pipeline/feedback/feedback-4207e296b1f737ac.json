@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 2,
+  "feedbackId": "feedback-4207e296b1f737ac",
+  "attemptId": "job-4b305eeeb547c4db-a001",
+  "candidateSha256": "2d1a5f242971aba6b3b31c76e73e67c8e1591ad689ad3770395e35c84b010823",
+  "reviewer": "cty41",
+  "verdict": "retry",
+  "strengths": [
+    "造型、左下朝向、1x1 footprint与接地点通过"
+  ],
+  "defects": [
+    "出口整体过小，门洞看起来无法让标准单位通过"
+  ],
+  "nextPromptDelta": "保持造型、朝向、footprint和锚点；显示总高从约80px提高到约105px，仍明显小于祭坛",
+  "recordedAt": "2026-08-23T16:12:23Z",
+  "authorType": "human",
+  "categories": [],
+  "disposition": "retry",
+  "frozenInvariants": [],
+  "pendingFixes": [
+    "出口整体过小，门洞看起来无法让标准单位通过"
+  ]
+}

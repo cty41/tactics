@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 2,
+  "supportingArtifactId": "supporting-artifact-3ddbc93b446ab31e",
+  "artifact": {
+    "path": "Tools/artworks/pipeline/reviews/job-a95411a55ccd0bbe-a001/tilemap_character_comparison_clawlines.png",
+    "sha256": "39adc6b216584afd140b2c8f2d818819a44bffc302ea96687c83564159eda8fc"
+  },
+  "role": "superseded-tilemap-comparison",
+  "note": "Superseded native-scale comparison that displayed both assets too large."
+}

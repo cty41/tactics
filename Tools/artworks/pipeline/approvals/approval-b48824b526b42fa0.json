@@ -1,0 +1,18 @@
+{
+  "schemaVersion": 2,
+  "approvalId": "approval-b48824b526b42fa0",
+  "attemptId": "job-4b305eeeb547c4db-a002",
+  "candidateSha256": "a3de110447c55bb5bcacdaa7c115f7e3a46cc90b92fe7705c42e8624747e879e",
+  "maskSha256": null,
+  "reviewer": "cty41",
+  "reviewSha256": {
+    "overlay": "46b116c5181cd3df9a95aa64ed22ff91aa1fe748ad6f239da0da1699a5cbf43c",
+    "preview128": "8f7574a36844d5658545056d484491c351c32f1f801d005d513246bb9fd9e86a",
+    "tile64x32": "ec10aa7ecaa49840ee89a0065a5f9d7f74254f3bdebbdf6ef460b9b435550f07"
+  },
+  "decision": "approved",
+  "reason": "User approved enlarged exit portal with corrected down-left target facing and mirrored player scale comparison.",
+  "decidedAt": "2026-08-23T16:19:18.0089103Z",
+  "annotation": null,
+  "reportSha256": "bdaafe7a22e33c6af9c404a15514845c98f32145e1bab3c3b2c241efbc54288f"
+}

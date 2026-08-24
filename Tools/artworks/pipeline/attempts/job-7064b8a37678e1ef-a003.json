@@ -1,0 +1,49 @@
+{
+  "schemaVersion": 2,
+  "attemptId": "job-7064b8a37678e1ef-a003",
+  "jobId": "job-7064b8a37678e1ef",
+  "ordinal": 3,
+  "parentAttemptId": "job-7064b8a37678e1ef-a002",
+  "retryFeedbackId": null,
+  "promptDelta": null,
+  "technicalRemediation": true,
+  "state": "review_pending",
+  "artifacts": {
+    "source": {
+      "path": "Tools/artworks/pure_run/items/concepts/pure_run_item_silver_ring_v01_chroma_source_v03.png",
+      "sha256": "0e1a0631d3a9136c0fc019d684ab822a03e8d68ade51999a88b4fb6a3a540efc"
+    },
+    "raw": {
+      "path": "Tools/artworks/pipeline/artifacts/job-7064b8a37678e1ef/job-7064b8a37678e1ef-a003/raw.png",
+      "sha256": "0e1a0631d3a9136c0fc019d684ab822a03e8d68ade51999a88b4fb6a3a540efc"
+    },
+    "prepared": {
+      "path": "Tools/artworks/pipeline/artifacts/job-7064b8a37678e1ef/job-7064b8a37678e1ef-a003/prepared.png",
+      "sha256": "84cdebbd1c307455fe91d16e101e85ca4f501999b32846069c08776f6a25db83"
+    },
+    "review": {
+      "overlay": {
+        "path": "Tools/artworks/pipeline/reviews/job-7064b8a37678e1ef-a003/overlay.png",
+        "sha256": "85b3ed68a05ea0a7ea44c80457c8a148866a586f31d8c4d713063f546a632a68"
+      },
+      "preview128": {
+        "path": "Tools/artworks/pipeline/reviews/job-7064b8a37678e1ef-a003/preview128.png",
+        "sha256": "39845394fd1a9d10050affbc18e8075dc46e140c6f3a45399b33a5885ed4fc22"
+      },
+      "tile64x32": {
+        "path": "Tools/artworks/pipeline/reviews/job-7064b8a37678e1ef-a003/tile64x32.png",
+        "sha256": "b2f9a73e42f367a0d10c782ee6b61f4de56b6d4d58aeae35f53826a1ecbb3492"
+      }
+    }
+  },
+  "report": {
+    "path": "Tools/artworks/pipeline/reports/report-442bb3b7f20f26f2.json",
+    "sha256": "09b53b788b2b9d2b22fd3ff269355fa271a8519b9aeb9180ce0bb6c83b23a6ed"
+  },
+  "approvalId": null,
+  "feedbackId": null,
+  "preparation": {
+    "chroma": "00ff00",
+    "chromaTolerance": 48
+  }
+}

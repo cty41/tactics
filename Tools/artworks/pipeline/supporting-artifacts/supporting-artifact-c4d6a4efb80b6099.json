@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 2,
+  "supportingArtifactId": "supporting-artifact-c4d6a4efb80b6099",
+  "artifact": {
+    "path": "Tools/artworks/pure_run/villager/reviews/villager_idle_dr_strong_yaw_comparison.png",
+    "sha256": "ecc01c3d72234a6253ac5e69c7243e786f6d8619a9e3f7cd8c52ac6740da0786"
+  },
+  "role": "direction-comparison",
+  "note": "Comparison after discarding ineffective incremental yaw attempts: red-shiba DR, villager V03, and a materially rotated strong-yaw V06 endpoint; all share y=236 baseline."
+}

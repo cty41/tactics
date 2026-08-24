@@ -1,0 +1,18 @@
+{
+  "schemaVersion": 2,
+  "approvalId": "approval-19d5289ddcbfddb6",
+  "attemptId": "job-349e761b5378c0a6-a001",
+  "candidateSha256": "f90e933a9f7db11afe5a83a3e45e589eee196f81eeab9e45ece920e6e7615d4a",
+  "maskSha256": null,
+  "reviewer": "cty41",
+  "reviewSha256": {
+    "overlay": "a7eca3e2f89b0a9d4848a968b0d987afbb9d1a668975420d8117e101dfd85543",
+    "preview128": "5d402f349f198c1b27c1743eb33f62953780e59a631b993d6aefad548b9a3f28",
+    "tile64x32": "b753696e2b0ab41fb6bdd79de86bce9be3b52c8c3f5c2a5053a4fb1b13af8bfc"
+  },
+  "decision": "approved",
+  "reason": "用户确认 Mystery 节点图，并要求继续新增互动任务目的地感叹号图标",
+  "decidedAt": "2026-08-23T03:53:59Z",
+  "annotation": null,
+  "reportSha256": "545f7a3f1089eb1452c3df46cc7c320701ba33bf10c5750bca9c02ed1fd2f9a0"
+}

@@ -1,0 +1,18 @@
+{
+  "schemaVersion": 2,
+  "approvalId": "approval-eceb26ddcf32f691",
+  "attemptId": "job-a3130635f06ad42d-a005",
+  "candidateSha256": "5d26b3879fd7247633db9b0425e789cdf24e34235e67578e2d4bdd308803fe3f",
+  "maskSha256": "f0acc3c3b313623ebdf760d2abb48061f296d6f913426572d8a855ea3652c53e",
+  "reviewer": "cty41",
+  "reviewSha256": {
+    "overlay": "6444b3c798175c4d432a462862f480d1fcb84fe2cb5dbfacba90739d8852c5b4",
+    "preview128": "fcab5b5249df312eebd7979d0fa0f13c26659da99aa5809abee37f8da9701daa",
+    "tile64x32": "0be2bfaba1a96203e7dca25c7fae21136847a7e67ca5c6844380c3e44bc0ac3d"
+  },
+  "decision": "approved",
+  "reason": "User approved the grounded DR hit reaction after adding bilateral streaming tears and requested promote.",
+  "decidedAt": "2026-08-24T02:12:36.8826624Z",
+  "annotation": null,
+  "reportSha256": "9f0c1b4dc066946a1bdb4c6358012644c7bd75ef0e97db6f8496a048a5fb871f"
+}

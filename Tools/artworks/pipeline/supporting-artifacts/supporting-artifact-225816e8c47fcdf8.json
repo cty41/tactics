@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 2,
+  "supportingArtifactId": "supporting-artifact-225816e8c47fcdf8",
+  "artifact": {
+    "path": "Tools/artworks/pure_run/villager/reviews/villager_death_v02_comparison.png",
+    "sha256": "f7e775ca979e275069b20c3f5f4697ba686107e3ba2ee7c4a85a0b7203385b21"
+  },
+  "role": "pose-comparison",
+  "note": "Final villager pose review: death V02 uses complete-AABB centering on the tile, compact supine capsule geometry, head upper-right, four attached paws, and no equipment."
+}

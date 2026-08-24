@@ -1,0 +1,35 @@
+{
+  "schemaVersion": 2,
+  "attemptId": "job-7064b8a37678e1ef-a004",
+  "jobId": "job-7064b8a37678e1ef",
+  "ordinal": 4,
+  "parentAttemptId": "job-7064b8a37678e1ef-a003",
+  "retryFeedbackId": null,
+  "promptDelta": null,
+  "technicalRemediation": false,
+  "state": "review_pending",
+  "artifacts": {
+    "source": {
+      "path": "Tools/artworks/pure_run/items/concepts/pure_run_item_silver_ring_v01_chroma_source_v04.png",
+      "sha256": "e31f0507fabf790eda43dce9149bce29ea7c90be48f9316f0a560114932438fa"
+    },
+    "raw": {
+      "path": "Tools/artworks/pipeline/artifacts/job-7064b8a37678e1ef/job-7064b8a37678e1ef-a004/raw.png",
+      "sha256": "e31f0507fabf790eda43dce9149bce29ea7c90be48f9316f0a560114932438fa"
+    },
+    "prepared": {
+      "path": "Tools/artworks/pipeline/artifacts/job-7064b8a37678e1ef/job-7064b8a37678e1ef-a004/prepared.png",
+      "sha256": "eb0e570d7c3c870215f2ca655e78fa457b6b3bd2eafb6018802facdef15d0521"
+    }
+  },
+  "report": {
+    "path": "Tools/artworks/pipeline/reports/report-30022a2712bf935e.json",
+    "sha256": "e46d31770ba24634495ae5aa8af87753a45f99f37fa82ec007cb236a33001559"
+  },
+  "approvalId": null,
+  "feedbackId": null,
+  "preparation": {
+    "chroma": "00ff00",
+    "chromaTolerance": 48
+  }
+}

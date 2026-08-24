@@ -649,6 +649,69 @@ class ArtworkPipelineTests(unittest.TestCase):
         self.assertIn("transparent_rgb_nonzero", issues)
         self.assertIn("exact_chroma_residue", issues)
 
+    def test_technical_gate_accepts_contract_declared_large_master(self):
+        path = self.root / "large-master.png"
+        Image.new("RGBA", (384, 384), (0, 0, 0, 0)).save(path)
+        technical, issues = pipeline.inspect_technical(
+            path, "projectile", expected_master_size=(384, 384))
+        self.assertEqual([384, 384], technical["size"])
+        self.assertNotIn("master_size_mismatch", issues)
+
+        _, default_issues = pipeline.inspect_technical(path, "projectile")
+        self.assertIn("master_size_mismatch", default_issues)
+
+    def test_tile_placement_contract_and_review_metrics(self):
+        contract = pipeline.create_contract(self.store, self.ns(
+            asset_id="altar", approved_asset_id=None, kind="projectile", direction="down-right", pose="display",
+            anchor=None, anchor_mask=None, mask_required=False, no_arms=False,
+            near_hand_side=None, far_hand_side=None, size_tolerance=3, center_tolerance=2,
+            master_width=384, master_height=384,
+            footprint_width=2, footprint_height=2, display_scale=0.5,
+            ground_anchor_x=192, ground_anchor_y=342, anchor_mode="contact_shape_center",
+            output_master="Tools/artworks/approved/altar.png",
+            output_preview="Tools/artworks/approved/altar_128.png",
+            rights_holder="cty41", license="CC-BY-4.0", provenance="project-owned-gpt-generated"))
+        self.assertEqual([384, 384], contract["canvasSpec"]["masterSize"])
+        self.assertEqual([2, 2], contract["tilePlacementSpec"]["footprintTiles"])
+
+        image = Image.new("RGBA", (384, 384), (0, 0, 0, 0))
+        review, metrics = pipeline.render_tile_placement_review(image, contract["tilePlacementSpec"])
+        self.assertEqual([192, 192], metrics["displaySize"])
+        self.assertEqual(metrics["logicalTileCenter"], metrics["anchorScreenPoint"])
+        self.assertEqual(4, len(metrics["tileCenters"]))
+        self.assertEqual([128, 224], metrics["logicalTileCenter"])
+        self.assertEqual((256, 256), review.size)
+
+    def test_tile_placement_contract_rejects_partial_or_out_of_canvas_values(self):
+        common = dict(
+            asset_id="bad", approved_asset_id=None, kind="projectile", direction="down-right", pose="display",
+            anchor=None, anchor_mask=None, mask_required=False, no_arms=False,
+            near_hand_side=None, far_hand_side=None, size_tolerance=3, center_tolerance=2,
+            master_width=256, master_height=256, output_master="Tools/artworks/approved/bad.png",
+            output_preview="Tools/artworks/approved/bad_128.png",
+            rights_holder="cty41", license="CC-BY-4.0", provenance="project-owned-gpt-generated")
+        with self.assertRaisesRegex(pipeline.PipelineError, "requires footprint"):
+            pipeline.create_contract(self.store, self.ns(**common, footprint_width=1))
+        with self.assertRaisesRegex(pipeline.PipelineError, "inside the master canvas"):
+            pipeline.create_contract(self.store, self.ns(
+                **common, footprint_width=1, footprint_height=1, display_scale=0.5,
+                ground_anchor_x=128, ground_anchor_y=256, anchor_mode="contact_shape_center"))
+
+    def test_target_orientation_places_asset_upper_right_facing_player(self):
+        image = Image.new("RGBA", (256, 256), (0, 0, 0, 0))
+        spec = {
+            "footprintTiles": [1, 1], "displayScale": 0.5,
+            "groundAnchorPx": [128, 230], "anchorMode": "contact_shape_center",
+            "boardRole": "target", "screenFacing": "down_left",
+        }
+        review, metrics = pipeline.render_tile_placement_review(image, spec)
+        self.assertEqual("up_right", metrics["explorationDirection"])
+        self.assertEqual("down_left", metrics["screenFacing"])
+        self.assertGreater(metrics["logicalTileCenter"][0], metrics["playerReferenceTileCenter"][0])
+        self.assertLess(metrics["logicalTileCenter"][1], metrics["playerReferenceTileCenter"][1])
+        self.assertEqual(metrics["logicalTileCenter"], metrics["anchorScreenPoint"])
+        self.assertEqual((320, 224), review.size)
+
     def test_finite_series_requires_feedback_and_rejects_sixth_unique_output(self):
         _, _, args = self.contract_and_job()
         _series, job = self.bind_series(args)

@@ -1,0 +1,18 @@
+{
+  "schemaVersion": 2,
+  "approvalId": "approval-8b72544169a1f877",
+  "attemptId": "job-b9c0bdffa342f730-a001",
+  "candidateSha256": "97920d4d76a58fa9fe36184c75a21ff17e1c4cddf6cd204e52106430a2f3dd6f",
+  "maskSha256": null,
+  "reviewer": "cty41",
+  "reviewSha256": {
+    "overlay": "5a98edd43f8b3c47c6256e7c891e2157dba18ce204487b64249d1f2734dc4520",
+    "preview128": "90225775437a53398dd56ead9116ee5f47ba6fe62bb2b9a59d438cf5319ce88b",
+    "tile64x32": "b19b12dc5bc46ed175fc8e14629aa5cd2e060716e27370ed247158c8e883637c"
+  },
+  "decision": "approved",
+  "reason": "用户确认闭合宝箱场景道具并要求 promote",
+  "decidedAt": "2026-08-23T13:49:01Z",
+  "annotation": null,
+  "reportSha256": "8f8dcbee534b926232ce3ec042b2d44f890819f90a5c419d9bec998f3642a1f8"
+}

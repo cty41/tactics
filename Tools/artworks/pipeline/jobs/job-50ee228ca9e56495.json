@@ -1,0 +1,21 @@
+{
+  "schemaVersion": 2,
+  "jobId": "job-50ee228ca9e56495",
+  "state": "ready",
+  "contractId": "contract-ac9f54a6b4d9ceae",
+  "contractSha256": "6bac9340835b1edf58fe502e78ce31e0c3d7cf0a6e712e8ef07f18c8306f6f50",
+  "prompt": {
+    "path": "Tools/artworks/pure_run/villager/prompt_idle_ul_v02.md",
+    "sha256": "96dd4ed356a5a7322b5432416fb768131b28696b9f98c24c9a74fead024d54dd"
+  },
+  "inputs": [],
+  "target": {
+    "direction": "up-left",
+    "pose": "idle"
+  },
+  "series": null,
+  "conceptOnly": false,
+  "contractRequirements": null,
+  "requiresInvocation": false,
+  "poseGuide": null
+}

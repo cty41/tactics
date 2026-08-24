@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 2,
+  "supportingArtifactId": "supporting-artifact-2a582ebed53149b3",
+  "artifact": {
+    "path": "Tools/artworks/pure_run/reviews/canvas-codex-handoff.md",
+    "sha256": "44d45797a8e2a9564c643519ce98aca718268d4e06d179dbfa412eba71b6e8de"
+  },
+  "role": "supporting-derived",
+  "note": "Handoff prompt: Pure Run artwork production context for continuing in codex CLI"
+}

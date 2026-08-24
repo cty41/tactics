@@ -1,0 +1,21 @@
+{
+  "schemaVersion": 2,
+  "jobId": "job-8c0260edd8abdb68",
+  "state": "ready",
+  "contractId": "contract-1150e3da1a2d2be8",
+  "contractSha256": "e60cc1ee834ea70cc0b58f4456e01bc5e17d15525d28f9569f5a8047e9545c54",
+  "prompt": {
+    "path": "Tools/artworks/pure_run/items/prompt_lucky_ring.md",
+    "sha256": "638c39f4d3d1ba13799d057aa6eaa236f026a4f8518ddbf0b63f0df9a2de4a16"
+  },
+  "inputs": [],
+  "target": {
+    "direction": "down-right",
+    "pose": "display"
+  },
+  "series": null,
+  "conceptOnly": false,
+  "contractRequirements": null,
+  "requiresInvocation": false,
+  "poseGuide": null
+}

@@ -1,0 +1,21 @@
+{
+  "schemaVersion": 2,
+  "approvalId": "approval-964de67bf42616ab",
+  "attemptId": "job-22d5112e679b2e7d-a002",
+  "candidateSha256": "e87562a8f3184d0f6a9ead468abf9d35b4a740a356ac79c8a6a054603fb7ffef",
+  "maskSha256": "d2e806d41ffc949130a73d1c373eca2385fdcbc1131f8edb47b9aee868c06fbc",
+  "reviewer": "cty41",
+  "reviewSha256": {
+    "overlay": "074722c053f94439accf755d9491bfda055b22fb44774dee7e2b5a3c9b298201",
+    "preview128": "c7df030a61909a617e5b08fa3f9d5744aed22764b4df6db2a32e9d57ee97c9fb",
+    "tile64x32": "4e1cb383990667f8328e33cc3302e4ad0892e1582402f3c09df311551be36774"
+  },
+  "decision": "approved",
+  "reason": "用户确认 V03 缩小且压扁后的村民死亡姿态并明确要求 promote；按已确认的死亡图完整 alpha AABB 居中规则晋升。",
+  "decidedAt": "2026-08-24T10:41:34.2277811+08:00",
+  "annotation": {
+    "annotationId": "annotations-ed8baf6ea815e418",
+    "sha256": "2e9b9e1381df6b0eda3972aae06734684fa8c346b45abe7dec34c3120f8add9c"
+  },
+  "reportSha256": "8eba0deaa68702e3f179aff8060a94c0889706330c242da105342bdbeabcf379"
+}

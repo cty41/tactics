@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 2,
+  "feedbackId": "feedback-38afe0a8bdd483ff",
+  "attemptId": "job-897833991fd2f552-a009",
+  "candidateSha256": "a31c4a064734ba688111a73cc95de13c8345db6722c95794338af5b758ba0053",
+  "reviewer": "codex",
+  "verdict": "technical_failed",
+  "strengths": [],
+  "defects": [
+    "Near-transparent outer pixels contaminated the alpha bounds and made the visible sprite undersized."
+  ],
+  "nextPromptDelta": "Keep the corrected pose; normalize using a 50-percent alpha visible boundary.",
+  "recordedAt": "2026-08-24T01:49:34.8810669Z",
+  "authorType": "agent",
+  "categories": [
+    "processing"
+  ],
+  "disposition": "technical_failed",
+  "frozenInvariants": [],
+  "pendingFixes": [
+    "Near-transparent outer pixels contaminated the alpha bounds and made the visible sprite undersized."
+  ]
+}

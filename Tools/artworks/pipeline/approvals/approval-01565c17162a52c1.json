@@ -1,0 +1,18 @@
+{
+  "schemaVersion": 2,
+  "approvalId": "approval-01565c17162a52c1",
+  "attemptId": "job-4617aa55018a5a6d-a003",
+  "candidateSha256": "40d9197f2687dad414757bbc0c88684bb54b8a9492825a60ca94ec88279df81e",
+  "maskSha256": null,
+  "reviewer": "cty41",
+  "reviewSha256": {
+    "overlay": "56fb90627e8cba47d2533af11d0e87365e6a03ce38e68a98451716ffcdf73735",
+    "preview128": "6c736c55e2da16f8238d8cd2d86a23706fe665a9e4d23d95b5e1c4a6f30e5563",
+    "tile64x32": "9cc8a8a8bf7e3cecb88e8769d06e164172d1b4636b56d0d18757bca3b1759a03"
+  },
+  "decision": "approved",
+  "reason": "用户确认该彩色篝火作为场景正式篝火道具并要求 promote",
+  "decidedAt": "2026-08-23T04:03:17Z",
+  "annotation": null,
+  "reportSha256": "9a070ac0dbf5655b8f6eadc88c1d7159ae87a9bec099e1c4bc9bbf2822db5db5"
+}

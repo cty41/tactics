@@ -1,0 +1,18 @@
+{
+  "schemaVersion": 2,
+  "approvalId": "approval-804cb98079ac4a97",
+  "attemptId": "job-d1d20f1acf426ee0-a002",
+  "candidateSha256": "45993fdf6f93c58c7b49d3f61311ddd908c8a8391e8f512f5f9ed62db50d6085",
+  "maskSha256": "e942a0500a7ce2722d879856f2d6fbf822e9234bf5e356915adc0672442da533",
+  "reviewer": "cty41",
+  "reviewSha256": {
+    "overlay": "5753ad18a4c957a9fcd864ad4158b68a802dd31e703be27c1c3a62da99da938d",
+    "preview128": "35cf78c6732fa3548e65314958f678877dc44df9faea112ba1cfcd0e4a8577a0",
+    "tile64x32": "2b7498b9cc78fcb45797460f67f3104f7914267ce44a56773bf813fd4c7675bf"
+  },
+  "decision": "approved",
+  "reason": "User approved the UL hit reaction with complete topology, grounded recoil, and streaming tears and requested promote.",
+  "decidedAt": "2026-08-24T02:15:13.6311027Z",
+  "annotation": null,
+  "reportSha256": "d3c7665596de767bf423a85e59b1849225e5bbbc5ddba7a2ba5234fa73686e47"
+}

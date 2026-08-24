@@ -1,0 +1,32 @@
+{
+  "schemaVersion": 2,
+  "attemptId": "job-a3130635f06ad42d-a002",
+  "jobId": "job-a3130635f06ad42d",
+  "ordinal": 2,
+  "parentAttemptId": "job-a3130635f06ad42d-a001",
+  "retryFeedbackId": "feedback-d6ab564e43708376",
+  "promptDelta": null,
+  "technicalRemediation": false,
+  "state": "prepared",
+  "artifacts": {
+    "source": {
+      "path": "Tools/artworks/pure_run/villager/concepts/pure_run_villager_hit_dr_v02_normalized_source_v01.png",
+      "sha256": "4b8adc1933c0080c7ec3873b8483d439336a21120b72e82cc8dddde1f07c16b5"
+    },
+    "raw": {
+      "path": "Tools/artworks/pipeline/artifacts/job-a3130635f06ad42d/job-a3130635f06ad42d-a002/raw.png",
+      "sha256": "4b8adc1933c0080c7ec3873b8483d439336a21120b72e82cc8dddde1f07c16b5"
+    },
+    "prepared": {
+      "path": "Tools/artworks/pipeline/artifacts/job-a3130635f06ad42d/job-a3130635f06ad42d-a002/prepared.png",
+      "sha256": "7c55297aa2e802b08ef4d2c447820e448dc0c0fb5de602cd96014d476fd0f19f"
+    }
+  },
+  "report": null,
+  "approvalId": null,
+  "feedbackId": "feedback-657e9c0ee7a46948",
+  "preparation": {
+    "chroma": null,
+    "chromaTolerance": 0
+  }
+}

@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 2,
+  "feedbackId": "feedback-a4979cb1d76fe540",
+  "attemptId": "job-897833991fd2f552-a006",
+  "candidateSha256": "4bd23986ac21e5978ffdb74a82f41f1aed6ccc75734f92e1e1d0a1c4d2547b5c",
+  "reviewer": "cty41",
+  "verdict": "retry",
+  "strengths": [],
+  "defects": [
+    "The first clockwise turn is insufficient; rotate the facing another approximately 20 degrees clockwise."
+  ],
+  "nextPromptDelta": "Apply another obvious 20-degree yaw toward screen right while preserving upright capsule geometry and baseline.",
+  "recordedAt": "2026-08-24T01:42:12.5121864Z",
+  "authorType": "human",
+  "categories": [
+    "pose_axis"
+  ],
+  "disposition": "retry",
+  "frozenInvariants": [],
+  "pendingFixes": [
+    "The first clockwise turn is insufficient; rotate the facing another approximately 20 degrees clockwise."
+  ]
+}

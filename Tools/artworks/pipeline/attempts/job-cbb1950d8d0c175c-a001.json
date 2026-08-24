@@ -1,0 +1,53 @@
+{
+  "schemaVersion": 2,
+  "attemptId": "job-cbb1950d8d0c175c-a001",
+  "jobId": "job-cbb1950d8d0c175c",
+  "ordinal": 1,
+  "parentAttemptId": null,
+  "retryFeedbackId": null,
+  "promptDelta": null,
+  "technicalRemediation": false,
+  "state": "review_pending",
+  "artifacts": {
+    "source": {
+      "path": "Tools/artworks/pure_run/props/approved/pure_run_prop_chest_closed_v01.png",
+      "sha256": "97920d4d76a58fa9fe36184c75a21ff17e1c4cddf6cd204e52106430a2f3dd6f"
+    },
+    "raw": {
+      "path": "Tools/artworks/pipeline/artifacts/job-cbb1950d8d0c175c/job-cbb1950d8d0c175c-a001/raw.png",
+      "sha256": "97920d4d76a58fa9fe36184c75a21ff17e1c4cddf6cd204e52106430a2f3dd6f"
+    },
+    "prepared": {
+      "path": "Tools/artworks/pipeline/artifacts/job-cbb1950d8d0c175c/job-cbb1950d8d0c175c-a001/prepared.png",
+      "sha256": "97920d4d76a58fa9fe36184c75a21ff17e1c4cddf6cd204e52106430a2f3dd6f"
+    },
+    "tilePlacementMetrics": {
+      "path": "Tools/artworks/pipeline/reviews/job-cbb1950d8d0c175c-a001/tilePlacementMetrics.json",
+      "sha256": "e75e9d0f5713261bf2d592a09b0920e9e886ce41322293521e9f76a2e0c7f125"
+    },
+    "review": {
+      "overlay": {
+        "path": "Tools/artworks/pipeline/reviews/job-cbb1950d8d0c175c-a001/overlay.png",
+        "sha256": "5a98edd43f8b3c47c6256e7c891e2157dba18ce204487b64249d1f2734dc4520"
+      },
+      "preview128": {
+        "path": "Tools/artworks/pipeline/reviews/job-cbb1950d8d0c175c-a001/preview128.png",
+        "sha256": "90225775437a53398dd56ead9116ee5f47ba6fe62bb2b9a59d438cf5319ce88b"
+      },
+      "tile64x32": {
+        "path": "Tools/artworks/pipeline/reviews/job-cbb1950d8d0c175c-a001/tile64x32.png",
+        "sha256": "510feb3417ccfd8eaa425f7757ed4a455b81f706b80195b4f51239e0872c24bc"
+      }
+    }
+  },
+  "report": {
+    "path": "Tools/artworks/pipeline/reports/report-349f08797004de15.json",
+    "sha256": "c425b80b7c79712ab25e2168e6d6253230bf9bc935d3c9b5ed939b654e8a72ee"
+  },
+  "approvalId": null,
+  "feedbackId": "feedback-a853baa8b17a1a9c",
+  "preparation": {
+    "chroma": null,
+    "chromaTolerance": 0
+  }
+}

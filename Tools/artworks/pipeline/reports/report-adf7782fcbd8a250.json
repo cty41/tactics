@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "attemptId": "job-897833991fd2f552-a001",
+  "inputSha256": "c1d6e21c9fd5618e20f6e5dcafc508ee65cfeb3f8fa71498297982a1de25d7d5",
+  "maskSha256": null,
+  "technical": {
+    "size": [
+      256,
+      256
+    ],
+    "alphaBbox": [
+      73,
+      115,
+      183,
+      237
+    ]
+  },
+  "geometry": {},
+  "issues": [
+    "semantic_mask_missing"
+  ],
+  "passed": false
+}

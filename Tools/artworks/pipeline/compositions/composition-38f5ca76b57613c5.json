@@ -1,0 +1,63 @@
+{
+  "schemaVersion": 2,
+  "compositionId": "composition-38f5ca76b57613c5",
+  "assetId": "villager-death",
+  "spec": {
+    "canvas": [
+      256,
+      256
+    ],
+    "bodyLayer": true,
+    "coreAxis": {
+      "bottom": [
+        96,
+        146
+      ],
+      "top": [
+        160,
+        110
+      ],
+      "tiltDegrees": [
+        -90.0,
+        90.0
+      ]
+    },
+    "footCenter": [
+      128,
+      128
+    ],
+    "weapon": {
+      "hiddenGrip": [
+        128,
+        128
+      ],
+      "exitWindow": [
+        0,
+        0,
+        255,
+        255
+      ],
+      "tipRegion": [
+        0,
+        0,
+        255,
+        255
+      ]
+    },
+    "forbiddenRegions": [],
+    "requiredHiddenLabels": [],
+    "visibleAreaCaps": {},
+    "equipmentState": {
+      "scabbard": "absent",
+      "staticEffects": "absent"
+    }
+  },
+  "source": {
+    "path": "Tools/artworks/pure_run/villager/death_composition_v01.json",
+    "sha256": "96ba4341fba822a82dad19e0bde3a980f1c36403b2fa48575a094ba2407e8b86"
+  },
+  "anchor": {
+    "path": "Tools/artworks/pure_run/villager/approved/pure_run_villager_idle_dr_v01.png",
+    "sha256": "9cbed15b75152d998dfa257bbc3bf391ae4a21fc7d3cdfc915ec0e2f3d562d0a"
+  }
+}

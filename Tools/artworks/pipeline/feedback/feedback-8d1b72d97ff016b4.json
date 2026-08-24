@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 2,
+  "feedbackId": "feedback-8d1b72d97ff016b4",
+  "attemptId": "job-d1d20f1acf426ee0-a001",
+  "candidateSha256": "9f1167115284aa5bca5da8e58c61ec62a4d008683bc85049ba652658058a66b3",
+  "reviewer": "codex",
+  "verdict": "retry",
+  "strengths": [],
+  "defects": [
+    "The overnight hit UL draft predates the promoted UL identity and approved streaming-tear hit language."
+  ],
+  "nextPromptDelta": "Regenerate from approved UL and hit DR assets, preserving four-paw topology, UL direction, grounded recoil, and readable tears.",
+  "recordedAt": "2026-08-24T02:13:56.0296095Z",
+  "authorType": "agent",
+  "categories": [
+    "identity",
+    "pose_axis"
+  ],
+  "disposition": "retry",
+  "frozenInvariants": [],
+  "pendingFixes": [
+    "The overnight hit UL draft predates the promoted UL identity and approved streaming-tear hit language."
+  ]
+}

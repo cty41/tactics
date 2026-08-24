@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 2,
+  "supportingArtifactId": "supporting-artifact-856b84c480ebb7e2",
+  "artifact": {
+    "path": "Tools/artworks/pure_run/items/reviews/items_batch1_prepared_grid.png",
+    "sha256": "abbc9f1bc4f686d7940fd557c2e38b111379d6759128fffd0387ec04a530b7be"
+  },
+  "role": "supporting-derived",
+  "note": "Batch1 items prepared grid for human review (5 items: rings + potions)"
+}

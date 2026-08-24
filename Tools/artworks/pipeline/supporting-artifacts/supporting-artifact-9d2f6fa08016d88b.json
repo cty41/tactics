@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 2,
+  "supportingArtifactId": "supporting-artifact-9d2f6fa08016d88b",
+  "artifact": {
+    "path": "Tools/artworks/pure_run/items/reviews/items_batch1_tile_review.png",
+    "sha256": "547f53b353b80e179abf9ca613adc4e2c944c407cee368b2ef716f1091e58632"
+  },
+  "role": "supporting-derived",
+  "note": "Batch1 items 64x32 tile review grid for human review"
+}

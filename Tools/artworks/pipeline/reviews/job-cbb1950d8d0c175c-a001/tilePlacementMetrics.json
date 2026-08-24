@@ -1,0 +1,44 @@
+{
+  "schemaVersion": 1,
+  "attemptId": "job-cbb1950d8d0c175c-a001",
+  "masterSize": [
+    256,
+    256
+  ],
+  "displayScale": 0.5,
+  "displaySize": [
+    128,
+    128
+  ],
+  "footprintTiles": [
+    1,
+    1
+  ],
+  "tileCenters": [
+    [
+      128,
+      160
+    ]
+  ],
+  "logicalTileCenter": [
+    128,
+    160
+  ],
+  "groundAnchorPx": [
+    128.0,
+    232.0
+  ],
+  "scaledGroundAnchorPx": [
+    64,
+    116
+  ],
+  "spriteOrigin": [
+    64,
+    44
+  ],
+  "anchorScreenPoint": [
+    128,
+    160
+  ],
+  "anchorMode": "contact_shape_center"
+}

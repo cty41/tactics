@@ -1,0 +1,18 @@
+{
+  "schemaVersion": 2,
+  "approvalId": "approval-24fe738d80cb2aa0",
+  "attemptId": "job-66bf33da4cb41b4f-a001",
+  "candidateSha256": "4ad1514ac8e4cdf2162675da0243cb409b5b80b11e2ae73f06c2c46ba1241cb5",
+  "maskSha256": null,
+  "reviewer": "cty41",
+  "reviewSha256": {
+    "overlay": "8c20bbed7a0b5880b8e7f64480b24838c98e9ab854fbe0c2703a2d2507f12ed4",
+    "preview128": "093ed560ee10562d7f113e6a96f60e089be92d687be49390c63c92c2776d4ca5",
+    "tile64x32": "b7fc03e463fcbd27bd27f52e74c23e63de360b130b19e98db2a9eb1f1c749199"
+  },
+  "decision": "approved",
+  "reason": "用户确认最终V04：2x2祭坛比例、接地形体圆心对齐、胶囊犬神像、单侧缺爪及三条爪线均通过，并明确要求 promote",
+  "decidedAt": "2026-08-23T15:35:13Z",
+  "annotation": null,
+  "reportSha256": "0e02284fb3a66ecdc955ac1797097ccb410ef1c8926058cb8c0e216a9d443f55"
+}

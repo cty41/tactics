@@ -1,0 +1,18 @@
+{
+  "schemaVersion": 2,
+  "approvalId": "approval-e01e6f3d2514019a",
+  "attemptId": "job-0e460636da54a72f-a001",
+  "candidateSha256": "3b28f23026d6fb8bd724c7246bf49daf79f6354478b9c90a1b9fbf42cdb5b65b",
+  "maskSha256": null,
+  "reviewer": "cty41",
+  "reviewSha256": {
+    "overlay": "e1ceb698315b1a693f49cd03ff5e1cf2d23b3479ec564b7c3fdebef0cca8906d",
+    "preview128": "d79321f9f0da72368ba7d0a50972fa1f9738117a2cb8b10ff186eb20d8676326",
+    "tile64x32": "f2a9927058a55101d2b74b60be1c3144ec402fd62b0b7acb25a9395c1c0de032"
+  },
+  "decision": "approved",
+  "reason": "用户在查看打开宝箱原图后明确要求 promote；完成同宽尺寸、基线和管线 Review 后晋升",
+  "decidedAt": "2026-08-23T13:51:56Z",
+  "annotation": null,
+  "reportSha256": "9c98ba70d2f08dbbadfa3d89904d191c998edfd2631fc4a8381dedf2801d8a24"
+}

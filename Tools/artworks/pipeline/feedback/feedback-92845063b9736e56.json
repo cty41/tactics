@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 2,
+  "feedbackId": "feedback-92845063b9736e56",
+  "attemptId": "job-897833991fd2f552-a012",
+  "candidateSha256": "9cbed15b75152d998dfa257bbc3bf391ae4a21fc7d3cdfc915ec0e2f3d562d0a",
+  "reviewer": "codex",
+  "verdict": "technical_failed",
+  "strengths": [],
+  "defects": [
+    "Semantic mask retained partial alpha at subject edges and foot labels stopped above the y=236 baseline."
+  ],
+  "nextPromptDelta": "Use binary subject alpha and extend labeled feet through the visible baseline.",
+  "recordedAt": "2026-08-24T01:53:15.1993523Z",
+  "authorType": "agent",
+  "categories": [
+    "processing"
+  ],
+  "disposition": "technical_failed",
+  "frozenInvariants": [],
+  "pendingFixes": [
+    "Semantic mask retained partial alpha at subject edges and foot labels stopped above the y=236 baseline."
+  ]
+}

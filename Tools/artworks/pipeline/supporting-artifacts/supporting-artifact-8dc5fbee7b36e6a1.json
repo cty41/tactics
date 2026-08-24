@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 2,
+  "supportingArtifactId": "supporting-artifact-8dc5fbee7b36e6a1",
+  "artifact": {
+    "path": "Tools/artworks/pure_run/villager/reviews/villager_death_size_flatten_comparison.png",
+    "sha256": "2e881a7bd211d110eefc028731ddd9101fa5c4b33d4f0e74d1150166865f3446"
+  },
+  "role": "size-comparison",
+  "note": "Death V03 responds to user feedback by reducing visible AABB from 150x140 to 120x78 and flattening vertically while preserving centered placement and head-upper-right axis."
+}

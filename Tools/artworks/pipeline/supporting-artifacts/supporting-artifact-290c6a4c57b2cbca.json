@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 2,
+  "supportingArtifactId": "supporting-artifact-290c6a4c57b2cbca",
+  "artifact": {
+    "path": "Tools/artworks/pipeline/reviews/job-4b305eeeb547c4db-a002/tilemap_exit_portal_red_shiba_amazon_ul_compare_v01.png",
+    "sha256": "ea85b0496b1dfd11f546da62701dc1bba6b7cfc2a9418c2874fdac1508c61451"
+  },
+  "role": "tilemap-player-target-facing-comparison",
+  "note": "Standard red-shiba Amazon UL stands on the lower-left player Tile facing upper-right; enlarged exit portal stands on the upper-right target Tile facing down-left. Both use approved 0.5 display scale and contact-center placement."
+}

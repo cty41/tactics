@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 2,
+  "feedbackId": "feedback-02c87c2b8e4a9db4",
+  "attemptId": "job-a95411a55ccd0bbe-a002",
+  "candidateSha256": "4ad1514ac8e4cdf2162675da0243cb409b5b80b11e2ae73f06c2c46ba1241cb5",
+  "reviewer": "cty41",
+  "verdict": "selected",
+  "strengths": [
+    "最终V04通过：胶囊犬神像、单侧整肢缺失、贴身圆爪与三条爪线、空祭品台、2x2比例及接地形体圆心对齐均确认"
+  ],
+  "defects": [],
+  "nextPromptDelta": "",
+  "recordedAt": "2026-08-23T15:26:29Z",
+  "authorType": "human",
+  "categories": [],
+  "disposition": "selected",
+  "frozenInvariants": [],
+  "pendingFixes": []
+}

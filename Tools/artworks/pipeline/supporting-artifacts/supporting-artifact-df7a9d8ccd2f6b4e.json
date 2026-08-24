@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 2,
+  "supportingArtifactId": "supporting-artifact-df7a9d8ccd2f6b4e",
+  "artifact": {
+    "path": "Tools/artworks/pure_run/villager/villager_v01_generation_contact_sheet.png",
+    "sha256": "97aa49566e480f39b70c5e68162e4859bbc36f47a4fa93e970ae891c56e3dbea"
+  },
+  "role": "review-contact-sheet",
+  "note": "User-requested overnight V1 villager batch: idle DR/UL, hit DR/UL, and death; pending identity-anchor review."
+}

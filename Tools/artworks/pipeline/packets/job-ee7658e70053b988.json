@@ -1,0 +1,21 @@
+{
+  "schemaVersion": 2,
+  "jobId": "job-ee7658e70053b988",
+  "state": "ready",
+  "contractId": "contract-00312112a8b9abd1",
+  "contractSha256": "522499e16fa9f19bedcbca1e366b0f188986885ec01a67efdcd7f6c908c4f103",
+  "prompt": {
+    "path": "Tools/artworks/pure_run/items/prompt_life_potion.md",
+    "sha256": "a153af1a737877c8c7e5016e18a64be6b9c8a20fa88c1a6ff96cf7c84a70fc41"
+  },
+  "inputs": [],
+  "target": {
+    "direction": "down-right",
+    "pose": "display"
+  },
+  "series": null,
+  "conceptOnly": false,
+  "contractRequirements": null,
+  "requiresInvocation": false,
+  "poseGuide": null
+}

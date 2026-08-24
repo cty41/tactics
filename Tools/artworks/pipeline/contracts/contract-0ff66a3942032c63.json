@@ -1,0 +1,43 @@
+{
+  "schemaVersion": 2,
+  "contractId": "contract-0ff66a3942032c63",
+  "assetId": "villager-death",
+  "approvedAssetId": "villager-death",
+  "kind": "death_pose",
+  "direction": "down-right",
+  "pose": "death",
+  "anchor": null,
+  "maskRequired": true,
+  "noArms": true,
+  "handSides": {
+    "near_hand": null,
+    "far_hand": null
+  },
+  "occlusion": null,
+  "compositionSpec": {
+    "compositionId": "composition-38f5ca76b57613c5",
+    "sha256": "857fbcbbdc6d06c1342b6444128d7a9985a98d470c74230c91de51b1181b0aae"
+  },
+  "identitySpec": null,
+  "requiresInvocation": false,
+  "canvasSpec": {
+    "masterSize": [
+      256,
+      256
+    ]
+  },
+  "tilePlacementSpec": null,
+  "tolerances": {
+    "sizePx": 3,
+    "centerPx": 2
+  },
+  "outputs": {
+    "master": "Tools/artworks/pure_run/villager/approved/pure_run_villager_death_v01.png",
+    "preview": "Tools/artworks/pure_run/villager/approved/pure_run_villager_death_v01_128.png"
+  },
+  "rights": {
+    "rightsHolder": "cty41",
+    "license": "CC-BY-4.0",
+    "provenance": "project-owned-gpt-generated"
+  }
+}

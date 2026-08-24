@@ -1,0 +1,53 @@
+{
+  "schemaVersion": 2,
+  "attemptId": "job-cbb1950d8d0c175c-a002",
+  "jobId": "job-cbb1950d8d0c175c",
+  "ordinal": 2,
+  "parentAttemptId": "job-cbb1950d8d0c175c-a001",
+  "retryFeedbackId": "feedback-a853baa8b17a1a9c",
+  "promptDelta": null,
+  "technicalRemediation": false,
+  "state": "review_pending",
+  "artifacts": {
+    "source": {
+      "path": "Tools/artworks/pure_run/props/concepts/pure_run_prop_chest_closed_v02_left_down_source.png",
+      "sha256": "4dc57588a0cc1c836cf09c7a9984b356763ea4cb3280d3ce4cda2c306874e6e2"
+    },
+    "raw": {
+      "path": "Tools/artworks/pipeline/artifacts/job-cbb1950d8d0c175c/job-cbb1950d8d0c175c-a002/raw.png",
+      "sha256": "4dc57588a0cc1c836cf09c7a9984b356763ea4cb3280d3ce4cda2c306874e6e2"
+    },
+    "prepared": {
+      "path": "Tools/artworks/pipeline/artifacts/job-cbb1950d8d0c175c/job-cbb1950d8d0c175c-a002/prepared.png",
+      "sha256": "e6e41a8218e9cf5c3ad5f14c931147114fe4db3fa04c57d04daf5e14b75848d8"
+    },
+    "tilePlacementMetrics": {
+      "path": "Tools/artworks/pipeline/reviews/job-cbb1950d8d0c175c-a002/tilePlacementMetrics.json",
+      "sha256": "c78ef2ee5759def8dbe0a5ced88a61d3cfd2634bf1c5172af8b2e48bdcd3d066"
+    },
+    "review": {
+      "overlay": {
+        "path": "Tools/artworks/pipeline/reviews/job-cbb1950d8d0c175c-a002/overlay.png",
+        "sha256": "2386ac75778e666eeb03621de3d1f26c5aa5b760b644ab265cb8f9d6bc9cd877"
+      },
+      "preview128": {
+        "path": "Tools/artworks/pipeline/reviews/job-cbb1950d8d0c175c-a002/preview128.png",
+        "sha256": "e4a6c535c4d63d4b3d2815d874294f89635947fad5af5b51fc92a53ea19ace8b"
+      },
+      "tile64x32": {
+        "path": "Tools/artworks/pipeline/reviews/job-cbb1950d8d0c175c-a002/tile64x32.png",
+        "sha256": "aab15567e0e64e88fab7916e0a4d8970f4eb97c20881776215ccefa8ef55e9f3"
+      }
+    }
+  },
+  "report": {
+    "path": "Tools/artworks/pipeline/reports/report-de30bf62cb64e5d6.json",
+    "sha256": "e317f697be524eb5d0ee4979d580438b2d9f0ddf81b61a76e10d53d238c1b97a"
+  },
+  "approvalId": null,
+  "feedbackId": null,
+  "preparation": {
+    "chroma": null,
+    "chromaTolerance": 0
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 2,
+  "supportingArtifactId": "supporting-artifact-b3bc1db8f5d5dbb6",
+  "artifact": {
+    "path": "Tools/artworks/pipeline/reviews/job-a95411a55ccd0bbe-a001/altar_2x2_tilemap_50pct.png",
+    "sha256": "356f3ef2cfd3dd421724991f952be25bd6f990c49e629e1ba6da5218d85a22c1"
+  },
+  "role": "intermediate-scale-preview",
+  "note": "Intermediate 50 percent altar preview used for Tilemap composition."
+}

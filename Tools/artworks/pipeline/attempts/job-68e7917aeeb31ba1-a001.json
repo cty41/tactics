@@ -1,0 +1,63 @@
+{
+  "schemaVersion": 2,
+  "attemptId": "job-68e7917aeeb31ba1-a001",
+  "jobId": "job-68e7917aeeb31ba1",
+  "ordinal": 1,
+  "parentAttemptId": null,
+  "retryFeedbackId": null,
+  "promptDelta": null,
+  "technicalRemediation": false,
+  "state": "promoted",
+  "artifacts": {
+    "source": {
+      "path": "Tools/artworks/pure_run/props/approved/pure_run_prop_altar_v01.png",
+      "sha256": "4ad1514ac8e4cdf2162675da0243cb409b5b80b11e2ae73f06c2c46ba1241cb5"
+    },
+    "raw": {
+      "path": "Tools/artworks/pipeline/artifacts/job-68e7917aeeb31ba1/job-68e7917aeeb31ba1-a001/raw.png",
+      "sha256": "4ad1514ac8e4cdf2162675da0243cb409b5b80b11e2ae73f06c2c46ba1241cb5"
+    },
+    "prepared": {
+      "path": "Tools/artworks/pipeline/artifacts/job-68e7917aeeb31ba1/job-68e7917aeeb31ba1-a001/prepared.png",
+      "sha256": "4ad1514ac8e4cdf2162675da0243cb409b5b80b11e2ae73f06c2c46ba1241cb5"
+    },
+    "tilePlacementMetrics": {
+      "path": "Tools/artworks/pipeline/reviews/job-68e7917aeeb31ba1-a001/tilePlacementMetrics.json",
+      "sha256": "1e87eb87431242b491674c47f3a06c5d5bb81d1acfe21f3ebe4b47eefd0c9631"
+    },
+    "review": {
+      "overlay": {
+        "path": "Tools/artworks/pipeline/reviews/job-68e7917aeeb31ba1-a001/overlay.png",
+        "sha256": "8c20bbed7a0b5880b8e7f64480b24838c98e9ab854fbe0c2703a2d2507f12ed4"
+      },
+      "preview128": {
+        "path": "Tools/artworks/pipeline/reviews/job-68e7917aeeb31ba1-a001/preview128.png",
+        "sha256": "093ed560ee10562d7f113e6a96f60e089be92d687be49390c63c92c2776d4ca5"
+      },
+      "tile64x32": {
+        "path": "Tools/artworks/pipeline/reviews/job-68e7917aeeb31ba1-a001/tile64x32.png",
+        "sha256": "b5a14520e295826eadb9f9decc17993d9a1a7ff32fb37f0db8b9d064ed1d2de8"
+      }
+    },
+    "promoted": {
+      "master": {
+        "path": "Tools/artworks/pure_run/props/approved/pure_run_prop_altar_v01.png",
+        "sha256": "4ad1514ac8e4cdf2162675da0243cb409b5b80b11e2ae73f06c2c46ba1241cb5"
+      },
+      "preview": {
+        "path": "Tools/artworks/pure_run/props/approved/pure_run_prop_altar_v01_128.png",
+        "sha256": "093ed560ee10562d7f113e6a96f60e089be92d687be49390c63c92c2776d4ca5"
+      }
+    }
+  },
+  "report": {
+    "path": "Tools/artworks/pipeline/reports/report-c0ca005575e8d661.json",
+    "sha256": "bbb204f652e99d5e38dda9b528deda43fd6400b58cf49a10219a483c9a2c42bc"
+  },
+  "approvalId": "approval-bec4a66bc4801021",
+  "feedbackId": null,
+  "preparation": {
+    "chroma": null,
+    "chromaTolerance": 0
+  }
+}

@@ -1,0 +1,21 @@
+{
+  "schemaVersion": 1,
+  "attemptId": "job-14f14757b75a7df7-a001",
+  "inputSha256": "f68b4ef416fed57fb206e20a333cade2e6c74986c0ec87332036f7e8b288db0d",
+  "maskSha256": null,
+  "technical": {
+    "size": [
+      256,
+      256
+    ],
+    "alphaBbox": [
+      91,
+      138,
+      165,
+      236
+    ]
+  },
+  "geometry": {},
+  "issues": [],
+  "passed": true
+}

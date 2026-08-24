@@ -1,0 +1,18 @@
+{
+  "schemaVersion": 2,
+  "approvalId": "approval-9cf0f1ea8c3f2f05",
+  "attemptId": "job-897833991fd2f552-a016",
+  "candidateSha256": "9cbed15b75152d998dfa257bbc3bf391ae4a21fc7d3cdfc915ec0e2f3d562d0a",
+  "maskSha256": "27b2b746058c8760f994d65d0104b3c1ab53d3622a96957cc52d0d69198ca058",
+  "reviewer": "cty41",
+  "reviewSha256": {
+    "overlay": "33d7c7e0e00de7c4312c17aef4a0853b3c82028f23c1f1f6c85c1adec14e2206",
+    "preview128": "f404bef319c4f39df649722ee5be335700827c42e199d84860499cfe7d8ebac2",
+    "tile64x32": "6c02b66eddb44eb628000629c9386ca154f1c0bc34a230e3b0d7453ca3c31ca7"
+  },
+  "decision": "approved",
+  "reason": "User explicitly approved the corrected DR villager identity, direction, isometric presentation, scale, and grounding and requested promote.",
+  "decidedAt": "2026-08-24T01:55:10.5554643Z",
+  "annotation": null,
+  "reportSha256": "ef6e4507d02397e0622f6051a56990524c85ec734a14d78fb032943f13ab78f0"
+}

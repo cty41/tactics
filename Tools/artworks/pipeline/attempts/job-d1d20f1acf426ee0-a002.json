@@ -1,0 +1,67 @@
+{
+  "schemaVersion": 2,
+  "attemptId": "job-d1d20f1acf426ee0-a002",
+  "jobId": "job-d1d20f1acf426ee0",
+  "ordinal": 2,
+  "parentAttemptId": "job-d1d20f1acf426ee0-a001",
+  "retryFeedbackId": "feedback-8d1b72d97ff016b4",
+  "promptDelta": null,
+  "technicalRemediation": false,
+  "state": "promoted",
+  "artifacts": {
+    "source": {
+      "path": "Tools/artworks/pure_run/villager/concepts/pure_run_villager_hit_ul_v02_tears_normalized_source_v01.png",
+      "sha256": "e3261f1f2f72afb996215ce13c6830bf223a36c9f3b7cbca4065f1002d4f34d8"
+    },
+    "raw": {
+      "path": "Tools/artworks/pipeline/artifacts/job-d1d20f1acf426ee0/job-d1d20f1acf426ee0-a002/raw.png",
+      "sha256": "e3261f1f2f72afb996215ce13c6830bf223a36c9f3b7cbca4065f1002d4f34d8"
+    },
+    "prepared": {
+      "path": "Tools/artworks/pipeline/artifacts/job-d1d20f1acf426ee0/job-d1d20f1acf426ee0-a002/prepared.png",
+      "sha256": "45993fdf6f93c58c7b49d3f61311ddd908c8a8391e8f512f5f9ed62db50d6085"
+    },
+    "maskSource": {
+      "path": "Tools/artworks/pure_run/villager/masks/pure_run_villager_hit_ul_v02_semantic_mask_v01.png",
+      "sha256": "e942a0500a7ce2722d879856f2d6fbf822e9234bf5e356915adc0672442da533"
+    },
+    "mask": {
+      "path": "Tools/artworks/pipeline/artifacts/job-d1d20f1acf426ee0/job-d1d20f1acf426ee0-a002/mask.png",
+      "sha256": "e942a0500a7ce2722d879856f2d6fbf822e9234bf5e356915adc0672442da533"
+    },
+    "review": {
+      "overlay": {
+        "path": "Tools/artworks/pipeline/reviews/job-d1d20f1acf426ee0-a002/overlay.png",
+        "sha256": "5753ad18a4c957a9fcd864ad4158b68a802dd31e703be27c1c3a62da99da938d"
+      },
+      "preview128": {
+        "path": "Tools/artworks/pipeline/reviews/job-d1d20f1acf426ee0-a002/preview128.png",
+        "sha256": "35cf78c6732fa3548e65314958f678877dc44df9faea112ba1cfcd0e4a8577a0"
+      },
+      "tile64x32": {
+        "path": "Tools/artworks/pipeline/reviews/job-d1d20f1acf426ee0-a002/tile64x32.png",
+        "sha256": "2b7498b9cc78fcb45797460f67f3104f7914267ce44a56773bf813fd4c7675bf"
+      }
+    },
+    "promoted": {
+      "master": {
+        "path": "Tools/artworks/pure_run/villager/approved/pure_run_villager_hit_ul_v01.png",
+        "sha256": "45993fdf6f93c58c7b49d3f61311ddd908c8a8391e8f512f5f9ed62db50d6085"
+      },
+      "preview": {
+        "path": "Tools/artworks/pure_run/villager/approved/pure_run_villager_hit_ul_v01_128.png",
+        "sha256": "35cf78c6732fa3548e65314958f678877dc44df9faea112ba1cfcd0e4a8577a0"
+      }
+    }
+  },
+  "report": {
+    "path": "Tools/artworks/pipeline/reports/report-be555ebceffbd7a9.json",
+    "sha256": "d3c7665596de767bf423a85e59b1849225e5bbbc5ddba7a2ba5234fa73686e47"
+  },
+  "approvalId": "approval-804cb98079ac4a97",
+  "feedbackId": null,
+  "preparation": {
+    "chroma": null,
+    "chromaTolerance": 0
+  }
+}

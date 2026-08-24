@@ -1,0 +1,32 @@
+{
+  "schemaVersion": 2,
+  "attemptId": "job-a3130635f06ad42d-a003",
+  "jobId": "job-a3130635f06ad42d",
+  "ordinal": 3,
+  "parentAttemptId": "job-a3130635f06ad42d-a002",
+  "retryFeedbackId": "feedback-657e9c0ee7a46948",
+  "promptDelta": null,
+  "technicalRemediation": false,
+  "state": "prepared",
+  "artifacts": {
+    "source": {
+      "path": "Tools/artworks/pure_run/villager/concepts/pure_run_villager_hit_dr_v03_tears_normalized_source_v01.png",
+      "sha256": "c5e0f446a4a4dbcc015d4d6dba2ddafc8554938aa81423b940a79c6b88625044"
+    },
+    "raw": {
+      "path": "Tools/artworks/pipeline/artifacts/job-a3130635f06ad42d/job-a3130635f06ad42d-a003/raw.png",
+      "sha256": "c5e0f446a4a4dbcc015d4d6dba2ddafc8554938aa81423b940a79c6b88625044"
+    },
+    "prepared": {
+      "path": "Tools/artworks/pipeline/artifacts/job-a3130635f06ad42d/job-a3130635f06ad42d-a003/prepared.png",
+      "sha256": "ad01502b682a273d65b2cb90334b7574289bfeb6d4d0b1676ddfc9f5e30354d2"
+    }
+  },
+  "report": null,
+  "approvalId": null,
+  "feedbackId": "feedback-a7654a56c042913c",
+  "preparation": {
+    "chroma": null,
+    "chromaTolerance": 0
+  }
+}

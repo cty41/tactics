@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 2,
+  "feedbackId": "feedback-a65295bdb1c341af",
+  "attemptId": "job-897833991fd2f552-a013",
+  "candidateSha256": "9cbed15b75152d998dfa257bbc3bf391ae4a21fc7d3cdfc915ec0e2f3d562d0a",
+  "reviewer": "codex",
+  "verdict": "technical_failed",
+  "strengths": [],
+  "defects": [
+    "The alpha intersection used the binary image opacity channel instead of its grayscale intensity, leaving label pixels outside the subject."
+  ],
+  "nextPromptDelta": "Copy binary grayscale into semantic-mask opacity explicitly.",
+  "recordedAt": "2026-08-24T01:53:43.1715218Z",
+  "authorType": "agent",
+  "categories": [
+    "processing"
+  ],
+  "disposition": "technical_failed",
+  "frozenInvariants": [],
+  "pendingFixes": [
+    "The alpha intersection used the binary image opacity channel instead of its grayscale intensity, leaving label pixels outside the subject."
+  ]
+}

@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 2,
+  "supportingArtifactId": "supporting-artifact-c76795dfe641df01",
+  "artifact": {
+    "path": "Tools/artworks/pipeline/reviews/job-4b305eeeb547c4db-a002/red_shiba_amazon_ul_mirrored_preview.png",
+    "sha256": "74014ddcd8a242bc0a34a3b25596a0d96f1c394118e951e19b76118b1c4b2d86"
+  },
+  "role": "intermediate-facing-reference",
+  "note": "Horizontally mirrored formal red-shiba Amazon UL preview used to face the upper-right exploration direction."
+}
