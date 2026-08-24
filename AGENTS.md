@@ -28,6 +28,15 @@
 
 Unity-only rules、skills、MCP 和工具的退役证据保存在 `Tools/migration/manifest/retirement/unity-governance-retirement-v1.json`；它们不得再指导新实现。公开根不包含 Unity 工程；固定的 MIT godot-ai EditorPlugin 源码随仓库审计，但不进入游戏发布包。
 
+## 共享 Agent 技能
+
+通用技能（`grill-me`、`grilling`、`brainstorming`、`make-dev-plan`、`plan-mode-plan-writer`、`project-doc-organization`、`skill-writing`）来自公共仓 `cty41/skills`（[github.com/cty41/skills](https://github.com/cty41/skills)，MIT），经其 `scripts/install-user.ps1` 全局安装到 `~/.agents/skills`（Windows junction / macOS-Linux symlink）。本机已安装；更新 = `git -C <skills-checkout> pull` + 重跑安装脚本。任何读取用户级技能根的工具（DSH、Codex、OpenCode、Claude）在所有项目中都能看到这些技能。
+
+- **优先级**：项目本地 `.agents/skills/<技能名>` 覆盖用户级全局安装（DSH 发现顺序为 project-agents 先于 user-agents）。
+- **本地技能边界**：仅项目专属技能（`godot-*`、`gameplay-*`、`artworks-prompt-library`、`pure-run-artwork-pipeline`）与两个有意特化 —— `knowledge-maintenance`（完整 `Tools/okf` 工具链，替代全局 OKF-lite 版）、`manual-qa-handoff`（含 `agents/openai.yaml`，被 `Tools/agent-policy/validate_manual_qa_handoff.py` 硬引用）。
+- **约定映射**：`.agents/plans/`、`.agents/docs/`、`.agents/knowledge/` 与共享仓默认一致；OKF 命令以本地 `Tools/okf/` 为准（见 `.agents/rules/knowledge-maintenance.md`），不使用全局 `tools/okf-lite` 的默认路径。
+- **禁止**：不得把通用技能复制回 `.agents/skills/`（避免双源漂移）；删除本地技能前先确认没有 `Tools/*` 门禁或文档硬引用其路径。
+
 ## 绝对禁止
 
 1. 直接手写或机械修改 Godot `.tres/.tscn`。

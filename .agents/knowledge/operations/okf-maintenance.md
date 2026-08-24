@@ -4,18 +4,17 @@ resource: https://github.com/cty41/tactics/tree/main/Tools/okf
 title: OKF Maintenance
 description: 将工作区变更映射到 catalog_scope，并由 Agent 同步受影响知识概念的维护流程。
 tags: [agent, okf, knowledge, automation]
-timestamp: "2026-08-21T00:42:58+08:00"
+timestamp: "2026-08-24T13:38:52+08:00"
 status: active
 catalog_scope: okf-maintenance
 repo_paths:
   - .agents/knowledge/catalog-scopes.yaml
   - .agents/rules/knowledge-maintenance.md
   - .agents/skills/knowledge-maintenance/SKILL.md
-  - .agents/skills/project-doc-organization/SKILL.md
   - Tools/okf/catalog_impact.py
   - Tools/okf/validate_bundle.py
 verified_revision: c56d71ad4ebd
-source_fingerprint: sha256:7ae67a55a8e833c677fcd7678f954920bde2a61b7eedf69ed728e9d30bf0db0b
+source_fingerprint: sha256:df2d1559a9a4a36b435e4babea31772c0d24e81e30dc535c4e723aa236195182
 ---
 
 # Current State
@@ -23,6 +22,8 @@ source_fingerprint: sha256:7ae67a55a8e833c677fcd7678f954920bde2a61b7eedf69ed728e
 `catalog-scopes.yaml` 保存仓库路径到 `catalog_scope` 的多对多映射；根 `README.md` 作为项目入口归入 `project-architecture`。Agent 修改代码、设计、计划、规则或工具后，使用 `catalog_impact.py report --worktree` 找出受影响概念，核对真实差异并更新知识正文，再使用 `sync --worktree --scope <scope> --write` 刷新来源指纹、时间和根日志。
 
 同一路径可以合法影响多个 scope，例如根 `AGENTS.md` 同时影响项目架构、Godot Agent 工作流和 OKF 维护约束。同步范围应以“本任务实际造成的路径变化”为准：共享路径产生的直接 scope 必须一并核对，工作区中由其他文件产生的无关 scope 继续排除。
+
+`.agents/skills/project-doc-organization`、`plan-mode-plan-writer`、`make-dev-plan` 已上移全局 `cty41/skills`（`~/.agents/skills`），不再属于本仓库监控路径；本地只保留项目专属技能与 `knowledge-maintenance`（完整 `Tools/okf`）、`manual-qa-handoff`（被 `Tools/agent-policy` 硬引用）两个特化。
 
 这一流程由 Agent 规则触发，不依赖 Git hook 或远端 CI。未映射但位于受监控目录的路径会显示为警告，Agent 必须判断它应加入已有 scope、建立新概念，还是明确保持不受 OKF 管理。
 

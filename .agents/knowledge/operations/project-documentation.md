@@ -10,8 +10,6 @@ catalog_scope: project-documentation
 repo_paths:
   - .agents/docs
   - .agents/plans
-  - .agents/skills/project-doc-organization/SKILL.md
-  - .agents/skills/plan-mode-plan-writer/SKILL.md
   - .agents/skills/manual-qa-handoff/SKILL.md
 verified_revision: c56d71ad4ebd
 source_fingerprint: sha256:ddffa5e1856d77b9c50310a1d6a0b7fbcdc2d085f49a065fabd69d5c8e5d5b2c
@@ -26,6 +24,8 @@ source_fingerprint: sha256:ddffa5e1856d77b9c50310a1d6a0b7fbcdc2d085f49a065fabd69
 魔剑士 `Demonbound` 已从职业 brainstorm 迁入 `.agents/docs/demonbound-class-design.md` 作为唯一权威设计，并由 `.agents/plans/demonbound-loop-development.md` 持续跟踪非大师实现、自动样本与人工门禁。三个大师技能及正式美术/完整表现仍由[项目已知缺口](../plans/project-known-gaps.md)导航；在人工账本通过前不得把自动绿灯表述为体验验收。
 
 `.agents/plans/` 只保存仍需执行且 decision-complete 的计划。实现完成并验证后，长期规则回写 docs，未实施项进入已知缺口或经批准的新计划，completed plan 随后删除并由 Git 保留历史。
+
+通用 Agent 技能（`brainstorming`、`make-dev-plan`、`plan-mode-plan-writer`、`project-doc-organization` 等）由用户级全局安装 `~/.agents/skills`（`cty41/skills`）提供；本仓库 `.agents/skills/` 只保留项目专属技能与两个特化技能（`knowledge-maintenance` 使用完整 `Tools/okf`、`manual-qa-handoff` 被 `Tools/agent-policy` 硬引用），契约见根 `AGENTS.md`。
 
 `.agents/knowledge/` 负责跨系统摘要、关系和导航，不复制完整设计或已完成计划。代码、Godot Resource 和测试仍是当前行为的最终事实源。
 
