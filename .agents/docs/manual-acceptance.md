@@ -307,13 +307,14 @@ Roguelike Map 分阶段操作步骤见 [真实 TileMap 人工验收 Checklist](r
 
 - Status: `pending`
 - Source: Start-first atlas implementation, `ROGUELIKE-MAP-CAMERA-001`
-- Action: 在 Start 与 Map 页面检查 Active/Preview、连线和 Planning 摘要，并依次操作右键拖动、滚轮、WASD/方向键、M、F/Home 与左键。
-- Expected: 唯一 Active，其余 Preview 无 Actor/AI/交互；左键只选取/摘要，右键拖动；缩放以指针为中心；键盘平移、总览和聚焦正确且受边界约束；提示不抢输入。
-- Observe: StartCampView/Map Preview、节点详情、右下提示、当前地图位置和 Godot Output。
+- Reopen reason: 用户最新复验仍无法左键选人，并报告 Overview 过远、节点文字漂移、M 无法返回和滚轮/提示状态不符合双状态模型；现改用专用地图输入层、全局 M、固定可读 Overview、地图顶部锚定标题及模式化提示，等待复验。
+- Action: 在 Current 依次点击候选身体并移动领队；按 M 进入 Overview，以右键/WASD 浏览并点击 Preview；滚动滚轮，再按 M 与 F/Home 返回。
+- Expected: Current 可可靠选人/移动且完整显示 Start；Overview 使用固定可读缩放，只允许浏览和 Preview，右键/WASD 可到达最远节点。滚轮无作用；M 不依赖焦点并稳定往返。每个 Start/Preview 标题均在自身 TileMap 上方中央且不漂移；两种模式的固定提示互斥。
+- Observe: StartCampView、10×10 Tile 边界、Start→N1 端点、主路线/分支方向、节点视觉尺度、页头、Party Setup、Planning/Party 状态、操作提示、Esc overlay 和 Godot Output。
 - Preserve on failure: 短视频、窗口尺寸、输入序列、节点 ID、相机位置/缩放和 Output。
 - Save boundary: Preview 与相机只读；不要通过出口推进，以免覆盖故障现场。
-- Automated evidence: Preview mode、连接拓扑和相机数值边界可自动断言；手感、可读性和性能仍需人工判断。
-- User verdict: none.
+- Automated evidence: 隔离 Godot 7/7 覆盖专用指针处理、身体/重叠命中、Overview 禁止选人、滚轮无状态变化、M/F 双态、Overview 比全路线 Fit 更近、全部节点标题顶部居中及层级顺序；实际点击、文字可读性、平移手感仍需人工判断。
+- User verdict: 最新复验失败：无法选择任何队员，Overview 太远、文字漂移且 M 无法返回；本次修复后尚未复验。Debugger 35 条记录按用户决定暂不纳入本轮。
 
 ### MQA-GODOT-START-ESC — Start exit, skill setup and Esc run controls
 
