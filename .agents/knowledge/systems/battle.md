@@ -4,7 +4,7 @@ resource: https://github.com/cty41/tactics
 title: Battle System
 description: Godot Pure Run 的棋盘、回合、技能、状态、AI 合法性、结算与表现投影主链。
 tags: [gameplay, battle, turn-based, godot]
-timestamp: "2026-08-21T19:31:14+08:00"
+timestamp: "2026-08-23T01:15:18+08:00"
 status: active
 catalog_scope: battle-system
 repo_paths:
@@ -25,7 +25,7 @@ repo_paths:
   - godot/src/Tactics.Godot.Adapter/Runtime/GodotPlayableRunMain.cs
   - godot/tests/CoreGoldenVectorGodotTests.cs
 verified_revision: 04c75ec4
-source_fingerprint: sha256:808091427d0d6de9384f3894733319b531dbfe6ab8df74b6fa5cd4e9814d6fd7
+source_fingerprint: sha256:00e4b53ef1b7390bb0a992b89dd6250ccca509c00e44871371d4c8e4eee7e351
 ---
 
 # Current State
@@ -38,6 +38,8 @@ source_fingerprint: sha256:808091427d0d6de9384f3894733319b531dbfe6ab8df74b6fa5cd
 
 固定战场使用 10×10、零基坐标。单位实例身份使用 `UnitInstanceId`，不能用内容 `ContentId` 代替。合法性预览、
 AI 和真实 Transition 必须复用 Core 规则；表现 cue、Tween、伤害数字和 Sprite 姿态不能修改战斗状态。
+
+Roguelike 地图首切片新增的 `GodotIsometricTileMapSurface` 已证明其 10×10、96×48 逐格中心和拾取合同与既有战斗投影一致，并生成基础战斗模板作为后续迁移输入；当前生产战斗棋盘尚未切换到该 TileMap 表面，不能据此删除 `GodotIsometricBattleBoard` 或宣称战斗 TileMap 化完成。
 
 ## Line of Sight
 

@@ -4,7 +4,7 @@ resource: https://github.com/cty41/tactics/tree/main/.agents/docs
 title: Project Documentation
 description: 当前设计、活跃计划、统一缺口与 OKF 综合层的文档生命周期。
 tags: [operations, documentation, plans, knowledge]
-timestamp: "2026-08-21T19:10:15+08:00"
+timestamp: "2026-08-24T11:19:06+08:00"
 status: active
 catalog_scope: project-documentation
 repo_paths:
@@ -14,7 +14,7 @@ repo_paths:
   - .agents/skills/plan-mode-plan-writer/SKILL.md
   - .agents/skills/manual-qa-handoff/SKILL.md
 verified_revision: c56d71ad4ebd
-source_fingerprint: sha256:261b07dfd600d97bb2256426f6c2f0004aacdbaa5f10335754c99437bc671a48
+source_fingerprint: sha256:8234f275ac3d0d849f976ed25d61e917efd065d192810d8dba83cc078197f0d9
 ---
 
 # Current State
@@ -24,6 +24,8 @@ source_fingerprint: sha256:261b07dfd600d97bb2256426f6c2f0004aacdbaa5f10335754c99
 魔剑士 `Demonbound` 已从职业 brainstorm 迁入 `.agents/docs/demonbound-class-design.md` 作为唯一权威设计，并由 `.agents/plans/demonbound-loop-development.md` 持续跟踪非大师实现、自动样本与人工门禁。三个大师技能及正式美术/完整表现仍由[项目已知缺口](../plans/project-known-gaps.md)导航；在人工账本通过前不得把自动绿灯表述为体验验收。
 
 `.agents/plans/` 只保存仍需执行且 decision-complete 的计划。实现完成并验证后，长期规则回写 docs，未实施项进入已知缺口或经批准的新计划，completed plan 随后删除并由 Git 保留历史。
+
+当前 `roguelike-map-real-tilemap-atlas.md` 作为活跃的六里程碑计划，跟踪共享 TileMap 基础、地图集、战斗与事件同图、节点级恢复和最终人工收口。首个开始营地切片完成不等于整份计划完成；后续里程碑仍须独立 review、自动门禁与人工账本判定。
 
 `.agents/knowledge/` 负责跨系统摘要、关系和导航，不复制完整设计或已完成计划。代码、Godot Resource 和测试仍是当前行为的最终事实源。
 

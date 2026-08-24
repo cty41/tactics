@@ -4,7 +4,7 @@ resource: https://github.com/cty41/tactics
 title: Godot migration provenance
 description: 已完成迁移的冻结来源、Godot ownership、生成批次与验证边界。
 tags: [migration, godot, provenance, testing]
-timestamp: "2026-08-22T13:38:44+08:00"
+timestamp: "2026-08-23T01:18:13+08:00"
 status: active
 catalog_scope: godot-migration
 repo_paths:
@@ -16,7 +16,7 @@ repo_paths:
   - Tools/migration
   - Tools/migration/manifest/retirement
 verified_revision: 2b341cb3
-source_fingerprint: sha256:0e17606d6d8c4e2e29e7d244f356e8daabdc868437ba0072b9e017ac02fd2804
+source_fingerprint: sha256:9946b7540de3b3c6afd3a1975b79d677b5e7762f8c132d331ad7618589adca59
 ---
 
 # Current State
@@ -26,6 +26,8 @@ Godot 4.7 C# 是唯一产品主线，`godot/project.godot` 是唯一项目。Cor
 迁移来源已冻结在最终 Tag、FrozenOracle、Golden、DTO、receipt、ownership ledger 与 retirement manifest 中。它们只用于来源审计、确定性回归和许可证证明，不提供 live 旧编辑器、旧 MCP 或旧资产写入路径。
 
 内容生成只消费已绑定的冻结输入，经 Application typed draft、ResourceSaver/PackedScene、Catalog/UID、target hash、幂等与 rollback 门禁进入 Godot。自动验证不能替代视觉、操作、真实 Editor Reload 或干净 Windows 启动验收。
+
+Roguelike 地图迁移的首个切片已建立 engine-neutral 10×10 模板、出生槽/入口/出口/状态层合同，以及由 `AdventureMapAssetBuilder` 通过 ResourceSaver 生成的共享等距 TileSet、开始营地和基础战斗模板。生成 manifest、固定 UID、Catalog 与连续两轮字节级幂等共同约束这些资源；运行时不再为 Adventure Board 临时绘制双色 TileSet。
 
 开发工具链把固定的 MIT godot-ai v3.1.2 源码作为 Editor-only vendor 依赖纳入公开源码，并由 manifest tree hash 审计；它不进入游戏 PCK/Windows 包。Editor 通过统一入口完成 production C# Build、worktree 用户数据隔离、项目级 Codex 配置和会话租约，避免测试宿主程序集或另一个 worktree 的窗口被误认成当前项目。
 

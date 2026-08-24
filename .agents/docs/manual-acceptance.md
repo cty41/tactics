@@ -2,6 +2,8 @@
 
 This is the current cross-project manual acceptance state. Stable IDs are authoritative; list numbers are temporary.
 
+Roguelike Map 分阶段操作步骤见 [真实 TileMap 人工验收 Checklist](roguelike-map-manual-acceptance-checklist.md)；本账本仍是 verdict 与状态的唯一权威。
+
 ## Pending
 
 ### MQA-GODOT-MAW-BAT-SLICE — 大嘴蝠、浅水与 N2 实战纵切
@@ -229,13 +231,14 @@ This is the current cross-project manual acceptance state. Stable IDs are author
 ### MQA-GODOT-TILE-READABILITY — Adventure Tile readability
 
 - Status: `pending`
-- Source: Gameplay-Test-Driven Tile Adventure Goal
+- Source: Roguelike Map 真实 TileMapLayer PR 1；原 Gameplay-Test-Driven Tile Adventure Goal
+- Reopen reason: Start Camp 已从缩略双色占位 Board 改为全尺寸共享 TileMapLayer、类型化营地对象和真实候选 Actor，需要复验地图尺度与无文字依赖的辨识度。
 - Action: From Start Camp, traverse every implemented adventure node type and inspect the 10×10 isometric board at the supported window sizes.
 - Expected: Walkable cells, blocked cells, current position, actors, interaction objects, route exits, and node state changes remain distinguishable without relying on debug text.
 - Observe: Adventure board, tile highlights, actor/object silhouettes, overlay, and Godot Output.
 - Preserve on failure: Screenshot with window size, node ID, leader cell, pointer position, and Output; do not continue to the next node.
 - Save boundary: Visual inspection and hover do not mutate the Run; entering or resolving a node does.
-- Automated evidence: Projection round trips, board readiness, cell coordinates, object state, and node lifecycle assertions pass through the formal Main scene.
+- Automated evidence: 共享表面逐格投影与拾取、100 个 Tile、10×10 模板、安全区包围和生成资源幂等已自动覆盖；地图实际占屏、地形层次与对象辨识仍只能人工判断。
 - User verdict: None; pending human acceptance.
 
 ### MQA-GODOT-TILE-INPUT-FEEL — Adventure click and leader-switch feel
@@ -278,14 +281,51 @@ This is the current cross-project manual acceptance state. Stable IDs are author
 ### MQA-GODOT-TILE-START-CAMP — Start Camp presentation and setup flow
 
 - Status: `pending`
-- Source: Gameplay-Test-Driven Tile Adventure Goal
-- Action: Start a new Run, choose the party by clicking characters in order, choose each starting skill, and enter the adventure board.
-- Expected: Selection order is readable and reversible before confirmation; each character receives exactly one visible starting skill choice; confirmation enters the camp/board without duplicate actors or stale prompts.
-- Observe: Camp composition, order indicators, skill cards, confirmation state, initial board, and Godot Output.
+- Source: Roguelike Map 真实 TileMapLayer PR 1；原 Gameplay-Test-Driven Tile Adventure Goal
+- Reopen reason: Start 切片取消 Home，并将选择改为增量持久化、不可撤销；首位候选成为可移动领队，提示、出口与恢复边界均已改变。
+- Action: 空存档启动后检查完整营地与全部候选，依次点击三名角色；重复点击已选者、满员后点击第四人，并在只选首人时移动领队。重启后继续技能选择并进入首节点。
+- Expected: 右侧清楚说明选 3 人、计数、槽位、首位领队和锁定原因；已选顺序不可撤销/重排，满员不溢出；领队可在可走格移动，其他人固定；重启保留选择但重置格位；出口仅在 3/3 解锁并提交一次。
+- Observe: StartCampView、角色 Body/Shadow、篝火与出口、Party 状态文字、技能卡、首节点和 Godot Output。
 - Preserve on failure: Screenshots of every setup page, selected order and skills, initial actor cells, save/backup copy, and Output.
-- Save boundary: Draft selections remain transient until final confirmation; confirmation creates or replaces the active Run checkpoint.
-- Automated evidence: Formal click-order setup, starting-skill selection, Board Ready, actor coordinates, and fixed-seed setup assertions pass.
+- Save boundary: 每次选人立即修改 PendingRunSetup；使用隔离存档，失败前保留 save/backup。
+- Automated evidence: Application 覆盖增量顺序、重复/满员拒绝、顺序不可更换和 setup 放弃；Godot 结构覆盖真实 Actor、TileMap 和出口。提示可读性、移动手感与误触仍需人工判断。
 - User verdict: None; pending human acceptance.
+
+### MQA-GODOT-START-FLOW — Automatic startup and recovery
+
+- Status: `pending`
+- Source: Start-first flow implementation, `ROGUELIKE-START-FLOW-001`
+- Action: 分别使用空存档、PendingRunSetup、普通节点、PendingBattle 和损坏副本启动应用。
+- Expected: 无旧 Home；空/不可恢复存档静默进入新营地，可恢复状态直接 Continue 到原页面；损坏文件保留隔离证据；PendingBattle 保持 Encounter/Seed 并从入口 checkpoint 重开。
+- Observe: 首个页面、Run seed/revision、战斗入口、`user://pure-run` 隔离文件和 Godot Output。
+- Preserve on failure: save/backup/corrupt 文件、首屏截图、seed/revision、页面标题及第一条 Output 异常。
+- Save boundary: 使用隔离存档副本；损坏测试不得针对唯一生产存档。
+- Automated evidence: V11 hash/兼容、quarantine、session resume 与固定测试 seed 可自动验证；真实首帧仍需人工确认。
+- User verdict: none.
+
+### MQA-GODOT-MAP-CAMERA — Start atlas preview and camera controls
+
+- Status: `pending`
+- Source: Start-first atlas implementation, `ROGUELIKE-MAP-CAMERA-001`
+- Action: 在 Start 与 Map 页面检查 Active/Preview、连线和 Planning 摘要，并依次操作右键拖动、滚轮、WASD/方向键、M、F/Home 与左键。
+- Expected: 唯一 Active，其余 Preview 无 Actor/AI/交互；左键只选取/摘要，右键拖动；缩放以指针为中心；键盘平移、总览和聚焦正确且受边界约束；提示不抢输入。
+- Observe: StartCampView/Map Preview、节点详情、右下提示、当前地图位置和 Godot Output。
+- Preserve on failure: 短视频、窗口尺寸、输入序列、节点 ID、相机位置/缩放和 Output。
+- Save boundary: Preview 与相机只读；不要通过出口推进，以免覆盖故障现场。
+- Automated evidence: Preview mode、连接拓扑和相机数值边界可自动断言；手感、可读性和性能仍需人工判断。
+- User verdict: none.
+
+### MQA-GODOT-START-ESC — Start exit, skill setup and Esc run controls
+
+- Status: `pending`
+- Source: Start-first flow implementation, `ROGUELIKE-START-FLOW-001`
+- Action: 在 0/3、1/3、2/3 与 3/3 状态测试出口，完成技能选择；检查 Esc 菜单，并分别验证 setup Abandon Run 与 PendingBattle Save and Quit。
+- Expected: 未满三人不推进，3/3 只提交一次；菜单只有 Continue、Options、Abandon Run、Save and Quit；Abandon 产生 Abandoned 摘要后进入新营地；Save and Quit 恢复相同 Encounter/Seed 的入口 checkpoint。
+- Observe: Start 出口、技能页、Esc overlay、Terminal Summary、重启后的战斗入口和 Godot Output。
+- Preserve on failure: 菜单/摘要截图、完整输入序列、Run seed/revision、checkpoint save/backup 和 Output。
+- Save boundary: Abandon、技能选择和退出会修改隔离 Run；测试前保留存档副本。
+- Automated evidence: setup 放弃摘要、原子选人/技能推进、PendingBattle checkpoint 与 quit interception 可自动验证；菜单可读性、确认体验及真实进程重启仍需人工判断。
+- User verdict: none.
 
 ### MQA-GODOT-TILE-ESCORT-DIFFICULTY — Lost villager escort readability and difficulty
 
@@ -527,5 +567,7 @@ This is the current cross-project manual acceptance state. Stable IDs are author
 
 ## Last Emitted Order
 
-1. `MQA-GODOT-MAW-BAT-SLICE`
-2. `MQA-GODOT-UNIT-VISUAL`
+1. `MQA-GODOT-START-FLOW`
+2. `MQA-GODOT-TILE-START-CAMP`
+3. `MQA-GODOT-MAP-CAMERA`
+4. `MQA-GODOT-START-ESC`

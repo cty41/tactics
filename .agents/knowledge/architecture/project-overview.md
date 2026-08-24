@@ -4,7 +4,7 @@ resource: https://github.com/cty41/tactics
 title: Tactics Project Overview
 description: Tactics 的 Godot 产品主线、纯 .NET 分层、运行时和主要游戏系统总入口。
 tags: [architecture, godot, agent-first]
-timestamp: "2026-08-21T19:10:14+08:00"
+timestamp: "2026-08-23T01:18:14+08:00"
 status: active
 catalog_scope: project-architecture
 repo_paths:
@@ -17,7 +17,7 @@ repo_paths:
   - godot/src/Tactics.Godot.Adapter
   - godot/project.godot
 verified_revision: c56d71ad4ebd
-source_fingerprint: sha256:4f88a72524bd4b87356a566ab85a2d7134193aa3128567e78ec6a10b35904f0a
+source_fingerprint: sha256:8b8d7204ac61bca869b9d23c90aa8b560bb4196aae15714e454e384e27dd1742
 ---
 
 # Summary
@@ -28,7 +28,7 @@ Tactics 是 Agent 优先维护并准备公开发布的 Godot 4.7 C# 战棋项目
 
 - `Tactics.Core` 与 `Tactics.Application` 是纯 .NET 9；Godot Node、Resource、Scene、文件系统和 UI 只进入 Adapter/Editor 层。
 - 最终内容由 Godot Resource/PackedScene 与轻量 Catalog 驱动；迁移 DTO、Unity GUID 和历史 receipt 不进入运行时。
-- 四候选选三人的 Pure Run 使用 Save V7、确定性 Battle/Run 状态、Catalog 160 与单一 `Main.tscn`；新增的魔剑士非大师内容使用魅力主属性、腐化/冥想与附身控制合同；
+- Pure Run 使用确定性 Battle/Run 状态、版本化 Save 与单一 `Main.tscn`；开始营地现在由 engine-neutral 10×10 地图模板和 Godot Resource 适配层驱动，全部候选按声明式槽位实例化为真实 `GodotUnitActor`，选三人的业务事务仍由 Application/Core 裁决。下一版 Save 合同只保留节点级语义、领队和遭遇 checkpoint，不持久化格位或相机表现；新增的魔剑士非大师内容使用魅力主属性、腐化/冥想与附身控制合同；
   `battle-layout.pure-run.split-flank` 将原本只在运行时代码中补建的布局闭合为正式 Resource。
 - Battle HUD 由 Godot Adapter 将 Application Snapshot 投影为当前行动者状态卡和鼠标 Hover 浮层；头像来自 typed Unit Resource，HP/MP/腐化只读展示，不参与战斗裁决或输入合法性。
 - `Tools/godot/Verify-GodotProject.ps1` 是本地主线统一门禁；Windows RC 使用只读 staging、包审计和双 renderer EXE smoke。
