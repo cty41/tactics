@@ -92,13 +92,13 @@ This is the current cross-project manual acceptance state. Stable IDs are author
 ### MQA-GODOT-DEMONBOUND-POSSESSION — Possession readability and terminal behavior
 
 - Status: `pending`
-- Source: Demonbound possession AI, permanent-death and special-victory implementation
-- Action: In a disposable battle, push Demonbound to 10 corruption, observe at least one possessed turn with a living ally, then a turn after all allies are Down. If practical, replay a fixed setup until both ordinary Down and permanent-death outcomes have been observed.
-- Expected: The possessed actor is immediately distinguishable; AI prioritizes allies, falls back to enemies when no living ally remains, never changes faction, and a possessed sole survivor still wins after enemies are defeated. Friendly lethal damage rolls permanent death exactly once and settlement clearly reflects the result.
-- Observe: Actor glow/tint, corruption/POSSESSED label, target choice, event log, Down/permanent roster state, settlement and terminal Summary.
-- Preserve on failure: RNG seed/state, unit cells and HP, selected skill, event sequence, battle checkpoint, screenshot/video and full Output.
+- Source: Demonbound possession AI, possessed-form boost/projection, unified target pool, permanent-death luck correction and special-victory implementation (2026-08-22 P1–P3)
+- Action: In a disposable battle, push Demonbound to 10 corruption and observe the possessed form: the actor tint changes to the possessed-form color, the corruption bar pulses `POSSESSED`, boosted HP/MP and projected skill levels are visible on the status card, and the possessed AI chooses from a unified pool (allies, enemies and summons) by value rather than always preferring allies. Confirm the AI can attack allies and enemies in the same battle, never changes faction, and a possessed sole survivor still wins after enemies are defeated. If practical, replay a fixed setup until both ordinary Down and permanent-death outcomes are observed, and verify a permanently dead character does not appear in the next battle while staying on the terminal Summary.
+- Expected: The possessed actor is immediately distinguishable (form tint, POSSESSED pulse, boosted resources/skill levels); unified targeting never hard-codes a faction; friendly lethal damage rolls permanent death exactly once with the lucky-correction formula and settlement clearly reflects the result; permanently dead characters are excluded from subsequent battles but remain as tombstones in the Summary.
+- Observe: Actor glow/tint, corruption/POSSESSED label, boosted HP/MP and skill levels, target choice, event log, Down/permanent roster state, settlement and terminal Summary, and the next battle's party composition.
+- Preserve on failure: RNG seed/state, unit cells and HP, selected skill, event sequence, battle checkpoint, save/backup copy, screenshot/video and full Output.
 - Save boundary: Permanent death mutates the current Run roster; use a disposable Run and preserve the pre-battle checkpoint.
-- Automated evidence: Deterministic AI target priority/fallback, controller-faction separation, one-time 25% lethal roll, settlement and special victory are covered. Visual distinction and emotional/interaction clarity remain manual.
+- Automated evidence: Possessed-form state/boost idempotency, skill projection, unified target pool, luck-corrected one-time permanent-death settlement, dead-character battle exclusion and tombstone preservation are covered by Core/Application/GdUnit tests and the fixed-seed probe. Visual distinction, unified-target readability and cross-battle roster clarity remain manual.
 - User verdict: none.
 
 ### MQA-GODOT-DEMONBOUND-WORKBENCH — Corruption-cost authoring round-trip
@@ -527,5 +527,4 @@ This is the current cross-project manual acceptance state. Stable IDs are author
 
 ## Last Emitted Order
 
-1. `MQA-GODOT-MAW-BAT-SLICE`
-2. `MQA-GODOT-UNIT-VISUAL`
+1. `MQA-GODOT-DEMONBOUND-POSSESSION` — 腐化与附身形态表现、敌友统一目标、永久死亡与缺员（同一 pending item 的三方面）

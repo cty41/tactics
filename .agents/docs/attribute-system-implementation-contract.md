@@ -10,7 +10,7 @@
 
 ```gameplay-contract
 id: ATTR-DERIVED-STATS-001
-status: superseded
+status: verified_current
 statement: 战斗单位只消费 UnitDerivedStats 中显式且已校验的最大生命、最大法力、初始法力、移动范围和先攻；Godot Adapter 不得从六项主属性重新推导这些数值。
 verification:
   - layer: core_test

@@ -24,10 +24,96 @@
 
 - 腐化为战斗局部整数，范围 `0–10`，战斗结束清零。
 - 技能产生腐化时允许越过上限：技能效果先完整结算，再把腐化截为 10 并进入不可控附身。
-- 失控后由既定附身 AI 控制，优先攻击可攻击的队友，再攻击敌人。
-- 对队友造成致命伤时，保留 25% 永久死亡判定；永久死亡与普通 Down 分开记录。
+- 失控后进入**恶魔失控形态**：六维基础属性各 +5，最大 HP/MP、移动、先攻、命中、闪避、暴击等派生值按统一派生规则从强化后属性重算；强化后的当前 HP/MP 按比例保持。六维 +5 只施加一次，同一场战斗内不随腐化或回合叠加。
+- 失控后由既定附身 AI 控制，从**敌友统一候选池**选择目标：所有存活正式敌我单位与存活召唤物进入同一候选池，排除魔剑士自身与诱饵，按技能收益、距离、目标数量与击杀价值统一评分，不按阵营硬编码优先级。
+- 失控形态把魔剑士**已学技能临时升到最高可用等级**；不临时解锁未学或大师技能。技能投影只存在于当前战斗，AI 候选、状态卡展示与战斗日志读取同一投影，不改 Run 的 `LearnedSkills`，不写入存档。
+- 对队友造成致命伤时，进行永久死亡判定：基线 25%，按目标幸运修正（目标幸运高于 5 的部分每点降低 2%，无下限；实现按概率不低于 0 钳制）；永久死亡与普通 Down 分开记录。
+- 永久死亡角色在 Summary/结算页保留墓碑与死亡来源记录；常规队伍、选角与战斗 UI 不展示死者。
+- 永久死亡导致正式队伍人数不足三人时，后续战斗以缺员阵型继续，本局不自动补员；补员/招募机制不在本轮范围。
 - 敌人全灭时不增加“只剩失控魔剑士则必败”的特殊规则。失控魔剑士仍算存活正式队员，可以正常取得胜利。
 - 战斗胜利后清除腐化与附身状态；召唤物、诱饵等非正式队员不改变正式队伍的生死结算。
+
+## 恶魔失控形态合同
+
+以下合同已由 2026-08-22 grilling 收束并经 2026-08 实现验证，状态为 `verified_current`。死亡来源的持久化存档字段（`RunCharacterState`）涉及 V1–V10 存档语义哈希，未纳入本轮，由 `RunPermanentDeathRolledEvent` 事件溯源支撑。
+
+```gameplay-contract
+id: DEMONBOUND-POSSESSED-BOOST-001
+status: verified_current
+statement: 腐化满进入失控后，魔剑士六维基础属性各加 5 且同一场战斗只施加一次，最大 HP、最大 MP、移动、先攻、命中、闪避与暴击由强化后属性按统一派生规则重新计算，当前 HP/MP 按比例保持，战斗结束随 BattleState 丢弃并由 Run 原始属性重建。
+verification:
+  - layer: core_test
+    path: src/Tactics.Core.Tests/DemonboundPossessedBoostTests.cs
+  - layer: core_test
+    path: src/Tactics.Core.Tests/DemonboundPossessedFormTests.cs
+  - layer: manual_qa
+    path: .agents/docs/manual-acceptance.md
+dsl_support: unsupported
+```
+
+```gameplay-contract
+id: DEMONBOUND-POSSESSED-SKILL-PROJECTION-001
+status: verified_current
+statement: 失控形态把魔剑士已学技能临时提升到最高可用等级，不临时解锁未学或大师技能；该技能投影仅存在于当前战斗，AI 候选、状态卡与战斗日志使用同一投影，不修改 Run 的 LearnedSkills，不写入存档，战斗结束即失效。
+verification:
+  - layer: core_test
+    path: src/Tactics.Core.Tests/DemonboundPossessedSkillProjectionTests.cs
+  - layer: application_test
+    path: src/Tactics.Application.Tests/PlayableBattleSessionServiceTests.cs
+dsl_support: unsupported
+```
+
+```gameplay-contract
+id: DEMONBOUND-POSSESSED-TARGET-POOL-001
+status: verified_current
+statement: 失控 AI 的目标候选池包含所有存活正式敌我单位与存活召唤物，排除魔剑士自身与诱饵，按技能收益、距离、目标数量与击杀价值统一评分选目标，不按阵营硬编码优先级；技能合法目标判定与 AI 候选消费同一目标关系策略。
+verification:
+  - layer: core_test
+    path: src/Tactics.Core.Tests/AiEncounterRuntimeTests.cs
+  - layer: core_test
+    path: src/Tactics.Core.Tests/DemonboundPossessedAiTests.cs
+  - layer: application_test
+    path: src/Tactics.Application.Tests/PlayableBattleSessionServiceTests.cs
+dsl_support: unsupported
+```
+
+```gameplay-contract
+id: DEMONBOUND-PERMADEATH-LUCK-001
+status: verified_current
+statement: 失控魔剑士对友方造成致命伤时进行永久死亡判定，基线概率 25%，按目标幸运修正：目标幸运大于 5 的部分每点降低 2 个百分点，不设下限，实现按概率不低于 0 钳制；每次存活到死亡的转换只判定一次并只消耗一次确定性随机数。
+verification:
+  - layer: core_test
+    path: src/Tactics.Core.Tests/DemonboundPermanentDeathPostProcessorTests.cs
+  - layer: core_test
+    path: src/Tactics.Core.Tests/DemonboundMeditationTests.cs
+dsl_support: unsupported
+```
+
+```gameplay-contract
+id: DEMONBOUND-DEATH-RECORD-001
+status: verified_current
+statement: 永久死亡角色在 Summary/结算页保留墓碑与死亡来源记录，常规队伍、选角与战斗 UI 不展示死者；永久死亡事实与普通 Down 分离持久化（本轮由 RunPermanentDeathRolledEvent 事件溯源支撑死亡来源，存档字段变更单独立项）。
+verification:
+  - layer: core_test
+    path: src/Tactics.Core.Tests/PureRunRuntimeTests.cs
+  - layer: application_test
+    path: src/Tactics.Application.Tests/PureRunLayerFourNodeServiceTests.cs
+  - layer: manual_qa
+    path: .agents/docs/manual-acceptance.md
+dsl_support: unsupported
+```
+
+```gameplay-contract
+id: DEMONBOUND-SQUAD-SHORTFALL-001
+status: verified_current
+statement: 永久死亡导致正式队伍人数不足三人时，后续战斗以缺员阵型继续，本局内不自动补员；死亡原因与阵亡者仍保留在最终 Summary。
+verification:
+  - layer: core_test
+    path: src/Tactics.Core.Tests/PureRunRuntimeTests.cs
+  - layer: application_test
+    path: src/Tactics.Application.Tests/PureRunLayerFourNodeServiceTests.cs
+dsl_support: unsupported
+```
 
 ## 专有技能：冥想
 
@@ -120,7 +206,7 @@ TODO。本轮不命名、不定义、不进入候选池。
 
 ### 大师：恶魔降临
 
-TODO。本轮不进入实现设计。此前讨论过的全属性强化、临时技能满级、临时 HP/MP 与持续时间仅为未确认草案，不属于本文当前规格。
+TODO。本轮不进入实现设计。全属性强化维度与临时技能满级已定稿为“腐化满后恶魔失控形态”的组成部分（见上“腐化与失控”与 `DEMONBOUND-POSSESSED-*` 合同），不再属于大师技能草案；恶魔降临作为独立主动技能的机制仍在设计中，不进入候选池。
 
 ## 实现与验收边界
 

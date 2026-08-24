@@ -16,5 +16,6 @@
 | [gdu4-conditional-package-release-contamination](gdu4-conditional-package-release-contamination.md) | Release `.deps.json` 含 GdUnit/TestPlatform | verified |
 | [headless-resource-uid-cache](headless-resource-uid-cache.md) | `unregistered Resource UID` + standalone ResourceSaver process | verified |
 | [godot-ai-project-run-cold-timeout](godot-ai-project-run-cold-timeout.md) | `Command run_project timed out after 5.0s` 但 Editor 已进入 live | observed |
+| [gdunit-gameplay-journey-native-host-hang](gdunit-gameplay-journey-native-host-hang.md) | `GodotGameplayRuntimeRunnerTests` 长场景套件 Godot host 退出后 testhost 满载无输出挂起 | reproduced |
 
 格式与晋升要求见 [schema](schema.md)。

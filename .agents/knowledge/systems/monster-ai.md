@@ -4,7 +4,7 @@ resource: https://github.com/cty41/tactics/tree/main/src/Tactics.Core/AI
 title: Monster AI
 description: Godot Pure Run 中基于合法候选、规则门禁、稳定评分和确定性执行的怪物决策系统。
 tags: [gameplay, ai, combat, godot]
-timestamp: "2026-08-21T19:10:14+08:00"
+timestamp: "2026-08-24T16:30:50+08:00"
 status: active
 catalog_scope: monster-ai
 repo_paths:
@@ -15,7 +15,7 @@ repo_paths:
   - godot/content
   - .agents/docs/maw-bat-enemy-slice-design.md
 verified_revision: c56d71ad4ebd
-source_fingerprint: sha256:e136fd2af75bd027b9394445ab2bb6a39b3858772eb203c5838d065b43e2a89b
+source_fingerprint: sha256:90b3d7eca258c0aa17ac8b9abd488572de94f13fa66289dce8ebbc82eb3502b9
 ---
 
 # Current State

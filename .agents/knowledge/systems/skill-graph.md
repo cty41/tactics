@@ -4,7 +4,7 @@ resource: https://github.com/cty41/tactics/tree/main/src/Tactics.Core/Skills
 title: SkillGraph
 description: Godot Pure Run 的技能定义、解释执行、共享目标规则和 typed authoring 主链。
 tags: [gameplay, skills, skill-graph, godot]
-timestamp: "2026-08-22T13:25:24+08:00"
+timestamp: "2026-08-24T16:30:50+08:00"
 status: active
 catalog_scope: skill-graph
 repo_paths:
@@ -17,7 +17,7 @@ repo_paths:
   - godot/src/Tactics.Godot.Adapter/Editor
   - godot/src/Tactics.Godot.Adapter/Runtime
 verified_revision: c56d71ad4ebd
-source_fingerprint: sha256:44594192015c7b314a248c23426609887130de68400ee134f4461adcef9285c8
+source_fingerprint: sha256:ecd776ab53b5725924dee93dba68813a70abc6b8a4067220c4808c6ec01c8378
 ---
 
 # Current State

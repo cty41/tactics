@@ -4,20 +4,20 @@ resource: https://github.com/cty41/tactics/blob/main/.agents/docs/project-known-
 title: Project Known Gaps
 description: 已从当前实现确认但尚未获批为活跃开发计划的集中缺口目录。
 tags: [planning, backlog, gaps]
-timestamp: "2026-08-21T14:19:43+08:00"
+timestamp: "2026-08-22T20:45:36+08:00"
 status: active
 catalog_scope: project-known-gaps
 repo_paths:
   - .agents/docs/project-known-gaps.md
 verified_revision: c56d71ad4ebd
-source_fingerprint: sha256:def1db21930fb114da1c7eb337b308b1e9402f1c3103699258962dfc12276142
+source_fingerprint: sha256:8574992081c0f45bb34b8376078ca40df544222f6e4481c5e60b9b8bfb02ea19
 ---
 
 # Current State
 
 权威缺口清单按 `verified-gap`、`needs-decision`、`deferred` 和 `idea` 区分确定性。当前覆盖 Monster AI、事件编辑器、Gameplay Test、SkillGraph、Godot Content Workbench、Adventure Tile 与公开发布整合、Pure Run 内容扩展、战斗反馈和配置硬编码。Adventure 已采用当前节点内的即时后继出口，不再使用开局 Route Overview；正式节点表现、出口信息/误触规范、旧存档提示以及公开 `main` 的资产 provenance 门禁仍是当前缺口。Workbench 的自动作者闭环已经完成，仅真实 Editor 的视觉、操作与 Assembly Reload 验收保持 deferred。自动门禁通过不等于人工项目完成。
 
-`.agents/docs/demonbound-class-design.md` 是魔剑士数值与玩法语义权威；非大师技能、腐化/冥想、附身 AI、Run/Resource/Workbench 和自动测试已进入活跃实现。当前 `deferred` 只保留三个大师技能、正式角色美术、完整 VFX 与音频，人工 Run/可读性门禁则由验收账本跟踪。
+`.agents/docs/demonbound-class-design.md` 是魔剑士数值与玩法语义权威；非大师技能、腐化/冥想、附身 AI、Run/Resource/Workbench 和自动测试已进入活跃实现。2026-08-22 经 grilling 收束的恶魔失控形态规格（六维+5 派生重构、已学技能临时满级、敌友统一目标池、幸运修正永久死亡、墓碑记录、缺员继续）已实现并验证，`DEMONBOUND-POSSESSED-*` 六份合同全部升级为 `verified_current`；死亡来源的持久化存档字段与三局人工 Run、固定 30 样本仍有待办。当前 `deferred` 保留三个大师技能、正式角色美术、完整 VFX 与音频，人工 Run/可读性门禁则由验收账本跟踪。
 
 该清单不是活跃开发计划。某项只有在满足文档中的激活条件、范围获得确认并建立可验收计划后才进入执行。
 
