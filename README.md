@@ -51,8 +51,8 @@ godot/project.godot + godot/content + godot/scenes
 ### 获取与运行
 
 ```powershell
-git clone git@github.com:cty41/tactics.git
-Set-Location tactics
+git clone git@github.com:cty41/wooftactics.git
+Set-Location wooftactics
 git lfs pull --include="godot/**" --exclude=""
 ```
 
@@ -111,6 +111,13 @@ pwsh -NoProfile -File .\Tools\godot\Build-GodotWindows.ps1 `
 | `Tests/gameplay-specs/` | 平台中立的 Gameplay Spec 与 Godot 执行计划 |
 | `.agents/docs/` | 当前设计、验收边界和项目约束 |
 | `.agents/knowledge/` | OKF 项目知识索引与跨系统导航 |
+| `.agents/skills/` | 项目专属 Agent 技能；通用技能来自全局共享仓（见「共享 Agent 技能」） |
+
+## 共享 Agent 技能
+
+通用 Agent 工作流技能（`grill-me`/`grilling`、`brainstorming`、`make-dev-plan`、`plan-mode-plan-writer`、`project-doc-organization`、`skill-writing` 等）从公开仓 [`cty41/skills`](https://github.com/cty41/skills) 安装到用户级 `~/.agents/skills`（`git clone git@github.com:cty41/skills.git` 后运行该 checkout 的 `scripts/install-user.ps1`；macOS/Linux 在 pwsh 下运行同一脚本）。它们不随本仓库 vendored；更新方式为 `git -C <skills-checkout> pull` 后重跑安装脚本。
+
+本仓库 `.agents/skills/` 只保留项目专属技能（`godot-*`、`gameplay-*`、`artworks-prompt-library`、`pure-run-artwork-pipeline`）与 `knowledge-maintenance`（完整 `Tools/okf`）、`manual-qa-handoff`（被 `Tools/agent-policy` 硬引用）两个有意特化；项目本地技能优先于全局安装。详细契约见 [AGENTS.md](AGENTS.md) 的「共享 Agent 技能」章节。
 
 ## 项目历史与协作
 
