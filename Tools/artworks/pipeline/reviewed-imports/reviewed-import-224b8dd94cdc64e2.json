@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 2,
+  "reviewedImportId": "reviewed-import-224b8dd94cdc64e2",
+  "contractId": "contract-f588c4ed71e13265",
+  "source": {
+    "path": "Tools/artworks/pure_run/equipment/concepts/pure_run_equipment_leather_boots_v05_chroma_source.png",
+    "sha256": "0ee8fea58471d0b7f06d8d4e8171a8288f902d5091ebbe0e3f63f4bbad7749f2"
+  },
+  "candidate": {
+    "path": "Tools/artworks/pure_run/equipment/candidates/pure_run_equipment_leather_boots_v05_alpha_fixed.png",
+    "sha256": "cdff834d777578766e5b85297aee2060f4a682c0140eb3ef5e260f3a3bd6ec52"
+  },
+  "preview": {
+    "path": "Tools/artworks/pure_run/equipment/candidates/pure_run_equipment_leather_boots_v05_alpha_fixed_128.png",
+    "sha256": "22d08bf7c21fa0e2989f845173c42d31d4a5ecde43b6ba219bbdb9c043a367d0"
+  },
+  "sizeComparison": {
+    "path": "Tools/artworks/pure_run/equipment/reviews/pure_run_equipment_leather_boots_v05_alpha_fixed_size_comparison.png",
+    "sha256": "9f3d2b1ffab85c3cba16a2465420bece6e551af409dac1a8d51377921b8d8b04"
+  },
+  "reviewer": "cty41",
+  "reason": "User explicitly approved leather boots V05; alpha-fixed candidate preserves approved design and passes equipment style gates.",
+  "acceptedAt": "2026-08-24T15:47:51Z",
+  "sourceMode": "reviewed_import"
+}

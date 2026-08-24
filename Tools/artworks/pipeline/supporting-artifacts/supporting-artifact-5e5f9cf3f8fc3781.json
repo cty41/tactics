@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 2,
+  "supportingArtifactId": "supporting-artifact-5e5f9cf3f8fc3781",
+  "artifact": {
+    "path": "Tools/artworks/pure_run/equipment/candidates/pure_run_equipment_iron_helmet_v02_128.png",
+    "sha256": "d8c149cf8012269d2e55155964597566c3a673275255eafe5f189e94d606bc5b"
+  },
+  "role": "equipment-review-preview",
+  "note": "Armor V2 128px preview."
+}

@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 2,
+  "supportingArtifactId": "supporting-artifact-5e812f9d4e7d8e6e",
+  "artifact": {
+    "path": "Tools/artworks/pure_run/equipment/candidates/pure_run_equipment_amazon_javelin_v01_keyed.png",
+    "sha256": "bc6e7117c71176a5c7166c6171c8e4cc292bcf1735a0bf67534fd4e4f2936691"
+  },
+  "role": "reviewed-chroma-clean-intermediate",
+  "note": "Exact chroma pixels removed after user visual approval."
+}

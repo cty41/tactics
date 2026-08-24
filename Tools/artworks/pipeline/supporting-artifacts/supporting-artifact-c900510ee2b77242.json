@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 2,
+  "supportingArtifactId": "supporting-artifact-c900510ee2b77242",
+  "artifact": {
+    "path": "Tools/artworks/pure_run/equipment/candidates/pure_run_equipment_shadow_cloak_v03.png",
+    "sha256": "c1189f1174603936110f0db243820fad43c070964840dd8722cbcd939c382e4f"
+  },
+  "role": "equipment-rejected-processing-evidence",
+  "note": "Pre-fix candidate retained as green-background crop regression evidence."
+}

@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 2,
+  "supportingArtifactId": "supporting-artifact-f023f34f30e24fac",
+  "artifact": {
+    "path": "Tools/artworks/pure_run/equipment/candidates/pure_run_equipment_plain_iron_sword_v01_128.png",
+    "sha256": "67377963c2884fbffe8e7e0dba85a1fda3a9a3b2ccd22f0d3408fa85a8c75b0d"
+  },
+  "role": "equipment-review-candidate",
+  "note": "Unapproved equipment batch V01 transformed candidate for numbered human review"
+}

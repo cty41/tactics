@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 2,
+  "supportingArtifactId": "supporting-artifact-2c6255dff08b0c2d",
+  "artifact": {
+    "path": "Tools/artworks/pure_run/equipment/reviews/equipment_weapons_batch_tile_v01.png",
+    "sha256": "3f2da06096a0a35d534e1de43c30d01bbf06d6d7b052e768d622bb41ab449cb6"
+  },
+  "role": "tile-review",
+  "note": "Numbered 64x32 Tile baseline review sheet for weapon batch V01; no item is approved by this sheet alone"
+}

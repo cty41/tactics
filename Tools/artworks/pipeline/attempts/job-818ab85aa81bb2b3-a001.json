@@ -1,0 +1,32 @@
+{
+  "schemaVersion": 2,
+  "attemptId": "job-818ab85aa81bb2b3-a001",
+  "jobId": "job-818ab85aa81bb2b3",
+  "ordinal": 1,
+  "parentAttemptId": null,
+  "retryFeedbackId": null,
+  "promptDelta": null,
+  "technicalRemediation": false,
+  "state": "prepared",
+  "artifacts": {
+    "source": {
+      "path": "Tools/artworks/pure_run/equipment/concepts/pure_run_equipment_plain_iron_sword_v01_chroma_source.png",
+      "sha256": "9e0e8391a9689ec02965eee8cc8f77763c818620ed56ad90aed948f457678ddc"
+    },
+    "raw": {
+      "path": "Tools/artworks/pipeline/artifacts/job-818ab85aa81bb2b3/job-818ab85aa81bb2b3-a001/raw.png",
+      "sha256": "9e0e8391a9689ec02965eee8cc8f77763c818620ed56ad90aed948f457678ddc"
+    },
+    "prepared": {
+      "path": "Tools/artworks/pipeline/artifacts/job-818ab85aa81bb2b3/job-818ab85aa81bb2b3-a001/prepared.png",
+      "sha256": "217668d578fcef58e13c41e1c7a8918a76ca62bbd5fd2b8ee9b8571e2902193b"
+    }
+  },
+  "report": null,
+  "approvalId": null,
+  "feedbackId": null,
+  "preparation": {
+    "chroma": "00ff00",
+    "chromaTolerance": 40
+  }
+}

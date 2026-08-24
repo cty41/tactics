@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 2,
+  "supportingArtifactId": "supporting-artifact-ffbdcf796b0635e5",
+  "artifact": {
+    "path": "Tools/artworks/pure_run/equipment/tmp/review-panels/pure_run_equipment_amazon_javelin_v01_128.png",
+    "sha256": "b2352aa5d207111d17a558b0afd9ff75014e1430ca12aa4c79367ca27c803664"
+  },
+  "role": "transient-review-panel",
+  "note": "Deterministic intermediate panel used to compose the registered weapon batch V01 contact sheets"
+}

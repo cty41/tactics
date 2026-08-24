@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 2,
+  "reviewedImportId": "reviewed-import-f304c7507161e614",
+  "contractId": "contract-ff485a07d2cb8d5c",
+  "source": {
+    "path": "Tools/artworks/pipeline/artifacts/job-80191342a2559d49/job-80191342a2559d49-a003/prepared.png",
+    "sha256": "92a412e50c736c9799ef8419f61b35f333cd541c0bab65212a352778872a67b0"
+  },
+  "candidate": {
+    "path": "Tools/artworks/pure_run/equipment/candidates/pure_run_equipment_demonbound_bound_sword_v01_promote_exact.png",
+    "sha256": "827056833326fe3e41a36f19a3ca9c30ad51dc8362ecb09a17cc9e5f36b8e563"
+  },
+  "preview": {
+    "path": "Tools/artworks/pure_run/equipment/candidates/pure_run_equipment_demonbound_bound_sword_v01_promote_exact_128.png",
+    "sha256": "376e315b82fdeef73637903426aabaa18e1e5e168cb02b210a1397dda1cd28b3"
+  },
+  "sizeComparison": {
+    "path": "Tools/artworks/pure_run/equipment/reviews/pure_run_equipment_demonbound_bound_sword_v01_promote_exact_size_comparison.png",
+    "sha256": "992ce3bbf9181efc0bc5d046438843ec8b47f8443b4c3c3e7ba7e792659abcde"
+  },
+  "reviewer": "cty41",
+  "reason": "User approved weapons batch items 1-6; only exact chroma residue was removed before import.",
+  "acceptedAt": "2026-08-24T15:20:08.7600989+08:00",
+  "sourceMode": "reviewed_import"
+}

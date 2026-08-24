@@ -1,0 +1,49 @@
+{
+  "schemaVersion": 2,
+  "attemptId": "job-2fdfa4d5d6c5035c-a001",
+  "jobId": "job-2fdfa4d5d6c5035c",
+  "ordinal": 1,
+  "parentAttemptId": null,
+  "retryFeedbackId": null,
+  "promptDelta": null,
+  "technicalRemediation": false,
+  "state": "promoted",
+  "sourceMode": "reviewed_import",
+  "reviewedImportId": "reviewed-import-569227414c827d2e",
+  "artifacts": {
+    "source": {
+      "path": "Tools/artworks/pure_run/equipment/concepts/pure_run_equipment_iron_helmet_v04_chroma_source.png",
+      "sha256": "b336def55fce06c29bd94b1e2e486e7bdc7fb99d2c702777659d408d442555dd"
+    },
+    "prepared": {
+      "path": "Tools/artworks/pure_run/equipment/candidates/pure_run_equipment_iron_helmet_v04.png",
+      "sha256": "ee67ec9e8445a37d26a2db9e434402ef53861dfd82c83723f2681bf70dab0f56"
+    },
+    "importedPreview": {
+      "path": "Tools/artworks/pure_run/equipment/candidates/pure_run_equipment_iron_helmet_v04_128.png",
+      "sha256": "bb88e4a698f19147769ed2e659610af8f5fea8277ea1c72bcd01e5d3f2434008"
+    },
+    "review": {
+      "sizeComparison": {
+        "path": "Tools/artworks/pure_run/equipment/reviews/pure_run_equipment_iron_helmet_v04_size_comparison.png",
+        "sha256": "d6b6b1e474dd7a3322f6043d2110e7de3b8f034f67ba561dabf91665e27b2885"
+      }
+    },
+    "promoted": {
+      "master": {
+        "path": "Tools/artworks/pure_run/equipment/approved/pure_run_equipment_iron_helmet_v04.png",
+        "sha256": "ee67ec9e8445a37d26a2db9e434402ef53861dfd82c83723f2681bf70dab0f56"
+      },
+      "preview": {
+        "path": "Tools/artworks/pure_run/equipment/approved/pure_run_equipment_iron_helmet_v04_128.png",
+        "sha256": "bb88e4a698f19147769ed2e659610af8f5fea8277ea1c72bcd01e5d3f2434008"
+      }
+    }
+  },
+  "report": {
+    "path": "Tools/artworks/pipeline/reports/report-59b4ad3d6f546c50.json",
+    "sha256": "148ec55f80c20bd1baa28ccdfbaa87253e38e1156f76cce5c0a037a28626e765"
+  },
+  "approvalId": "approval-699bdad2962ffdd0",
+  "feedbackId": null
+}

@@ -1,0 +1,50 @@
+{
+  "schemaVersion": 2,
+  "contractId": "contract-63adfc6152f88ba1",
+  "assetId": "pure_run_equipment_shadow_cloak_v04",
+  "approvedAssetId": "pure_run_equipment_shadow_cloak_v04",
+  "kind": "projectile",
+  "direction": "down-right",
+  "pose": "display",
+  "anchor": null,
+  "maskRequired": false,
+  "noArms": false,
+  "handSides": {
+    "near_hand": null,
+    "far_hand": null
+  },
+  "occlusion": null,
+  "compositionSpec": null,
+  "identitySpec": null,
+  "requiresInvocation": false,
+  "canvasSpec": {
+    "masterSize": [
+      256,
+      256
+    ]
+  },
+  "tilePlacementSpec": null,
+  "styleSpec": {
+    "profileId": "pure-run-equipment-flat-v1",
+    "profilePath": "Tools/artworks/pure_run/equipment/style_profile_flat_v1.json",
+    "profileSha256": "c7b9d3754163a302fc19bab6e645c6a7f635d7d9dad3d5a80f954132c34f04c2",
+    "targetVisibleHeight": 100,
+    "visibleHeightRange": [
+      92,
+      108
+    ]
+  },
+  "tolerances": {
+    "sizePx": 3,
+    "centerPx": 2
+  },
+  "outputs": {
+    "master": "Tools/artworks/pure_run/equipment/approved/pure_run_equipment_shadow_cloak_v04.png",
+    "preview": "Tools/artworks/pure_run/equipment/approved/pure_run_equipment_shadow_cloak_v04_128.png"
+  },
+  "rights": {
+    "rightsHolder": "cty41",
+    "license": "project-owned",
+    "provenance": "imagegen-user-reviewed"
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 2,
+  "supportingArtifactId": "supporting-artifact-6955fa4470e7484f",
+  "artifact": {
+    "path": "Tools/artworks/pure_run/equipment/candidates/pure_run_equipment_leather_armor_v03.png",
+    "sha256": "bb72a384cbddc691da81481959cd8fbd62eaf0eac1d3adedaa3560a4c575331d"
+  },
+  "role": "equipment-review-candidate",
+  "note": "Leather armor V3 single-asset limited-palette style test."
+}

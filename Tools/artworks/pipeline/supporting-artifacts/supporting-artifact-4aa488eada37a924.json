@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 2,
+  "supportingArtifactId": "supporting-artifact-4aa488eada37a924",
+  "artifact": {
+    "path": "Tools/artworks/pure_run/equipment/candidates/pure_run_equipment_leather_armor_v04_128.png",
+    "sha256": "6aa74e4e7c6497418843502eadfd19fc3b022763afe5e992511dcaf8f5433dad"
+  },
+  "role": "equipment-review-preview",
+  "note": "Leather armor V4 128px preview."
+}

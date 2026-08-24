@@ -1,0 +1,32 @@
+{
+  "schemaVersion": 2,
+  "attemptId": "job-852c16ba0270966f-a001",
+  "jobId": "job-852c16ba0270966f",
+  "ordinal": 1,
+  "parentAttemptId": null,
+  "retryFeedbackId": null,
+  "promptDelta": null,
+  "technicalRemediation": false,
+  "state": "prepared",
+  "artifacts": {
+    "source": {
+      "path": "Tools/artworks/pure_run/equipment/concepts/pure_run_equipment_leather_armor_v02_chroma_source.png",
+      "sha256": "302d7f60c96fc75f7914a2e428414af19cd0fd735b94fc561a4177dc90e8682d"
+    },
+    "raw": {
+      "path": "Tools/artworks/pipeline/artifacts/job-852c16ba0270966f/job-852c16ba0270966f-a001/raw.png",
+      "sha256": "302d7f60c96fc75f7914a2e428414af19cd0fd735b94fc561a4177dc90e8682d"
+    },
+    "prepared": {
+      "path": "Tools/artworks/pipeline/artifacts/job-852c16ba0270966f/job-852c16ba0270966f-a001/prepared.png",
+      "sha256": "4791f6bedf501d67bac2596f796d28a1e6b0c4129632a0ce2c02da7c2ccdc454"
+    }
+  },
+  "report": null,
+  "approvalId": null,
+  "feedbackId": null,
+  "preparation": {
+    "chroma": "00ff00",
+    "chromaTolerance": 48
+  }
+}

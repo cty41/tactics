@@ -1,0 +1,40 @@
+{
+  "schemaVersion": 1,
+  "styleReportId": "equipment-style-report-debb1aaf697f79bf",
+  "contractId": "contract-f588c4ed71e13265",
+  "contractSha256": "404137cc861bf4803129cecbceaf7eab94d0bd2339570d0fd9ee22913cb286db",
+  "profile": {
+    "path": "Tools/artworks/pure_run/equipment/style_profile_flat_v1.json",
+    "sha256": "c7b9d3754163a302fc19bab6e645c6a7f635d7d9dad3d5a80f954132c34f04c2"
+  },
+  "source": {
+    "path": "Tools/artworks/pure_run/equipment/concepts/pure_run_equipment_leather_boots_v05_chroma_source.png",
+    "sha256": "0ee8fea58471d0b7f06d8d4e8171a8288f902d5091ebbe0e3f63f4bbad7749f2"
+  },
+  "candidate": {
+    "path": "Tools/artworks/pure_run/equipment/candidates/pure_run_equipment_leather_boots_v05.png",
+    "sha256": "a8b3f9741e5cd0be7989c55c9be48296e128fcbc370b0544f40d426f8feee7cc"
+  },
+  "preview": {
+    "path": "Tools/artworks/pure_run/equipment/candidates/pure_run_equipment_leather_boots_v05_128.png",
+    "sha256": "e0b9ec42d8b819fd7a4f5977bbc51f3f7dad0a7c1222200b49278dc30b22e9e7"
+  },
+  "metrics": {
+    "interiorPixels": 5676,
+    "interiorColorBins": 24,
+    "smoothGradientRatio": 0.031188,
+    "visibleBbox": [
+      74,
+      137,
+      181,
+      237
+    ],
+    "visibleSize": [
+      107,
+      100
+    ],
+    "baseline": 236
+  },
+  "issues": [],
+  "passed": true
+}

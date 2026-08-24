@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 2,
+  "supportingArtifactId": "supporting-artifact-bad4606dc3276473",
+  "artifact": {
+    "path": "Tools/artworks/pure_run/equipment/reviews/armor_tile_panel_wizard_hat_v02.png",
+    "sha256": "0140fc1d801acc9809fe7c1afe104472d7a8da26c94d9c10d0e6fd5480351e93"
+  },
+  "role": "equipment-tile-review-panel",
+  "note": "Armor V2 tile-scale panel."
+}

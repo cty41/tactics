@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 2,
+  "supportingArtifactId": "supporting-artifact-0adf8b9a8e7f76d2",
+  "artifact": {
+    "path": "Tools/artworks/pure_run/equipment/candidates/pure_run_equipment_leather_armor_v03_sharp.png",
+    "sha256": "5d39498a33a1a9183d0db2c36d33d6df123a35a51a57e79f0186ddfdcc761c65"
+  },
+  "role": "equipment-review-candidate",
+  "note": "Leather armor V3 sharp-line refinement; shape and palette unchanged."
+}

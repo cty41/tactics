@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 2,
+  "supportingArtifactId": "supporting-artifact-050cf5824dc5ed45",
+  "artifact": {
+    "path": "Tools/artworks/pure_run/equipment/reviews/equipment_flat_v1_panel_iron_helmet.png",
+    "sha256": "8955e006126bf7152d87225894c70c3cbdd34fca9084f1a1763784cea84c08dc"
+  },
+  "role": "equipment-review-panel",
+  "note": "Flat style profile V1 full-scale panel."
+}

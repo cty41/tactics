@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 2,
+  "supportingArtifactId": "supporting-artifact-e406f396b685343d",
+  "artifact": {
+    "path": "Tools/artworks/pure_run/equipment/candidates/pure_run_equipment_plain_iron_sword_v01_keyed.png",
+    "sha256": "db2aa80b1387cbce454692f80af160653af4f894b4b44f78c647d722efdd077b"
+  },
+  "role": "reviewed-chroma-clean-intermediate",
+  "note": "Exact chroma pixels removed after user visual approval."
+}

@@ -1,5 +1,9 @@
 # Tactics Knowledge Update Log
 
+## 2026-08-25
+* **Sync**: `pure-run-artwork` 已同步到来源指纹 `sha256:17c5df004f02013174aaeae2594c6df9b56b7979ee7f2c53f4ed2cf8417dd55a`。
+* **Sync**: `project-documentation` 已同步到来源指纹 `sha256:9c6d82ff5d96f6af5060c9f1a1413a7df94fe916ab73953a0ea1361a7b7e4e62`。
+
 ## 2026-08-24
 * **Sync**: `project-documentation` 已同步到来源指纹 `sha256:d08f025424066d7fe13a96ac8ccdb714ac2ac08ad42d3f274e80f48905778dc1`。
 * **Sync**: `battle-system` 已同步到来源指纹 `sha256:16e627cd5548d672ffe8c9367a818edfa09b939d1b59e0365e7c2c48f128b1b7`。

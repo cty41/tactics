@@ -1,0 +1,36 @@
+{
+  "schemaVersion": 2,
+  "jobId": "job-b5d1d9671e7d445c",
+  "state": "ready",
+  "contractId": "contract-3a6934725402a994",
+  "contractSha256": "7ef04c90677bc6e1dd74038bad3f3da4696eb4d48cc73035776054c0648ce782",
+  "prompt": null,
+  "inputs": [
+    {
+      "path": "Tools/artworks/pure_run/equipment/concepts/pure_run_equipment_leather_armor_v03_chroma_source.png",
+      "sha256": "1d9d8c15d761b80e6bc6b8c2647e19474de9118661c4b9b92d3f2f47d37a5710"
+    },
+    {
+      "path": "Tools/artworks/pure_run/equipment/candidates/pure_run_equipment_leather_armor_v04.png",
+      "sha256": "bfa2dd69f85136690106ebb1998845ff20fdc589417012167e4988861c722b3b"
+    },
+    {
+      "path": "Tools/artworks/pure_run/equipment/candidates/pure_run_equipment_leather_armor_v04_128.png",
+      "sha256": "6aa74e4e7c6497418843502eadfd19fc3b022763afe5e992511dcaf8f5433dad"
+    },
+    {
+      "path": "Tools/artworks/pure_run/equipment/reviews/pure_run_equipment_leather_armor_v04_size_comparison.png",
+      "sha256": "da0271b17cd0d0c733622a9024b50f626576aab269d214ce04dc6b1f11e37ad3"
+    }
+  ],
+  "target": {
+    "direction": "down-right",
+    "pose": "display"
+  },
+  "series": null,
+  "conceptOnly": false,
+  "contractRequirements": null,
+  "requiresInvocation": false,
+  "sourceMode": "reviewed_import",
+  "reviewedImportId": "reviewed-import-65fbaf394779f9e8"
+}

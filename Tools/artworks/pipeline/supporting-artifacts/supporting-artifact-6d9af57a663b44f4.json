@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 2,
+  "supportingArtifactId": "supporting-artifact-6d9af57a663b44f4",
+  "artifact": {
+    "path": "Tools/artworks/pure_run/equipment/reviews/armor_panel_shadow_cloak_v01.png",
+    "sha256": "679027f5e6f9cc0eb037b9385da981edabea2ce344cbdb5fbb6ca8dbe62f232f"
+  },
+  "role": "equipment-review-panel",
+  "note": "Armor batch V1 full-scale review panel."
+}

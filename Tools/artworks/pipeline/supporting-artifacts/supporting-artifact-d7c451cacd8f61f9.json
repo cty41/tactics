@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 2,
+  "supportingArtifactId": "supporting-artifact-d7c451cacd8f61f9",
+  "artifact": {
+    "path": "Tools/artworks/pure_run/equipment/reviews/leather_armor_precision_test_v04.png",
+    "sha256": "d9187a98dc0f56ad9486cc64315fd1bc02fd45cabf629fc7996e85bfbed47116"
+  },
+  "role": "equipment-style-calibration-sheet",
+  "note": "Leather armor V4 corrected precision comparison."
+}

@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 2,
+  "supportingArtifactId": "supporting-artifact-be84049174464086",
+  "artifact": {
+    "path": "Tools/artworks/pure_run/equipment/candidates/pure_run_equipment_wizard_hat_v02.png",
+    "sha256": "920b5c1be11164438f1fea5a5c5e9f05fcb54ad78c642b96ddc6dd5c44bad52f"
+  },
+  "role": "equipment-review-candidate",
+  "note": "Armor V2 flatter Pure Run style review candidate."
+}

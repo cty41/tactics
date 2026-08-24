@@ -28,6 +28,7 @@ description: "Use when generating, editing, chroma-keying, calibrating, reviewin
 | 连续姿态生产 | `create-series` → 每版 `record-feedback` → `select-attempt` → `advance-series` |
 | 限定几何例外 | `approve-exception`；首版只允许 `core_size_out_of_tolerance`，并绑定完整证据哈希 |
 | 已人工确认成图的诚实收编 | `render-size-comparison` → `adopt-reviewed-sprite` → `approve` → `promote`；不得伪造 invocation |
+| 装备风格防漂移 | contract 绑定 `--style-profile` 与可见高度范围，再用 `prepare-equipment-candidate` 原子完成真实边界裁切、有限色阶、基线定位、预览与硬门禁报告 |
 | 公开许可变更 | `relicense-public-artifact`；仅允许 `cty41` 将哈希匹配的 approved `project-owned` 成图显式发布为 `CC-BY-4.0`，并生成不可变 receipt |
 | 登记离线辅助图 | `register-supporting-artifact`；PNG/SVG 导引、蒙版和参考源按当前哈希登记为 `supporting-derived`，不得作为运行时 Sprite |
 | 状态机严格门禁 | `python scripts/artwork_pipeline.py --root <repo> check --strict` |
@@ -53,6 +54,8 @@ description: "Use when generating, editing, chroma-keying, calibrating, reviewin
 5. **缩小和逐角色 Review。** 生成 `128×128` Mitchell 等比预览，确认脚底基线 `y=118`。再使用真实错列等距 Tile 排布，将预览的脚底锚点 `(64,118)` 精确映射到目标 `64×32` Tile 的几何中心；飞行单位使用同一虚拟落点，不能用可见身体下沿替代。带身份蒙版的动作/身体层还必须输出 Idle 锚点与候选同屏的 `anchorTileCompare`，两者使用相同 Tile 与脚底中心。死亡图先按 `references/death-state-sprites.md` 分类拓扑，并使用完整尸体 AABB 中心对齐 Tile。检查脚掌接触或悬浮间距、角色占用、脸部识别和装备分离。每次只校正一个角色，必须展示基准与当前角色并排并等待人工确认；确认后才进入下一个角色或生成其方向变体。运行时 Game View Review 必须遵循[前台交互与焦点保护规则](../../rules/foreground-interaction.md)：使用 MCP 截图、自动测试或虚拟输入；如果代表状态只能靠点击真实窗口获得，停止并标记 `manual_visual_qa_pending`。
 6. **执行状态转换。** `prepare` 只做确定性去幕、RGBA 规范化和透明 RGB 清零；对 ImageGen 的近似纯色色幕可显式传入 `--chroma-tolerance`。`attach-mask` 绑定源图同坐标语义蒙版；v2 高风险任务还必须 `attach-annotations` 绑定眼区、武器出口、剑尖和宝石区域。高分辨率输出再用 `calibrate-core` 统一等比缩放，并以语义脚爪校准地面基线；图像与蒙版共用同一变换。`validate` 确定性检查倾角、出口窗口、禁入区、宝石面积、装备状态与旧几何门禁。技术失败只能新建 retry；用户已经选中的同一 raw 可用 `--technical-remediation` 创建技术子 attempt，不增加唯一 ImageGen 输出数。
 7. **人工批准并晋升。** `approve` 前必须已经生成且哈希仍匹配 overlay、128 预览和 Tile Review；只有 `approve --reviewer cty41 --reason ... --decided-at ...` 落成绑定候选与蒙版哈希的 receipt 才算批准。若报告唯一失败项为 `core_size_out_of_tolerance`，且用户明确接受该候选，可使用 `approve-exception --issue core_size_out_of_tolerance --reviewer cty41 ...` 生成限定例外 receipt；它保留 `report.passed=false`，并额外绑定报告、合同、候选、蒙版和全部 Review 哈希及实际/锚点核心尺寸。任何其他失败项、未知 reviewer、哈希变化或全局容差放宽都不允许。`promote` 只接受有效 `approved` attempt，并同步正式输出、正式母图清单与公开 provenance。`legacy-unresolved` 不得作为母图；旧正式图的核心蒙版也必须先有同一候选/蒙版哈希组合的批准 receipt，才可写入新合同的几何锚点。
+
+   带 `styleSpec` 的装备合同只能收编由 `prepare-equipment-candidate` 产生、且候选/预览哈希完全匹配的通过报告。报告硬性约束真实 Alpha 可见高度、基线、内部色阶和连续平滑渐变；角色、武器与已批准装备锚点的同屏风格对照仍由用户人工确认，自动指标不得代替审美批准。
 
    若某张精确成图已经在对话中逐轮产生并由用户明确确认，但生成前没有 invocation，只能走 `reviewed_import`：先用 `render-size-comparison` 冻结四栏尺寸证据，再由 `adopt-reviewed-sprite --reviewer cty41` 绑定原始源图、256 候选、128 预览、对比图和确认时间。该入口不补写或伪造 ImageGen receipt，只接受居中、透明四角、无精确色幕残留的完整 Sprite；批准后 `promote` 原样复制候选与预览字节。它是历史缺口的受限收编入口，不是日常生成捷径。
 

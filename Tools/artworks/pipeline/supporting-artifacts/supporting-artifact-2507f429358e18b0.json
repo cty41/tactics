@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 2,
+  "supportingArtifactId": "supporting-artifact-2507f429358e18b0",
+  "artifact": {
+    "path": "Tools/artworks/pure_run/equipment/reviews/armor_tile_panel_leather_armor_v01.png",
+    "sha256": "f977f2a4e8adff1010af6b34f7b43efb0372067b1ca992aa8c9832559508d714"
+  },
+  "role": "equipment-tile-review-panel",
+  "note": "Armor batch V1 tile-scale review panel."
+}

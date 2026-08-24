@@ -1,0 +1,21 @@
+{
+  "schemaVersion": 2,
+  "jobId": "job-a1738729f4985f5a",
+  "state": "ready",
+  "contractId": "contract-841477c5193887b8",
+  "contractSha256": "2fc5580638c02a87659fb067635b4ae2260817268fc6c989981d98a5177e0795",
+  "prompt": {
+    "path": "Tools/artworks/pure_run/equipment/prompt_wizard_hat_v03.md",
+    "sha256": "24c488fe916ae5b8b7bf9174621120062e9c650b922b2b31e8baa80207fa51ff"
+  },
+  "inputs": [],
+  "target": {
+    "direction": "down-right",
+    "pose": "display"
+  },
+  "series": null,
+  "conceptOnly": false,
+  "contractRequirements": null,
+  "requiresInvocation": false,
+  "poseGuide": null
+}

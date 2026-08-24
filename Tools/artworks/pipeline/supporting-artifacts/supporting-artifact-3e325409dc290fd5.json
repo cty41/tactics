@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 2,
+  "supportingArtifactId": "supporting-artifact-3e325409dc290fd5",
+  "artifact": {
+    "path": "Tools/artworks/pure_run/equipment/reviews/armor_tile_panel_leather_armor_v02.png",
+    "sha256": "f24359eda03f686639b2ff77145cae9cea4ddcd318e0ce8a525a9da05e56d860"
+  },
+  "role": "equipment-tile-review-panel",
+  "note": "Armor V2 tile-scale panel."
+}

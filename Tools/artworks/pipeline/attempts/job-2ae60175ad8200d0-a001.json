@@ -1,0 +1,32 @@
+{
+  "schemaVersion": 2,
+  "attemptId": "job-2ae60175ad8200d0-a001",
+  "jobId": "job-2ae60175ad8200d0",
+  "ordinal": 1,
+  "parentAttemptId": null,
+  "retryFeedbackId": null,
+  "promptDelta": null,
+  "technicalRemediation": false,
+  "state": "prepared",
+  "artifacts": {
+    "source": {
+      "path": "Tools/artworks/pure_run/equipment/concepts/pure_run_equipment_leather_boots_v03_chroma_source.png",
+      "sha256": "9cc653f0ec61ba6e4ee9eb958a53ba624f106a661916d9f6f8f88574c6557d70"
+    },
+    "raw": {
+      "path": "Tools/artworks/pipeline/artifacts/job-2ae60175ad8200d0/job-2ae60175ad8200d0-a001/raw.png",
+      "sha256": "9cc653f0ec61ba6e4ee9eb958a53ba624f106a661916d9f6f8f88574c6557d70"
+    },
+    "prepared": {
+      "path": "Tools/artworks/pipeline/artifacts/job-2ae60175ad8200d0/job-2ae60175ad8200d0-a001/prepared.png",
+      "sha256": "47e928248c54c9351c305ccd5d66f9c9e5a30ad0073e9f1113ca6e48fd8d1076"
+    }
+  },
+  "report": null,
+  "approvalId": null,
+  "feedbackId": null,
+  "preparation": {
+    "chroma": "00ff00",
+    "chromaTolerance": 48
+  }
+}

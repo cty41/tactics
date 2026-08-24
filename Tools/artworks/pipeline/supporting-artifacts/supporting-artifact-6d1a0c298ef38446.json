@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 2,
+  "supportingArtifactId": "supporting-artifact-6d1a0c298ef38446",
+  "artifact": {
+    "path": "Tools/artworks/pure_run/equipment/candidates/pure_run_equipment_shadow_cloak_v03b.png",
+    "sha256": "4206fce5d7b8aa17cc9aed9f68bb9ba81d49173d335aae614d3a63c0b8e24f99"
+  },
+  "role": "equipment-review-candidate",
+  "note": "Flat style profile V1 passing equipment candidate."
+}

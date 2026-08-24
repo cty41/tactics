@@ -1,0 +1,40 @@
+{
+  "schemaVersion": 1,
+  "styleReportId": "equipment-style-report-0fad099e56a8d740",
+  "contractId": "contract-8a716e3d54ba3a92",
+  "contractSha256": "896c27a658844f97d7f7349d45855a9a3140c1b4f443beb56545c7c38d32ad99",
+  "profile": {
+    "path": "Tools/artworks/pure_run/equipment/style_profile_flat_v1.json",
+    "sha256": "c7b9d3754163a302fc19bab6e645c6a7f635d7d9dad3d5a80f954132c34f04c2"
+  },
+  "source": {
+    "path": "Tools/artworks/pure_run/equipment/concepts/pure_run_equipment_shadow_cloak_v03_chroma_source.png",
+    "sha256": "fda3b241208c86392771604e084deddd0687704cdefd6d03da3362824a5ed4c9"
+  },
+  "candidate": {
+    "path": "Tools/artworks/pure_run/equipment/candidates/pure_run_equipment_shadow_cloak_v03.png",
+    "sha256": "c1189f1174603936110f0db243820fad43c070964840dd8722cbcd939c382e4f"
+  },
+  "preview": {
+    "path": "Tools/artworks/pure_run/equipment/candidates/pure_run_equipment_shadow_cloak_v03_128.png",
+    "sha256": "43a0c9cde18020bb10eeaef64fd6f845c9d4e1f018c7a7c8c73de3fc6451e65c"
+  },
+  "metrics": {
+    "interiorPixels": 1916,
+    "interiorColorBins": 16,
+    "smoothGradientRatio": 0.0,
+    "visibleBbox": [
+      72,
+      125,
+      184,
+      237
+    ],
+    "visibleSize": [
+      112,
+      112
+    ],
+    "baseline": 236
+  },
+  "issues": [],
+  "passed": true
+}

@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 2,
+  "supportingArtifactId": "supporting-artifact-ad2ef292701597cd",
+  "artifact": {
+    "path": "Tools/artworks/pure_run/equipment/reviews/armor_panel_wizard_hat_v02.png",
+    "sha256": "2667897a3759e987629c9c66c042c5a20d13cbcfc796be11f0a036a51493c372"
+  },
+  "role": "equipment-review-panel",
+  "note": "Armor V2 full-scale panel."
+}

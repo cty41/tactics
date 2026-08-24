@@ -538,6 +538,34 @@ def create_contract(store: Store, args: argparse.Namespace) -> dict[str, Any]:
             if screen_facing not in allowed_facing[board_role]:
                 raise PipelineError(f"screen facing {screen_facing} is invalid for board role {board_role}")
             tile_placement.update({"boardRole": board_role, "screenFacing": screen_facing})
+    style_spec = None
+    style_profile_path = getattr(args, "style_profile", None)
+    style_values = (
+        getattr(args, "target_visible_height", None),
+        getattr(args, "visible_height_min", None),
+        getattr(args, "visible_height_max", None),
+    )
+    if style_profile_path or any(value is not None for value in style_values):
+        if not style_profile_path or any(value is None for value in style_values):
+            raise PipelineError("equipment style requires profile, target height, and visible height range")
+        target_height, minimum_height, maximum_height = style_values
+        if not 0 < minimum_height <= target_height <= maximum_height <= master_height:
+            raise PipelineError("invalid equipment visible height range")
+        profile_rel = store.relative(style_profile_path, must_exist=True)
+        profile = load_json(store.absolute(profile_rel))
+        if profile.get("schemaVersion") != 1 or not profile.get("profileId"):
+            raise PipelineError("equipment style profile must use schemaVersion 1 and declare profileId")
+        for reference in profile.get("references", []):
+            reference_path = store.absolute(reference["path"], must_exist=True)
+            if sha256_file(reference_path) != reference.get("sha256"):
+                raise PipelineError("equipment style reference hash mismatch")
+        style_spec = {
+            "profileId": profile["profileId"],
+            "profilePath": profile_rel,
+            "profileSha256": sha256_file(store.absolute(profile_rel)),
+            "targetVisibleHeight": target_height,
+            "visibleHeightRange": [minimum_height, maximum_height],
+        }
     payload = {
         "assetId": args.asset_id,
         "approvedAssetId": args.approved_asset_id or args.asset_id,
@@ -555,6 +583,7 @@ def create_contract(store: Store, args: argparse.Namespace) -> dict[str, Any]:
                                or (asset_role == "component" and source_mode == "generated")),
         "canvasSpec": {"masterSize": [master_width, master_height]},
         "tilePlacementSpec": tile_placement,
+        "styleSpec": style_spec,
         "tolerances": {"sizePx": args.size_tolerance, "centerPx": args.center_tolerance},
         "outputs": {"master": store.relative(args.output_master), "preview": store.relative(args.output_preview)},
         "rights": {"rightsHolder": args.rights_holder, "license": args.license, "provenance": args.provenance},
@@ -571,6 +600,138 @@ def create_contract(store: Store, args: argparse.Namespace) -> dict[str, Any]:
     record = {"schemaVersion": version, "contractId": cid, **payload}
     write_json_idempotent(store.record("contracts", cid), record, immutable=True)
     return record
+
+
+def _equipment_style_profile(store: Store, contract: dict[str, Any]) -> dict[str, Any]:
+    spec = contract.get("styleSpec")
+    if not spec:
+        raise PipelineError("operation requires a contract-bound equipment style profile")
+    profile_path = store.absolute(spec["profilePath"], must_exist=True)
+    if sha256_file(profile_path) != spec["profileSha256"]:
+        raise PipelineError("equipment style profile hash mismatch")
+    profile = load_json(profile_path)
+    if profile.get("profileId") != spec["profileId"]:
+        raise PipelineError("equipment style profile id mismatch")
+    for reference in profile.get("references", []):
+        if sha256_file(store.absolute(reference["path"], must_exist=True)) != reference["sha256"]:
+            raise PipelineError("equipment style reference hash mismatch")
+    return profile
+
+
+def _interior_style_metrics(image: Image.Image) -> dict[str, Any]:
+    rgba = image.convert("RGBA")
+    pixels = pixel_data(rgba)
+    width, height = rgba.size
+    interior: list[tuple[int, int, int]] = []
+    smooth_pixels = 0
+    scanned_pixels = 0
+    for y in range(1, height - 1):
+        row: list[tuple[int, tuple[int, int, int]]] = []
+        for x in range(1, width - 1):
+            index = y * width + x
+            value = pixels[index]
+            if value[3] == 255 and all(pixels[index + delta][3] == 255 for delta in (-1, 1, -width, width)):
+                rgb = value[:3]
+                interior.append(rgb)
+                row.append((x, rgb))
+        run = 1
+        previous_sign = 0
+        for index in range(1, len(row)):
+            if row[index][0] != row[index - 1][0] + 1:
+                run = 1
+                previous_sign = 0
+                continue
+            left = row[index - 1][1]
+            right = row[index][1]
+            delta = round(sum(right) / 3) - round(sum(left) / 3)
+            sign = 1 if 1 <= delta <= 8 else (-1 if -8 <= delta <= -1 else 0)
+            if sign and sign == previous_sign:
+                run += 1
+            else:
+                if run >= 8:
+                    smooth_pixels += run
+                run = 2 if sign else 1
+            previous_sign = sign
+            scanned_pixels += 1
+        if run >= 8:
+            smooth_pixels += run
+    bins = {(red // 16, green // 16, blue // 16) for red, green, blue in interior}
+    return {
+        "interiorPixels": len(interior),
+        "interiorColorBins": len(bins),
+        "smoothGradientRatio": round(smooth_pixels / max(1, scanned_pixels), 6),
+    }
+
+
+def prepare_equipment_candidate(store: Store, args: argparse.Namespace) -> dict[str, Any]:
+    contract = load_json(store.record("contracts", args.contract_id))
+    profile = _equipment_style_profile(store, contract)
+    source = _bound_artifact(store, args.source)
+    with Image.open(store.absolute(source["path"])) as opened:
+        image = opened.convert("RGBA")
+    chroma = profile.get("chroma", "00ff00").lstrip("#")
+    tolerance = int(profile.get("chromaTolerance", 48))
+    key = tuple(int(chroma[index:index + 2], 16) for index in (0, 2, 4))
+    cleaned = []
+    for red, green, blue, alpha in pixel_data(image):
+        distance = (red - key[0]) ** 2 + (green - key[1]) ** 2 + (blue - key[2]) ** 2
+        green_screen = green >= 120 and green >= red + 40 and green >= blue + 40
+        cleaned.append((0, 0, 0, 0) if distance <= tolerance ** 2 or green_screen else (red, green, blue, alpha))
+    image.putdata(cleaned)
+    bbox = image.getchannel("A").getbbox()
+    if not bbox:
+        raise PipelineError("equipment source is empty after chroma removal")
+    cropped = image.crop(bbox)
+    palette_colors = int(profile.get("processing", {}).get("interiorPaletteColors", 16))
+    original_alpha = cropped.getchannel("A")
+    quantized = cropped.quantize(colors=palette_colors, method=Image.Quantize.FASTOCTREE).convert("RGBA")
+    quantized.putalpha(original_alpha)
+    target_height = contract["styleSpec"]["targetVisibleHeight"]
+    target_width = max(1, round(quantized.width * target_height / quantized.height))
+    resized = quantized.resize((target_width, target_height), Image.Resampling.LANCZOS)
+    master_size = tuple(contract.get("canvasSpec", {}).get("masterSize", [256, 256]))
+    canvas = Image.new("RGBA", master_size, (0, 0, 0, 0))
+    baseline = int(profile.get("baseline", 236))
+    x = round((master_size[0] - target_width) / 2)
+    y = baseline - target_height + 1
+    canvas.alpha_composite(resized, (x, y))
+    canvas = normalize_transparent_rgb(canvas)
+    output_rel = store.relative(args.output)
+    preview_rel = store.relative(args.preview)
+    output_path = store.absolute(output_rel)
+    preview_path = store.absolute(preview_rel)
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    preview_path.parent.mkdir(parents=True, exist_ok=True)
+    canvas.save(output_path, format="PNG", optimize=False, compress_level=9)
+    make_preview(canvas).save(preview_path, format="PNG", optimize=False, compress_level=9)
+    candidate = _bound_artifact(store, output_rel)
+    preview = _bound_artifact(store, preview_rel)
+    visible = canvas.getchannel("A").getbbox()
+    metrics = _interior_style_metrics(canvas)
+    metrics.update({"visibleBbox": list(visible) if visible else None,
+                    "visibleSize": [visible[2] - visible[0], visible[3] - visible[1]] if visible else None,
+                    "baseline": visible[3] - 1 if visible else None})
+    minimum_height, maximum_height = contract["styleSpec"]["visibleHeightRange"]
+    limits = profile.get("hardGates", {})
+    issues = []
+    if not visible or not minimum_height <= metrics["visibleSize"][1] <= maximum_height:
+        issues.append("equipment_visible_height_out_of_range")
+    if metrics["baseline"] != baseline:
+        issues.append("equipment_baseline_mismatch")
+    if metrics["interiorColorBins"] > int(limits.get("maxInteriorColorBins", 40)):
+        issues.append("equipment_palette_too_complex")
+    if metrics["smoothGradientRatio"] > float(limits.get("maxSmoothGradientRatio", 0.12)):
+        issues.append("equipment_smooth_gradient_excess")
+    payload = {"contractId": args.contract_id,
+               "contractSha256": sha256_file(store.record("contracts", args.contract_id)),
+               "profile": {"path": contract["styleSpec"]["profilePath"], "sha256": contract["styleSpec"]["profileSha256"]},
+               "source": source, "candidate": candidate, "preview": preview, "metrics": metrics,
+               "issues": sorted(issues), "passed": not issues}
+    report_id = stable_id("equipment-style-report", payload)
+    report = {"schemaVersion": 1, "styleReportId": report_id, **payload}
+    write_json_idempotent(store.record("style-reports", report_id), report, immutable=True)
+    register_public_artifacts(store, [candidate, preview], "project-owned-supporting-derived")
+    return report
 
 
 def create_job(store: Store, args: argparse.Namespace) -> dict[str, Any]:
@@ -2329,6 +2490,8 @@ def render_size_comparison(store: Store, args: argparse.Namespace) -> dict[str, 
 def adopt_reviewed_sprite(store: Store, args: argparse.Namespace) -> dict[str, Any]:
     contract_path = store.record("contracts", args.contract_id)
     contract = load_json(contract_path)
+    if contract.get("styleSpec"):
+        _equipment_style_profile(store, contract)
     if contract.get("assetRole") == "component" or contract.get("runtimeEligible") is False:
         raise PipelineError("reviewed imports must be complete Sprite assets")
     if args.reviewer != "cty41":
@@ -2343,6 +2506,19 @@ def adopt_reviewed_sprite(store: Store, args: argparse.Namespace) -> dict[str, A
     candidate = _bound_artifact(store, args.candidate)
     preview = _bound_artifact(store, args.preview)
     comparison = _bound_artifact(store, args.size_comparison)
+    style_report_artifact = None
+    if contract.get("styleSpec"):
+        matches = []
+        for path in (store.pipeline / "style-reports").glob("*.json"):
+            report = load_json(path)
+            if (report.get("contractId") == args.contract_id
+                    and report.get("candidate") == candidate
+                    and report.get("preview") == preview):
+                matches.append(report)
+        if len(matches) != 1 or not matches[0].get("passed"):
+            raise PipelineError("reviewed import requires one passing matching equipment style report")
+        style_path = store.record("style-reports", matches[0]["styleReportId"])
+        style_report_artifact = {"path": store.relative(style_path), "sha256": sha256_file(style_path)}
     comparison_records = [
         load_json(path) for path in (store.pipeline / "size-comparisons").glob("*.json")
         if load_json(path).get("artifact") == comparison
@@ -2373,6 +2549,8 @@ def adopt_reviewed_sprite(store: Store, args: argparse.Namespace) -> dict[str, A
     write_json_idempotent(store.record("jobs", job_id), job, immutable=True)
     report_payload = {"passed": True, "issues": [], "candidateGeometry": candidate_geometry,
                       "previewGeometry": preview_geometry, "reviewedImportId": adoption_id}
+    if style_report_artifact:
+        report_payload["styleReport"] = style_report_artifact
     report_id = stable_id("report", report_payload)
     report_path = store.record("reports", report_id)
     write_json_idempotent(report_path, {"schemaVersion": 2, "reportId": report_id, **report_payload}, immutable=True)
@@ -3428,6 +3606,10 @@ def build_parser() -> argparse.ArgumentParser:
     create.add_argument("--asset-role", choices=sorted(ASSET_ROLES))
     create.add_argument("--component-kind", choices=sorted(COMPONENT_KINDS))
     create.add_argument("--source-mode", choices=sorted(SOURCE_MODES))
+    create.add_argument("--style-profile")
+    create.add_argument("--target-visible-height", type=int)
+    create.add_argument("--visible-height-min", type=int)
+    create.add_argument("--visible-height-max", type=int)
     job = commands.add_parser("create-job"); job.add_argument("--contract-id", required=True)
     job.add_argument("--prompt", required=True); job.add_argument("--input", action="append", default=[])
     job.add_argument("--pose-guide-id")
@@ -3491,6 +3673,11 @@ def build_parser() -> argparse.ArgumentParser:
     normalize_import_p = commands.add_parser("normalize-reviewed-sprite")
     normalize_import_p.add_argument("--source", required=True); normalize_import_p.add_argument("--output", required=True)
     normalize_import_p.add_argument("--preview", required=True)
+    equipment_candidate_p = commands.add_parser("prepare-equipment-candidate")
+    equipment_candidate_p.add_argument("--contract-id", required=True)
+    equipment_candidate_p.add_argument("--source", required=True)
+    equipment_candidate_p.add_argument("--output", required=True)
+    equipment_candidate_p.add_argument("--preview", required=True)
     runtime_copy_p = commands.add_parser("register-runtime-copy")
     runtime_copy_p.add_argument("--source", required=True); runtime_copy_p.add_argument("--target", required=True)
     relicense_p = commands.add_parser("relicense-public-artifact")
@@ -3545,6 +3732,7 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
         "register-supporting-artifact": register_supporting_artifact,
         "render-size-comparison": render_size_comparison,
         "normalize-reviewed-sprite": normalize_reviewed_sprite,
+        "prepare-equipment-candidate": prepare_equipment_candidate,
         "register-runtime-copy": register_runtime_copy,
         "relicense-public-artifact": relicense_public_artifacts,
         "adopt-reviewed-sprite": adopt_reviewed_sprite,

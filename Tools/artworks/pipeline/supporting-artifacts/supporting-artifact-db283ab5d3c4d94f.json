@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 2,
+  "supportingArtifactId": "supporting-artifact-db283ab5d3c4d94f",
+  "artifact": {
+    "path": "Tools/artworks/pure_run/equipment/reviews/equipment_flat_v1_tile_panel_leather_boots.png",
+    "sha256": "002b4d79ad0d4966668d773cb5cb9867f259e37b8636c0f6e398ec315fe9beae"
+  },
+  "role": "equipment-tile-review-panel",
+  "note": "Flat style profile V1 tile-scale panel."
+}

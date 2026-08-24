@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 2,
+  "supportingArtifactId": "supporting-artifact-02490acf4c00a60d",
+  "artifact": {
+    "path": "Tools/artworks/pure_run/equipment/reviews/leather_boots_v05_review.png",
+    "sha256": "c77cd196800a0954b3425f8d8828688bc98320b2defc4092cc07ae4afe523774"
+  },
+  "role": "equipment-production-evidence",
+  "note": "Retained equipment generation reference, rejected/intermediate candidate, or technical remediation evidence; not a promotable runtime sprite."
+}

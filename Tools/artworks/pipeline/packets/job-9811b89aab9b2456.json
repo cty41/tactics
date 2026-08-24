@@ -1,0 +1,21 @@
+{
+  "schemaVersion": 2,
+  "jobId": "job-9811b89aab9b2456",
+  "state": "ready",
+  "contractId": "contract-8a716e3d54ba3a92",
+  "contractSha256": "896c27a658844f97d7f7349d45855a9a3140c1b4f443beb56545c7c38d32ad99",
+  "prompt": {
+    "path": "Tools/artworks/pure_run/equipment/prompt_shadow_cloak_v03.md",
+    "sha256": "1d67ee0d5a3dc154bcff3059ae50cb60dfaa67b8c4ebc14682505ccd62c53947"
+  },
+  "inputs": [],
+  "target": {
+    "direction": "down-right",
+    "pose": "display"
+  },
+  "series": null,
+  "conceptOnly": false,
+  "contractRequirements": null,
+  "requiresInvocation": false,
+  "poseGuide": null
+}

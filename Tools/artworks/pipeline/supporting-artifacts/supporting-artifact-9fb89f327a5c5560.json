@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 2,
+  "supportingArtifactId": "supporting-artifact-9fb89f327a5c5560",
+  "artifact": {
+    "path": "Tools/artworks/pure_run/equipment/reviews/armor_panel_leather_armor_v01.png",
+    "sha256": "ca5e93f5862c1461b16217d5e6994a35b286e53d97dafadc4bfbdf7b69ede586"
+  },
+  "role": "equipment-review-panel",
+  "note": "Armor batch V1 full-scale review panel."
+}

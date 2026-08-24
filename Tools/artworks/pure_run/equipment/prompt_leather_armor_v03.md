@@ -1,0 +1,3 @@
+# Pure Run Leather Armor V3 Style Test
+
+Single-asset style calibration for the armor batch. The content is a short, rounded, mildly asymmetric leather vest shaped for the approved capsule-dog body. The visual target is the approved Pure Run weapon and character set: restrained detail density, organic dark outline, matte limited palette, and small discrete cel-shaded shadow shapes. Smooth gradients, reflected-light arcs, gloss, realistic leather texture, airbrushed volume, and perfect vector geometry are forbidden. The controlled review candidate additionally reduces the generated source to a limited discrete palette before human acceptance.

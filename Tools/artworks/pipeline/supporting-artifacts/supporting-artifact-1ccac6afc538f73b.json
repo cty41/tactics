@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 2,
+  "supportingArtifactId": "supporting-artifact-1ccac6afc538f73b",
+  "artifact": {
+    "path": "Tools/artworks/pure_run/equipment/candidates/pure_run_equipment_amazon_round_shield_v01_keyed_exact.png",
+    "sha256": "9cb298a862d13b5432e69d220ea45876b616b109e237acfbb07b43aac5f9afd1"
+  },
+  "role": "reviewed-chroma-clean-intermediate",
+  "note": "Exact chroma RGB pixels forced fully transparent after user visual approval."
+}

@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 2,
+  "supportingArtifactId": "supporting-artifact-594d81a369706327",
+  "artifact": {
+    "path": "Tools/artworks/pure_run/equipment/reviews/armor_panel_iron_helmet_v02.png",
+    "sha256": "8585565d20b44437a893ba7451ce5187b7fbdedbd623ac8185f38394d0203e94"
+  },
+  "role": "equipment-review-panel",
+  "note": "Armor V2 full-scale panel."
+}

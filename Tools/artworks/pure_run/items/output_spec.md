@@ -9,7 +9,7 @@
 | 物品 | ContentId | 文件名（待 promote） | 视觉 |
 | --- | --- | --- | --- |
 | 幸运戒指 | `item.equipment.lucky-ring-01` | `pure_run_item_lucky_ring_v01.png` | 金色环 + 红色宝石 |
-| 银戒指 | `item.equipment.silver-ring-01` | `pure_run_item_silver_ring_v01.png` | 银色环 + 蓝色宝石 |
+| 银戒指 | `item.equipment.silver-ring-01` | `pure_run_item_silver_ring_v01.png` | 简洁无宝石银色环 |
 | 生命药剂 | `item.consumable.life-potion` | `pure_run_item_life_potion_v01.png` | 圆肚玻璃瓶，红色液体 |
 | 魔法药剂 | `item.consumable.mana-potion` | `pure_run_item_mana_potion_v01.png` | 圆肚玻璃瓶，蓝色液体 |
 | 净化药水 | `item.consumable.cleansing-potion` | `pure_run_item_cleansing_potion_v01.png` | 圆肚玻璃瓶，紫色液体 |

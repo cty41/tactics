@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 2,
+  "approvalId": "approval-886317fe4cd01eda",
+  "attemptId": "job-5cfa78b7906a0f2e-a001",
+  "candidateSha256": "e254e333a2b7941c405e99a6104b989fc9be0683853b9929e31addd02286c787",
+  "maskSha256": null,
+  "reviewer": "cty41",
+  "reviewSha256": {
+    "sizeComparison": "4ca07d3f293f6303dab7e5bcdba4573c0c817449fd9c1ad72b12d899c91999d7"
+  },
+  "decision": "approved",
+  "reason": "User said promote next for shadow cloak V04.",
+  "decidedAt": "2026-08-24T16:50:12Z",
+  "annotation": null,
+  "reportSha256": "0e57d56c44143a960e4bba17a878d1dded1f596f5878c9ef05f8ab8e99557e3e"
+}

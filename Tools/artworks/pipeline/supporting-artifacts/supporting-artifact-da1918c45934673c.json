@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 2,
+  "supportingArtifactId": "supporting-artifact-da1918c45934673c",
+  "artifact": {
+    "path": "Tools/artworks/pure_run/equipment/candidates/pure_run_equipment_necromancer_dagger_v01_keyed_exact.png",
+    "sha256": "a718ea86515ba84b0e035d90cebcf157af8b6533d31e5e38b33574dc410cbd73"
+  },
+  "role": "reviewed-chroma-clean-intermediate",
+  "note": "Exact chroma RGB pixels forced fully transparent after user visual approval."
+}

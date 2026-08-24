@@ -1,0 +1,36 @@
+{
+  "schemaVersion": 2,
+  "jobId": "job-5cfa78b7906a0f2e",
+  "state": "ready",
+  "contractId": "contract-63adfc6152f88ba1",
+  "contractSha256": "2f21675faeded792c47ee23e08774fa7888cd6d31ed33f8668d7d0f86d7f99a3",
+  "prompt": null,
+  "inputs": [
+    {
+      "path": "Tools/artworks/pure_run/equipment/concepts/pure_run_equipment_shadow_cloak_v04_chroma_source.png",
+      "sha256": "8d0c9125142aed163d1ebf3b9751a380a453182b6b11c94b7bfe32312ad44af1"
+    },
+    {
+      "path": "Tools/artworks/pure_run/equipment/candidates/pure_run_equipment_shadow_cloak_v04_alpha_fixed.png",
+      "sha256": "e254e333a2b7941c405e99a6104b989fc9be0683853b9929e31addd02286c787"
+    },
+    {
+      "path": "Tools/artworks/pure_run/equipment/candidates/pure_run_equipment_shadow_cloak_v04_alpha_fixed_128.png",
+      "sha256": "a530895118e60e69c2c00f66da8155f89068ab1a7b18a74af217ad681f0093c1"
+    },
+    {
+      "path": "Tools/artworks/pure_run/equipment/reviews/pure_run_equipment_shadow_cloak_v04_alpha_fixed_size_comparison.png",
+      "sha256": "4ca07d3f293f6303dab7e5bcdba4573c0c817449fd9c1ad72b12d899c91999d7"
+    }
+  ],
+  "target": {
+    "direction": "down-right",
+    "pose": "display"
+  },
+  "series": null,
+  "conceptOnly": false,
+  "contractRequirements": null,
+  "requiresInvocation": false,
+  "sourceMode": "reviewed_import",
+  "reviewedImportId": "reviewed-import-67150b0318294a76"
+}

@@ -1259,6 +1259,94 @@ class ArtworkPipelineTests(unittest.TestCase):
         with Image.open(self.store.absolute(result["artifacts"]["preview"]["path"])) as preview:
             self.assertEqual((128, 128), preview.size)
 
+    def test_equipment_style_candidate_uses_visible_crop_and_binds_passing_report(self):
+        references = []
+        for index in range(4):
+            path = self.png(f"Tools/artworks/approved/style-{index}.png", variant=index)
+            references.append({"role": f"anchor-{index}", "path": self.store.relative(path),
+                               "sha256": pipeline.sha256_file(path)})
+        profile_path = self.root / "Tools/artworks/equipment/style.json"
+        profile_path.parent.mkdir(parents=True)
+        profile_path.write_text(json.dumps({
+            "schemaVersion": 1, "profileId": "test-flat-v1", "baseline": 236,
+            "chroma": "00ff00", "chromaTolerance": 48,
+            "processing": {"interiorPaletteColors": 8},
+            "hardGates": {"maxInteriorColorBins": 40, "maxSmoothGradientRatio": 0.12},
+            "references": references,
+        }), encoding="utf-8")
+        contract = pipeline.create_contract(self.store, self.ns(
+            asset_id="styled-armor", approved_asset_id="styled-armor", kind="projectile",
+            direction="down-right", pose="display", anchor=None, anchor_mask=None,
+            mask_required=False, no_arms=False, near_hand_side=None, far_hand_side=None,
+            size_tolerance=3, center_tolerance=2, layer_rule=[], visibility_cap=[],
+            composition_id=None, identity_anchor_mask=None, forehead_blaze_min_iou=0.45,
+            pose_reference=False, output_master="Tools/artworks/approved/styled-armor.png",
+            output_preview="Tools/artworks/approved/styled-armor_128.png", rights_holder="cty41",
+            license="project-owned", provenance="derived", asset_role=None, component_kind=None,
+            source_mode=None, style_profile=str(profile_path), target_visible_height=108,
+            visible_height_min=106, visible_height_max=110))
+        source = self.root / "Tools/artworks/concepts/styled-source.png"
+        source.parent.mkdir(parents=True)
+        image = Image.new("RGBA", (400, 400), (0, 255, 0, 255))
+        draw = ImageDraw.Draw(image)
+        draw.rectangle((0, 0, 399, 399), fill=(35, 220, 25, 255))
+        for y in range(80, 321):
+            shade = 80 + (y - 80) // 4
+            draw.rectangle((110, y, 289, y), fill=(shade, 65, 35, 255))
+        image.save(source)
+        report = pipeline.prepare_equipment_candidate(self.store, self.ns(
+            contract_id=contract["contractId"], source=str(source),
+            output="Tools/artworks/candidates/styled.png",
+            preview="Tools/artworks/candidates/styled_128.png"))
+        self.assertTrue(report["passed"], report["issues"])
+        self.assertEqual(108, report["metrics"]["visibleSize"][1])
+        self.assertLess(report["metrics"]["visibleSize"][0], report["metrics"]["visibleSize"][1])
+        self.assertEqual(236, report["metrics"]["baseline"])
+        candidate = self.store.absolute(report["candidate"]["path"])
+        preview = self.store.absolute(report["preview"]["path"])
+        comparison = pipeline.render_size_comparison(self.store, self.ns(
+            identity=str(references[0]["path"]), previous=str(candidate), reference=str(candidate),
+            candidate=str(candidate), output="Tools/artworks/reviews/styled-size.png"))
+        adopted = pipeline.adopt_reviewed_sprite(self.store, self.ns(
+            contract_id=contract["contractId"], source=str(source), candidate=str(candidate), preview=str(preview),
+            size_comparison=comparison["artifact"]["path"], reviewer="cty41", reason="style accepted",
+            accepted_at="2026-08-24T00:00:00+08:00"))
+        bound_report = pipeline.load_json(self.store.absolute(adopted["attempt"]["report"]["path"]))
+        self.assertEqual(report["styleReportId"],
+                         Path(bound_report["styleReport"]["path"]).stem.replace("equipment-style-report-", "equipment-style-report-"))
+
+    def test_styled_reviewed_import_rejects_candidate_without_style_report(self):
+        reference = self.png("Tools/artworks/approved/style-anchor.png")
+        profile_path = self.root / "Tools/artworks/equipment/style.json"
+        profile_path.parent.mkdir(parents=True)
+        profile_path.write_text(json.dumps({
+            "schemaVersion": 1, "profileId": "test-flat-v1", "baseline": 236,
+            "references": [{"role": "anchor", "path": self.store.relative(reference),
+                            "sha256": pipeline.sha256_file(reference)}],
+        }), encoding="utf-8")
+        contract = pipeline.create_contract(self.store, self.ns(
+            asset_id="unstyled-import", approved_asset_id="unstyled-import", kind="projectile",
+            direction="down-right", pose="display", anchor=None, anchor_mask=None,
+            mask_required=False, no_arms=False, near_hand_side=None, far_hand_side=None,
+            size_tolerance=3, center_tolerance=2, layer_rule=[], visibility_cap=[],
+            composition_id=None, identity_anchor_mask=None, forehead_blaze_min_iou=0.45,
+            pose_reference=False, output_master="Tools/artworks/approved/unstyled.png",
+            output_preview="Tools/artworks/approved/unstyled_128.png", rights_holder="cty41",
+            license="project-owned", provenance="derived", asset_role=None, component_kind=None,
+            source_mode=None, style_profile=str(profile_path), target_visible_height=108,
+            visible_height_min=106, visible_height_max=110))
+        candidate = self.png("Tools/artworks/candidates/manual.png")
+        preview = self.root / "Tools/artworks/candidates/manual_128.png"
+        pipeline.make_preview(Image.open(candidate).convert("RGBA")).save(preview)
+        comparison = pipeline.render_size_comparison(self.store, self.ns(
+            identity=str(reference), previous=str(candidate), reference=str(candidate), candidate=str(candidate),
+            output="Tools/artworks/reviews/manual-size.png"))
+        with self.assertRaisesRegex(pipeline.PipelineError, "matching equipment style report"):
+            pipeline.adopt_reviewed_sprite(self.store, self.ns(
+                contract_id=contract["contractId"], source=str(reference), candidate=str(candidate), preview=str(preview),
+                size_comparison=comparison["artifact"]["path"], reviewer="cty41", reason="invalid bypass",
+                accepted_at="2026-08-24T00:00:00+08:00"))
+
     def test_register_runtime_copy_requires_identical_approved_source(self):
         contract, _job, _job_args = self.contract_and_job()
         source = self.store.absolute(contract["anchor"]["path"])

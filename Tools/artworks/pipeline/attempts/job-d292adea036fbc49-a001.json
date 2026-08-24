@@ -1,0 +1,32 @@
+{
+  "schemaVersion": 2,
+  "attemptId": "job-d292adea036fbc49-a001",
+  "jobId": "job-d292adea036fbc49",
+  "ordinal": 1,
+  "parentAttemptId": null,
+  "retryFeedbackId": null,
+  "promptDelta": null,
+  "technicalRemediation": false,
+  "state": "prepared",
+  "artifacts": {
+    "source": {
+      "path": "Tools/artworks/pure_run/equipment/concepts/pure_run_equipment_shadow_cloak_v02_chroma_source.png",
+      "sha256": "717b2d656dbebba5c4801feeb09f8ea82e7f595d59e5268ec906ce0ace4f9e57"
+    },
+    "raw": {
+      "path": "Tools/artworks/pipeline/artifacts/job-d292adea036fbc49/job-d292adea036fbc49-a001/raw.png",
+      "sha256": "717b2d656dbebba5c4801feeb09f8ea82e7f595d59e5268ec906ce0ace4f9e57"
+    },
+    "prepared": {
+      "path": "Tools/artworks/pipeline/artifacts/job-d292adea036fbc49/job-d292adea036fbc49-a001/prepared.png",
+      "sha256": "3d6aaaee4785bcf89ddddd6164607589fb55cbd0f0279b74b2d61a75a096c897"
+    }
+  },
+  "report": null,
+  "approvalId": null,
+  "feedbackId": null,
+  "preparation": {
+    "chroma": "00ff00",
+    "chromaTolerance": 48
+  }
+}

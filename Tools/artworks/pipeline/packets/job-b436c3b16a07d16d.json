@@ -1,0 +1,21 @@
+{
+  "schemaVersion": 2,
+  "jobId": "job-b436c3b16a07d16d",
+  "state": "ready",
+  "contractId": "contract-6a86410da3e7cfc8",
+  "contractSha256": "4a656222bcb46a2840200039cb4faed44cc228182dc694ea0061a8f49f09db52",
+  "prompt": {
+    "path": "Tools/artworks/pure_run/equipment/prompt_iron_helmet_v03.md",
+    "sha256": "d44f33300710b2fc4b342d6a7615a5758ed14efe3fcf136604bc8a0f81ec7a0d"
+  },
+  "inputs": [],
+  "target": {
+    "direction": "down-right",
+    "pose": "display"
+  },
+  "series": null,
+  "conceptOnly": false,
+  "contractRequirements": null,
+  "requiresInvocation": false,
+  "poseGuide": null
+}

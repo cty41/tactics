@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 2,
+  "supportingArtifactId": "supporting-artifact-83ef47a02a7eb82b",
+  "artifact": {
+    "path": "Tools/artworks/pure_run/equipment/tmp/review-panels/02_tile.png",
+    "sha256": "6a1408cb77de8424ba096956a1a80ffa8a306983f0815f6db41345035d0fb204"
+  },
+  "role": "transient-review-panel",
+  "note": "Deterministic intermediate panel used to compose the registered weapon batch V01 contact sheets"
+}

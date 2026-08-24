@@ -1,0 +1,40 @@
+{
+  "schemaVersion": 2,
+  "contractId": "contract-47753651548de126",
+  "assetId": "equipment-necromancer-dagger",
+  "approvedAssetId": "equipment-necromancer-dagger",
+  "kind": "projectile",
+  "direction": "down-right",
+  "pose": "display",
+  "anchor": null,
+  "maskRequired": false,
+  "noArms": false,
+  "handSides": {
+    "near_hand": null,
+    "far_hand": null
+  },
+  "occlusion": null,
+  "compositionSpec": null,
+  "identitySpec": null,
+  "requiresInvocation": false,
+  "canvasSpec": {
+    "masterSize": [
+      256,
+      256
+    ]
+  },
+  "tilePlacementSpec": null,
+  "tolerances": {
+    "sizePx": 3,
+    "centerPx": 2
+  },
+  "outputs": {
+    "master": "Tools/artworks/pure_run/equipment/approved/pure_run_equipment_necromancer_dagger_v01.png",
+    "preview": "Tools/artworks/pure_run/equipment/approved/pure_run_equipment_necromancer_dagger_v01_128.png"
+  },
+  "rights": {
+    "rightsHolder": "cty41",
+    "license": "project-owned",
+    "provenance": "project-owned-gpt-generated"
+  }
+}

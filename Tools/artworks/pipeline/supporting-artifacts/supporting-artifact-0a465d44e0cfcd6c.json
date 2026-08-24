@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 2,
+  "supportingArtifactId": "supporting-artifact-0a465d44e0cfcd6c",
+  "artifact": {
+    "path": "Tools/artworks/pure_run/equipment/candidates/pure_run_equipment_shadow_cloak_v01_128.png",
+    "sha256": "05271ce7b6b322a04d00a579c39e6e2b2da9688860ff8ab1d380bfa9d27be288"
+  },
+  "role": "equipment-review-preview",
+  "note": "Armor batch V1 128px preview."
+}

@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 2,
+  "approvalId": "approval-ca4265f0bfc8448d",
+  "attemptId": "job-b5d1d9671e7d445c-a001",
+  "candidateSha256": "bfa2dd69f85136690106ebb1998845ff20fdc589417012167e4988861c722b3b",
+  "maskSha256": null,
+  "reviewer": "cty41",
+  "reviewSha256": {
+    "sizeComparison": "da0271b17cd0d0c733622a9024b50f626576aab269d214ce04dc6b1f11e37ad3"
+  },
+  "decision": "approved",
+  "reason": "User verdict: promote leather armor V4 and use it as the armor style anchor.",
+  "decidedAt": "2026-08-24T17:54:28.3575150+08:00",
+  "annotation": null,
+  "reportSha256": "713b8b0ed69230341be6659bf64550687c7d56a79650925bfd022bd644209bc0"
+}

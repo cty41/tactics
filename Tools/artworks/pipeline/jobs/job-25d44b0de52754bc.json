@@ -1,0 +1,36 @@
+{
+  "schemaVersion": 2,
+  "jobId": "job-25d44b0de52754bc",
+  "state": "ready",
+  "contractId": "contract-613805d9d067b58c",
+  "contractSha256": "9dac6ea3ccf3056121f557838d33e73952f89595ac69945add491a84b7783393",
+  "prompt": null,
+  "inputs": [
+    {
+      "path": "Tools/artworks/pure_run/equipment/concepts/pure_run_equipment_wizard_hat_v04_chroma_source.png",
+      "sha256": "1b1c16e77a66b268854b3e9bc72d5a8cc1ae79be1ddc9a80173106e4fde1247e"
+    },
+    {
+      "path": "Tools/artworks/pure_run/equipment/candidates/pure_run_equipment_wizard_hat_v04_alpha_fixed.png",
+      "sha256": "752963c4df58947c87c21d754e65aa6f16bead35a69e0e05a9d9f74022f0c8a7"
+    },
+    {
+      "path": "Tools/artworks/pure_run/equipment/candidates/pure_run_equipment_wizard_hat_v04_alpha_fixed_128.png",
+      "sha256": "495bfaef9ac7b0785115541149ca8a1ff6b3a6f25a181d0a874fb1fb65ad0c4e"
+    },
+    {
+      "path": "Tools/artworks/pure_run/equipment/reviews/pure_run_equipment_wizard_hat_v04_alpha_fixed_size_comparison.png",
+      "sha256": "93f93f82561920c630e4e91fdc63f365a5a82b479bfa07c4d798bb589e5dc10f"
+    }
+  ],
+  "target": {
+    "direction": "down-right",
+    "pose": "display"
+  },
+  "series": null,
+  "conceptOnly": false,
+  "contractRequirements": null,
+  "requiresInvocation": false,
+  "sourceMode": "reviewed_import",
+  "reviewedImportId": "reviewed-import-fdee0b4ff822b5ed"
+}

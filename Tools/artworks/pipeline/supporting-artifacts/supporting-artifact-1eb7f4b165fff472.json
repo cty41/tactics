@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 2,
+  "supportingArtifactId": "supporting-artifact-1eb7f4b165fff472",
+  "artifact": {
+    "path": "Tools/artworks/pure_run/equipment/candidates/pure_run_equipment_iron_helmet_v02.png",
+    "sha256": "c2f730a75be8357de5aa6de1a0f75b9d31584dba5cc5b0cc3dc75a712d1f7ee4"
+  },
+  "role": "equipment-review-candidate",
+  "note": "Armor V2 flatter Pure Run style review candidate."
+}

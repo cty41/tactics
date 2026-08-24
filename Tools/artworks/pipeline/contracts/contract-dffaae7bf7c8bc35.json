@@ -1,0 +1,41 @@
+{
+  "schemaVersion": 2,
+  "contractId": "contract-dffaae7bf7c8bc35",
+  "assetId": "pure_run_equipment_iron_helmet_v04",
+  "approvedAssetId": "pure_run_equipment_iron_helmet_v04",
+  "kind": "projectile",
+  "direction": "down-right",
+  "pose": "display",
+  "anchor": null,
+  "maskRequired": false,
+  "noArms": false,
+  "handSides": {
+    "near_hand": null,
+    "far_hand": null
+  },
+  "occlusion": null,
+  "compositionSpec": null,
+  "identitySpec": null,
+  "requiresInvocation": false,
+  "canvasSpec": {
+    "masterSize": [
+      256,
+      256
+    ]
+  },
+  "tilePlacementSpec": null,
+  "styleSpec": null,
+  "tolerances": {
+    "sizePx": 3,
+    "centerPx": 2
+  },
+  "outputs": {
+    "master": "Tools/artworks/pure_run/equipment/approved/pure_run_equipment_iron_helmet_v04.png",
+    "preview": "Tools/artworks/pure_run/equipment/approved/pure_run_equipment_iron_helmet_v04_128.png"
+  },
+  "rights": {
+    "rightsHolder": "cty41",
+    "license": "project-owned",
+    "provenance": "imagegen-user-reviewed"
+  }
+}

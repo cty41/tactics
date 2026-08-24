@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 2,
+  "approvalId": "approval-cc9bc564dd8667d0",
+  "attemptId": "job-257bc1573f58f23e-a001",
+  "candidateSha256": "7b5854a12e2515cabab1f8e263e444e2407d2e77fcfd7c808fb4314b1e837123",
+  "maskSha256": null,
+  "reviewer": "cty41",
+  "reviewSha256": {
+    "sizeComparison": "0e80641edf153ac4e36bc1765306172245eb8a65c1c7fe29b2dc590df64e6d5e"
+  },
+  "decision": "approved",
+  "reason": "User verdict: no issues, promote.",
+  "decidedAt": "2026-08-24T15:20:08.7600989+08:00",
+  "annotation": null,
+  "reportSha256": "1720866f5a818a49f77b78899e3927836d5b668b180bbcc6daec39c20ca48c6e"
+}

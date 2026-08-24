@@ -1,0 +1,40 @@
+{
+  "schemaVersion": 1,
+  "styleReportId": "equipment-style-report-5c90f51d580cea9c",
+  "contractId": "contract-841477c5193887b8",
+  "contractSha256": "2fc5580638c02a87659fb067635b4ae2260817268fc6c989981d98a5177e0795",
+  "profile": {
+    "path": "Tools/artworks/pure_run/equipment/style_profile_flat_v1.json",
+    "sha256": "c7b9d3754163a302fc19bab6e645c6a7f635d7d9dad3d5a80f954132c34f04c2"
+  },
+  "source": {
+    "path": "Tools/artworks/pure_run/equipment/concepts/pure_run_equipment_wizard_hat_v03_chroma_source.png",
+    "sha256": "410537ae0c91a747b1616d2becda7053b3476c2fb700536008447e91c78c55a1"
+  },
+  "candidate": {
+    "path": "Tools/artworks/pure_run/equipment/candidates/pure_run_equipment_wizard_hat_v03.png",
+    "sha256": "76a685a121b9d75cf4c2e6538313371e161f0dc4bd09cac9beebbc60aa98e4d1"
+  },
+  "preview": {
+    "path": "Tools/artworks/pure_run/equipment/candidates/pure_run_equipment_wizard_hat_v03_128.png",
+    "sha256": "553b0e840adc9b77d4eb5eeb85c82ddbf4daa2f1b92eb07364cfcfc3bf494a17"
+  },
+  "metrics": {
+    "interiorPixels": 1522,
+    "interiorColorBins": 36,
+    "smoothGradientRatio": 0.028436,
+    "visibleBbox": [
+      74,
+      129,
+      182,
+      237
+    ],
+    "visibleSize": [
+      108,
+      108
+    ],
+    "baseline": 236
+  },
+  "issues": [],
+  "passed": true
+}

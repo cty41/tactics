@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 2,
+  "supportingArtifactId": "supporting-artifact-f2dbda455f7c03cf",
+  "artifact": {
+    "path": "Tools/artworks/pure_run/equipment/tmp/review-panels/pure_run_equipment_amazon_round_shield_v01_128.png",
+    "sha256": "d9902f0bf402ca29344115a9d5d6c9c84164a1d2ab9499bc0ad79eb4157f29b0"
+  },
+  "role": "transient-review-panel",
+  "note": "Deterministic intermediate panel used to compose the registered weapon batch V01 contact sheets"
+}

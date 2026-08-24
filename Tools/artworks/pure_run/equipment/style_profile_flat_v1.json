@@ -1,0 +1,37 @@
+{
+  "schemaVersion": 1,
+  "profileId": "pure-run-equipment-flat-v1",
+  "baseline": 236,
+  "chroma": "00ff00",
+  "chromaTolerance": 48,
+  "processing": {
+    "interiorPaletteColors": 16,
+    "resizeFilter": "lanczos-after-quantize"
+  },
+  "hardGates": {
+    "maxInteriorColorBins": 40,
+    "maxSmoothGradientRatio": 0.12
+  },
+  "references": [
+    {
+      "role": "character-style-anchor",
+      "path": "Tools/artworks/doge/calibrated/doge_capsule_hunter_color_calibrated_v01.png",
+      "sha256": "68a35da9d5d646d497ae7bf99eebc5871bcc5be26a893441d9fcece57877ac07"
+    },
+    {
+      "role": "shield-style-anchor",
+      "path": "Tools/artworks/pure_run/equipment/approved/pure_run_equipment_amazon_round_shield_v01.png",
+      "sha256": "d5e14d2259d2af05a5fe5c00c275ed245ae5b543d0507ab031a23919363a2b24"
+    },
+    {
+      "role": "weapon-style-anchor",
+      "path": "Tools/artworks/pure_run/equipment/approved/pure_run_equipment_necromancer_dagger_v01.png",
+      "sha256": "7b5854a12e2515cabab1f8e263e444e2407d2e77fcfd7c808fb4314b1e837123"
+    },
+    {
+      "role": "armor-style-anchor",
+      "path": "Tools/artworks/pure_run/equipment/approved/pure_run_equipment_leather_armor_v04.png",
+      "sha256": "bfa2dd69f85136690106ebb1998845ff20fdc589417012167e4988861c722b3b"
+    }
+  ]
+}

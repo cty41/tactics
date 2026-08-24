@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 2,
+  "supportingArtifactId": "supporting-artifact-0ecd7898b25c9a4a",
+  "artifact": {
+    "path": "Tools/artworks/pure_run/equipment/candidates/pure_run_equipment_leather_armor_v02.png",
+    "sha256": "fa0c68137acdcfba045dd0a71a4689c0d7df124f584ff98adf391afb394330d2"
+  },
+  "role": "equipment-review-candidate",
+  "note": "Armor V2 flatter Pure Run style review candidate."
+}

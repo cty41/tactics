@@ -1,0 +1,92 @@
+{
+  "schemaVersion": 1,
+  "sizeComparisonId": "size-comparison-4cd918dfbd8d961c",
+  "inputs": [
+    {
+      "label": "Identity",
+      "artifact": {
+        "path": "Tools/artworks/doge/calibrated/doge_capsule_hunter_color_calibrated_v01.png",
+        "sha256": "68a35da9d5d646d497ae7bf99eebc5871bcc5be26a893441d9fcece57877ac07"
+      }
+    },
+    {
+      "label": "Previous",
+      "artifact": {
+        "path": "Tools/artworks/pipeline/artifacts/job-b03fba61c188e7a1/job-b03fba61c188e7a1-a001/prepared.png",
+        "sha256": "557dfd05e57ad542a8c15731491bb9dc3c3f35c14552c87cea88648f86226b95"
+      }
+    },
+    {
+      "label": "Pose reference",
+      "artifact": {
+        "path": "Tools/artworks/pure_run/equipment/reviews/equipment_weapons_batch_tile_v01.png",
+        "sha256": "3f2da06096a0a35d534e1de43c30d01bbf06d6d7b052e768d622bb41ab449cb6"
+      }
+    },
+    {
+      "label": "Candidate",
+      "artifact": {
+        "path": "Tools/artworks/pure_run/equipment/candidates/pure_run_equipment_amazon_javelin_v01_promote.png",
+        "sha256": "9f6e710c0877224537713792579fcfb2fe752a4c08b689119d4a5c7cf8a0951e"
+      }
+    }
+  ],
+  "measurements": [
+    {
+      "label": "Identity",
+      "bbox": [
+        38,
+        57,
+        89,
+        119
+      ],
+      "bboxSize": [
+        51,
+        62
+      ]
+    },
+    {
+      "label": "Previous",
+      "bbox": [
+        26,
+        6,
+        101,
+        121
+      ],
+      "bboxSize": [
+        75,
+        115
+      ]
+    },
+    {
+      "label": "Pose reference",
+      "bbox": [
+        0,
+        0,
+        128,
+        128
+      ],
+      "bboxSize": [
+        128,
+        128
+      ]
+    },
+    {
+      "label": "Candidate",
+      "bbox": [
+        35,
+        27,
+        93,
+        119
+      ],
+      "bboxSize": [
+        58,
+        92
+      ]
+    }
+  ],
+  "artifact": {
+    "path": "Tools/artworks/pure_run/equipment/reviews/pure_run_equipment_amazon_javelin_v01_promote_size_comparison.png",
+    "sha256": "e1fdae853a211f8c85b71ff04d5a17d6e6ea7c2762fb43d848bb04ff5ba728cd"
+  }
+}

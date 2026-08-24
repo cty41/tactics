@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 2,
+  "supportingArtifactId": "supporting-artifact-c9ceb28196526c53",
+  "artifact": {
+    "path": "Tools/artworks/pure_run/equipment/tmp/pure_run_equipment_leather_boots_v05_alpha_fixed_128.png",
+    "sha256": "e0b9ec42d8b819fd7a4f5977bbc51f3f7dad0a7c1222200b49278dc30b22e9e7"
+  },
+  "role": "equipment-production-evidence",
+  "note": "Retained equipment generation reference, rejected/intermediate candidate, or technical remediation evidence; not a promotable runtime sprite."
+}

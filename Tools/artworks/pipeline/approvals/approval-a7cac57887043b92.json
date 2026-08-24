@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 2,
+  "approvalId": "approval-a7cac57887043b92",
+  "attemptId": "job-25d44b0de52754bc-a001",
+  "candidateSha256": "752963c4df58947c87c21d754e65aa6f16bead35a69e0e05a9d9f74022f0c8a7",
+  "maskSha256": null,
+  "reviewer": "cty41",
+  "reviewSha256": {
+    "sizeComparison": "93f93f82561920c630e4e91fdc63f365a5a82b479bfa07c4d798bb589e5dc10f"
+  },
+  "decision": "approved",
+  "reason": "User said promote next for wizard hat V04.",
+  "decidedAt": "2026-08-24T16:52:40Z",
+  "annotation": null,
+  "reportSha256": "9a11e1101fcbd39e252be34730dd9c8214ef4662eeaceb5b7093eeb65089610a"
+}

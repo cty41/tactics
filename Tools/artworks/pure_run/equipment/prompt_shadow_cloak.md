@@ -1,0 +1,3 @@
+# Pure Run Shadow Cloak V1
+
+Create one standalone shadow cloak equipment sprite for a compact dog-capsule roguelike. Three-quarter isometric view, short hoodless mantle and rounded cape shaped to drape around a compact capsule body, deep charcoal-purple fabric with subtle muted violet folds and a slightly ragged lower edge. Empty garment only, no wearer, head, hood face, arms, smoke, magical aura, symbols, text, UI frame, cast shadow, or rarity glow. Soft painterly cartoon rendering with thick clean dark outline and a readable compact silhouette. Center it on pure `#00ff00` with generous clearance.

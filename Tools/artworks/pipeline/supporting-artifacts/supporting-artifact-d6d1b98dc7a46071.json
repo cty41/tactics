@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 2,
+  "supportingArtifactId": "supporting-artifact-d6d1b98dc7a46071",
+  "artifact": {
+    "path": "Tools/artworks/pure_run/equipment/tmp/review-panels/pure_run_equipment_mage_oak_staff_v01_128.png",
+    "sha256": "100b31731fdb7c5bcdfcc25106cbd346ea37edbd33324f61462e6354a2cd2a68"
+  },
+  "role": "transient-review-panel",
+  "note": "Deterministic intermediate panel used to compose the registered weapon batch V01 contact sheets"
+}

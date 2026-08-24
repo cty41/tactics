@@ -1,0 +1,32 @@
+{
+  "schemaVersion": 2,
+  "attemptId": "job-b436c3b16a07d16d-a001",
+  "jobId": "job-b436c3b16a07d16d",
+  "ordinal": 1,
+  "parentAttemptId": null,
+  "retryFeedbackId": null,
+  "promptDelta": null,
+  "technicalRemediation": false,
+  "state": "prepared",
+  "artifacts": {
+    "source": {
+      "path": "Tools/artworks/pure_run/equipment/concepts/pure_run_equipment_iron_helmet_v03_chroma_source.png",
+      "sha256": "7e56cc617713e38bebf200b812a86ee3e6323af0e31d93343e232a6581001347"
+    },
+    "raw": {
+      "path": "Tools/artworks/pipeline/artifacts/job-b436c3b16a07d16d/job-b436c3b16a07d16d-a001/raw.png",
+      "sha256": "7e56cc617713e38bebf200b812a86ee3e6323af0e31d93343e232a6581001347"
+    },
+    "prepared": {
+      "path": "Tools/artworks/pipeline/artifacts/job-b436c3b16a07d16d/job-b436c3b16a07d16d-a001/prepared.png",
+      "sha256": "06f8a73ead29ff115e760b41fb8e0e4bd1ea9b961f89baa3e5c194da9d206d8c"
+    }
+  },
+  "report": null,
+  "approvalId": null,
+  "feedbackId": null,
+  "preparation": {
+    "chroma": "00ff00",
+    "chromaTolerance": 48
+  }
+}

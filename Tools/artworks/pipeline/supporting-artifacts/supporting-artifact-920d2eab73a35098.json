@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 2,
+  "supportingArtifactId": "supporting-artifact-920d2eab73a35098",
+  "artifact": {
+    "path": "Tools/artworks/pure_run/equipment/reviews/equipment_armor_batch_tile_v01.png",
+    "sha256": "035f06e8dee9d3a7cfbbd40e001e58077cf2d49466d8c9d4b834e1e29547ca10"
+  },
+  "role": "equipment-tile-review-sheet",
+  "note": "Armor batch V1 numbered tile-scale review sheet."
+}

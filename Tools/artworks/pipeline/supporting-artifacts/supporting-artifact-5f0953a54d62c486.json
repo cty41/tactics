@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 2,
+  "supportingArtifactId": "supporting-artifact-5f0953a54d62c486",
+  "artifact": {
+    "path": "Tools/artworks/pure_run/equipment/reviews/equipment_flat_v1_tile_panel_wizard_hat.png",
+    "sha256": "d352e0eb5705ee4e5e7a358af890987798d4d70cc9770ead3bd2836c953a72a7"
+  },
+  "role": "equipment-tile-review-panel",
+  "note": "Flat style profile V1 tile-scale panel."
+}

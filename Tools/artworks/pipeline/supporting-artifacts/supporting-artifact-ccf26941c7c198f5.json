@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 2,
+  "supportingArtifactId": "supporting-artifact-ccf26941c7c198f5",
+  "artifact": {
+    "path": "Tools/artworks/pure_run/equipment/reviews/leather_armor_v03_line_sharpness_comparison.png",
+    "sha256": "0c7b581cd2ec42ad717e5cd52493488c523f52bade23328dcb242c9b5a025de6"
+  },
+  "role": "equipment-style-calibration-sheet",
+  "note": "Leather armor V3 original versus sharp-line refinement."
+}

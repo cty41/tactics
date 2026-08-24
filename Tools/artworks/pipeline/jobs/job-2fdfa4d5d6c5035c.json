@@ -1,0 +1,36 @@
+{
+  "schemaVersion": 2,
+  "jobId": "job-2fdfa4d5d6c5035c",
+  "state": "ready",
+  "contractId": "contract-dffaae7bf7c8bc35",
+  "contractSha256": "19f98f984a36dbad1f9de7867ca13e3d51d958a3f4a97f9f66d4a116dee51e9a",
+  "prompt": null,
+  "inputs": [
+    {
+      "path": "Tools/artworks/pure_run/equipment/concepts/pure_run_equipment_iron_helmet_v04_chroma_source.png",
+      "sha256": "b336def55fce06c29bd94b1e2e486e7bdc7fb99d2c702777659d408d442555dd"
+    },
+    {
+      "path": "Tools/artworks/pure_run/equipment/candidates/pure_run_equipment_iron_helmet_v04.png",
+      "sha256": "ee67ec9e8445a37d26a2db9e434402ef53861dfd82c83723f2681bf70dab0f56"
+    },
+    {
+      "path": "Tools/artworks/pure_run/equipment/candidates/pure_run_equipment_iron_helmet_v04_128.png",
+      "sha256": "bb88e4a698f19147769ed2e659610af8f5fea8277ea1c72bcd01e5d3f2434008"
+    },
+    {
+      "path": "Tools/artworks/pure_run/equipment/reviews/pure_run_equipment_iron_helmet_v04_size_comparison.png",
+      "sha256": "d6b6b1e474dd7a3322f6043d2110e7de3b8f034f67ba561dabf91665e27b2885"
+    }
+  ],
+  "target": {
+    "direction": "down-right",
+    "pose": "display"
+  },
+  "series": null,
+  "conceptOnly": false,
+  "contractRequirements": null,
+  "requiresInvocation": false,
+  "sourceMode": "reviewed_import",
+  "reviewedImportId": "reviewed-import-569227414c827d2e"
+}

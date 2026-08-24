@@ -1,0 +1,40 @@
+{
+  "schemaVersion": 2,
+  "contractId": "contract-16eb210dcc13f4f8",
+  "assetId": "pure_run_equipment_leather_armor_v03",
+  "approvedAssetId": "pure_run_equipment_leather_armor_v03",
+  "kind": "projectile",
+  "direction": "down-right",
+  "pose": "display",
+  "anchor": null,
+  "maskRequired": false,
+  "noArms": false,
+  "handSides": {
+    "near_hand": null,
+    "far_hand": null
+  },
+  "occlusion": null,
+  "compositionSpec": null,
+  "identitySpec": null,
+  "requiresInvocation": false,
+  "canvasSpec": {
+    "masterSize": [
+      256,
+      256
+    ]
+  },
+  "tilePlacementSpec": null,
+  "tolerances": {
+    "sizePx": 3,
+    "centerPx": 2
+  },
+  "outputs": {
+    "master": "Tools/artworks/pure_run/equipment/approved/pure_run_equipment_leather_armor_v03.png",
+    "preview": "Tools/artworks/pure_run/equipment/approved/pure_run_equipment_leather_armor_v03_128.png"
+  },
+  "rights": {
+    "rightsHolder": "cty41",
+    "license": "project-owned",
+    "provenance": "imagegen-reviewed"
+  }
+}
