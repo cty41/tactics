@@ -46,8 +46,10 @@ verification:
     path: src/Tactics.Core.Tests/DemonboundPossessedBoostTests.cs
   - layer: core_test
     path: src/Tactics.Core.Tests/DemonboundPossessedFormTests.cs
+  - layer: application_test
+    path: src/Tactics.Application.Tests/PlayableBattleSessionServiceTests.cs
   - layer: manual_qa
-    path: .agents/docs/manual-acceptance.md
+    path: .agents/docs/demonbound-possession-manual-checklist.md
 dsl_support: unsupported
 ```
 

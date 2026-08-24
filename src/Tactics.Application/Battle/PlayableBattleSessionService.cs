@@ -560,15 +560,43 @@ public sealed class PlayableBattleSessionService
         BattlePartyResult[] party = State.Units.Values
             .Where(unit => unit.Unit.PlayerNumber == _context.PlayerNumber && characterIds.ContainsKey(unit.Unit.InstanceId))
             .OrderBy(unit => unit.Unit.SpawnOrdinal)
-            .Select(unit => new BattlePartyResult(
-                characterIds[unit.Unit.InstanceId], unit.CurrentHealth, unit.CurrentMana, !unit.IsAlive,
-                unit.Consumables.Values.OrderBy(item => item.InstanceId.Value, StringComparer.Ordinal).ToArray(),
-                unit.Statuses.ContainsKey(SkillRuntimeService.RunPermanentDeathStatusId)))
+            .Select(unit => ProjectPartyResult(unit, characterIds[unit.Unit.InstanceId], request))
             .ToArray();
         int defeated = _initialEnemyCount - State.Units.Values.Count(unit => unit.IsAlive && unit.Unit.PlayerNumber != _context.PlayerNumber);
         _battleResult = new PureRunBattleResult(request.RunId, request.CheckpointRevision, request.EncounterContentId,
             playerAlive && !enemyAlive, State.Round, defeated, party);
         _lastTerminalMarker = playerAlive ? "victory_result_generated" : "defeat_result_generated";
+    }
+
+    private static BattlePartyResult ProjectPartyResult(BattleUnitState unit, string characterId,
+        EncounterRequest request)
+    {
+        int currentHealth = unit.CurrentHealth;
+        int currentMana = unit.CurrentMana;
+        // Possessed-form resources are a battle-local projection. Convert them back to the
+        // checkpoint maxima at the terminal boundary so the temporary +5 attributes cannot
+        // leak into Run state or make settlement reject an otherwise valid result.
+        if (unit.DemonboundState?.PossessedBoostApplied == true)
+        {
+            RunCharacterState? checkpoint = request.Party.FirstOrDefault(character =>
+                string.Equals(character.CharacterId, characterId, StringComparison.Ordinal));
+            if (checkpoint is not null)
+            {
+                currentHealth = RestoreRunResource(unit.CurrentHealth, unit.MaxHealth, checkpoint.MaxHealth);
+                currentMana = RestoreRunResource(unit.CurrentMana, unit.MaxMana, checkpoint.MaxMana);
+            }
+        }
+
+        return new BattlePartyResult(characterId, currentHealth, currentMana, !unit.IsAlive,
+            unit.Consumables.Values.OrderBy(item => item.InstanceId.Value, StringComparer.Ordinal).ToArray(),
+            unit.Statuses.ContainsKey(SkillRuntimeService.RunPermanentDeathStatusId));
+    }
+
+    private static int RestoreRunResource(int current, int battleMaximum, int runMaximum)
+    {
+        if (current <= 0 || runMaximum <= 0) return 0;
+        if (battleMaximum <= 0) return Math.Min(current, runMaximum);
+        return Math.Clamp((int)Math.Floor((long)current * runMaximum / (double)battleMaximum), 0, runMaximum);
     }
 
     private PlayableBattlePhase DeterminePhase()=>DeterminePhase(State);

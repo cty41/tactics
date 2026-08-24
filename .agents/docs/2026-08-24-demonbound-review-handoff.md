@@ -22,6 +22,7 @@
 | 6 | 结算 `Validate` 缺 `result.Party` 与 checkpoint 的**集合一致**检查（数量相同但成员不同会打穿到 `MergeParty` 的 KeyNotFound） | 🟡 建议修 | 加成员集合相等校验 |
 | 7 | `MergeParty` 用 `survivors.Concat(tombstones)` 把墓碑挪到队尾，破坏 `state.Party` 原顺序 | 🟡 建议修 | 按 `state.Party` 原顺序映射合并；注释明确墓碑物品保留是有意行为 |
 | 8 | `DemonboundPossessedAi.For` 的 `active` 参数为死参数 | 🟡 建议修 | 删除参数并更新 3 处调用 |
+| 9 | **附身资源投影泄漏到结算**：终局结果直接输出战斗内强化后的 HP/MP，而结算按 checkpoint 原上限校验；强化后资源超过原上限会触发 `run.result_invalid_character` | 🔴 必须修 | 终局按战斗上限与 checkpoint 上限的比例还原 HP/MP，再生成 `BattlePartyResult`；补附身满资源终局回归测试，保持战斗强化不写入 Run |
 
 另修复文档不一致：`.agents/knowledge/operations/project-documentation.md` 原写"实现与验证尚未排期"，与设计文档（六合同 `verified_current`）及缺口清单矛盾，已更新为一致表述。
 
@@ -46,7 +47,7 @@
 
 - `dotnet build Tactics.Godot.slnx`：0 警告 0 错误。
 - `Tactics.Core.Tests`：**180/180**（含新增正向永久死亡全路径用例；30-seed 探针在 IsHostile 修复后保持稳定）。
-- `Tactics.Application.Tests`：**187/187**（含新增 BeginEncounter/BeginBoss 带墓碑入口用例）。
+- `Tactics.Application.Tests`：**188/188**（含 BeginEncounter/BeginBoss 带墓碑入口及附身资源终局归一化用例）。
 - OKF `validate_bundle`：17 concepts OK；`agent-policy`：17/17 OK；`validate-skills.ps1`：13 技能（1 条既有 warning：pure-run-artwork 缺 Anti-patterns）。
 - 工作区干净；`project.godot` 的无关改动已回退（见遗留 5）。
 

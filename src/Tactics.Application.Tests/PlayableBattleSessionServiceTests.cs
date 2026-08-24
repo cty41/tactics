@@ -537,6 +537,43 @@ public sealed class PlayableBattleSessionServiceTests
     }
 
     [Test]
+    public void PossessedDemonboundTerminalResult_RestoresBattleOnlyResourcesToRunScale()
+    {
+        UnitInstanceId demonboundId = new("party-demonbound");
+        UnitInstanceId enemyId = new("enemy-goat");
+        var attributes = new UnitAttributes(6, 4, 6, 6, 6, 2);
+        BattleUnitState demonbound = new(
+            new UnitState(demonboundId, new ContentId("unit.pure-run.demonbound"),
+                new GridPoint(1, 1), 5, 18, 0, 0, effectiveAttributes: attributes),
+            44, 44, maxMana: 33, currentMana: 22,
+            demonboundState: new DemonboundBattleState(10, 1, isPossessed: true)
+                .WithPossessedBoostApplied());
+        BattleUnitState enemy = Unit(enemyId, "unit.pure-run.goat-charger",
+            new GridPoint(8, 8), 1, 1, 20, 0);
+        var checkpointMember = new RunCharacterState("pure_run_demonbound",
+            new ContentId("unit.pure-run.demonbound"), 1, attributes,
+            24, 24, 6, 18, false, Array.Empty<ContentId>());
+        var request = new EncounterRequest("run-possessed-normalization", 2,
+            new ContentId("encounter.pure-run.n1"), [checkpointMember]);
+
+        var service = new PlayableBattleSessionService(new PlayableBattleSessionContext(
+            State([demonbound, enemy], [demonboundId, enemyId]), 0,
+            new Dictionary<UnitInstanceId, IReadOnlyList<SkillDefinition>>(),
+            new Dictionary<UnitInstanceId, AiDefinition>(),
+            new Dictionary<ContentId, SkillDefinition>(), request,
+            new Dictionary<UnitInstanceId, string> { [demonboundId] = checkpointMember.CharacterId }));
+
+        BattlePartyResult result = service.BattleResult!.Party.Single();
+        Assert.Multiple(() =>
+        {
+            Assert.That(service.BattleResult.PlayerVictory, Is.True);
+            Assert.That(result.CurrentHealth, Is.EqualTo(24));
+            Assert.That(result.CurrentMana, Is.EqualTo(12));
+            Assert.That(result.IsDead, Is.False);
+        });
+    }
+
+    [Test]
     public void PossessedDemonboundFallsBackToEnemyTargetsAfterAlliesAreDown()
     {
         UnitInstanceId demonboundId = new("party-demonbound");

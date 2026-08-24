@@ -4,7 +4,7 @@ resource: https://github.com/cty41/tactics
 title: Battle System
 description: Godot Pure Run 的棋盘、回合、技能、状态、AI 合法性、结算与表现投影主链。
 tags: [gameplay, battle, turn-based, godot]
-timestamp: "2026-08-24T16:30:50+08:00"
+timestamp: "2026-08-24T17:02:05+08:00"
 status: active
 catalog_scope: battle-system
 repo_paths:
@@ -25,7 +25,7 @@ repo_paths:
   - godot/src/Tactics.Godot.Adapter/Runtime/GodotPlayableRunMain.cs
   - godot/tests/CoreGoldenVectorGodotTests.cs
 verified_revision: 04c75ec4
-source_fingerprint: sha256:cf92f1b593335d8b00aad62dee34dacab6ff7a9badc11e3c03963770111867b7
+source_fingerprint: sha256:16e627cd5548d672ffe8c9367a818edfa09b939d1b59e0365e7c2c48f128b1b7
 ---
 
 # Current State
@@ -73,7 +73,7 @@ Air 可越过动态占位与 flyover 障碍但不能停在其上；absolute 障�
 大嘴蝠是 N2 的 Air 敌人，咬击复用标准物理攻击链，并按最终实际 HP 伤害的 50% 向下取整吸血。
 伤害、恢复、死亡结算保持稳定事件顺序；完整数值、AI 与表现合同见 `.agents/docs/maw-bat-enemy-slice-design.md`。
 
-魔剑士 `Demonbound` 作为第四名开局候选但仍维持三人参战。Core 保存战斗局部 0–10 腐化、正念等级、冥想资格与附身控制状态；附身只切换控制者、不改变阵营，AI 使用敌友统一候选池（正式敌我+存活召唤物，排除自身与诱饵）按收益统一评分选目标，不再硬编码阵营优先级；附身形态施加一次六维+5 强化并把已学技能临时投影到分支最高等级。友军致命伤进行一次确定性永久死亡判定（基线 25%，目标幸运 >5 每点 -2%，无下限钳 0），永久死亡者不进入后续战斗但保留 Summary 墓碑，队伍缺员继续；仅剩附身魔剑士且敌人全灭仍是玩家胜利。Godot 左上状态卡只绑定当前行动者，复用 Unit Resource 显示头像/名称/HP/MP，并由 nullable Corruption 投影可选连续特殊资源条；Hover/LOS 详情迁入鼠标旁输入穿透浮层。结构与语义已自动覆盖，视觉可读性仍待人工验收。
+魔剑士 `Demonbound` 作为第四名开局候选但仍维持三人参战。Core 保存战斗局部 0–10 腐化、正念等级、冥想资格与附身控制状态；附身只切换控制者、不改变阵营，AI 使用敌友统一候选池（正式敌我+存活召唤物，排除自身与诱饵）按收益统一评分选目标，不再硬编码阵营优先级；附身形态施加一次六维+5 强化并把已学技能临时投影到分支最高等级。终局生成 `BattlePartyResult` 时会把强化后的 HP/MP 按比例还原到 checkpoint 上限，保证战斗局部投影不泄漏到 Run 或触发结算拒绝。友军致命伤进行一次确定性永久死亡判定（基线 25%，目标幸运 >5 每点 -2%，无下限钳 0），永久死亡者不进入后续战斗但保留 Summary 墓碑，队伍缺员继续；仅剩附身魔剑士且敌人全灭仍是玩家胜利。Godot 左上状态卡只绑定当前行动者，复用 Unit Resource 显示头像/名称/HP/MP，并由 nullable Corruption 投影可选连续特殊资源条；Hover/LOS 详情迁入鼠标旁输入穿透浮层。结构与语义已自动覆盖，视觉可读性仍待人工验收。
 
 厄运魔刃使用相邻方向输入并按近到远命中前方两格；墙体和第一格单位都不截断半月斩。技能效果通过统一成长类型读取战斗有效属性，不再使用“高于中立值”的独立伤害加值。表现层把 Bane 编译为近战挥剑 Cue，并在半月斩抵达第一、第二格时依次插入受击和数字；规则提交仍早于表现，表现暂停或取消不改变结算。
 
