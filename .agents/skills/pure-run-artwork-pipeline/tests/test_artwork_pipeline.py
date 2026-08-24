@@ -1380,6 +1380,132 @@ class ArtworkPipelineTests(unittest.TestCase):
         with self.assertRaisesRegex(pipeline.PipelineError, "must be 128x128 RGBA"):
             pipeline.adopt_reviewed_sprite(self.store, args)
 
+    def equipment_contract_fixture(self):
+        base = self.png("Tools/artworks/approved/base-anchor.png")
+        category = self.png("Tools/artworks/approved/armor-anchor.png", variant=1)
+        profile = self.root / "Tools/artworks/equipment/production-v2.json"
+        profile.parent.mkdir(parents=True, exist_ok=True)
+        profile.write_text(json.dumps({
+            "schemaVersion": 2, "profileId": "test-equipment-v2", "baseline": 236,
+            "chroma": "00ff00", "chromaTolerance": 48,
+            "baseRules": ["flat style"], "negativeConstraints": ["no glossy lighting"],
+            "hardGates": {"maxInteriorColorBins": 4, "maxSmoothGradientRatio": 0.0},
+            "baseAnchors": [{"role": "base-style-anchor", "path": self.store.relative(base),
+                             "sha256": pipeline.sha256_file(base)}],
+            "categories": {"armor": {"rules": ["three-quarter view"], "anchors": [{
+                "role": "armor-category-anchor", "path": self.store.relative(category),
+                "sha256": pipeline.sha256_file(category)}]}},
+        }), encoding="utf-8")
+        contract = pipeline.create_equipment_contract(self.store, self.ns(
+            asset_id="new-armor", approved_asset_id=None, category="armor", production_profile=str(profile),
+            target_visible_height=108, visible_height_min=106, visible_height_max=110,
+            master_width=256, master_height=256, size_tolerance=3, center_tolerance=2,
+            output_master="Tools/artworks/approved/new-armor.png",
+            output_preview="Tools/artworks/approved/new-armor_128.png", rights_holder="cty41",
+            license="CC-BY-4.0", provenance="project-owned-gpt-generated"))
+        return contract, profile
+
+    def test_equipment_contract_binds_category_anchors_and_requires_invocation(self):
+        contract, _profile = self.equipment_contract_fixture()
+        self.assertTrue(contract["requiresInvocation"])
+        self.assertEqual("armor", contract["equipmentProductionSpec"]["category"])
+        self.assertEqual(2, len(contract["equipmentProductionSpec"]["anchors"]))
+        category_anchor = self.store.absolute(contract["equipmentProductionSpec"]["anchors"][-1]["path"])
+        Image.new("RGBA", (256, 256), (1, 2, 3, 255)).save(category_anchor)
+        with self.assertRaisesRegex(pipeline.PipelineError, "anchor hash mismatch"):
+            pipeline._equipment_style_profile(self.store, contract)
+
+    def test_local_reference_descriptor_never_records_absolute_path_or_public_provenance(self):
+        external = Path(self.temp.name).parent / f"third-party-{Path(self.temp.name).name}.png"
+        Image.new("RGB", (8, 8), (1, 2, 3)).save(external)
+        try:
+            record = pipeline.register_local_reference(self.store, self.ns(
+                path=str(external), source_label="Diablo II silhouette reference", role="shape_reference"))
+            serialized = json.dumps(record)
+            self.assertNotIn(str(external.parent), serialized)
+            self.assertNotIn("path", record)
+            manifest = json.loads((self.root / "Tools/public-release/asset-provenance.json").read_text(encoding="utf-8"))
+            self.assertEqual([], manifest["entries"])
+        finally:
+            external.unlink(missing_ok=True)
+
+    def test_equipment_prompt_uses_descriptors_and_preserve_processing_is_not_quantized(self):
+        contract, _profile = self.equipment_contract_fixture()
+        prompt = self.root / "Tools/artworks/prompts/equipment.md"
+        prompt.parent.mkdir(parents=True); prompt.write_text("make leather armor", encoding="utf-8")
+        local = self.root / "local-ref.png"; Image.new("RGB", (8, 8), (9, 8, 7)).save(local)
+        descriptor = pipeline.register_local_reference(self.store, self.ns(
+            path=str(local), source_label="local shape cue", role="shape_reference"))
+        job = pipeline.create_job(self.store, self.ns(contract_id=contract["contractId"], prompt=str(prompt),
+            input=[], pose_guide_id=None, series_id=None, pose_id=None,
+            local_reference_id=[descriptor["localReferenceId"]]))
+        compiled = pipeline.compile_equipment_prompt(self.store, self.ns(
+            job_id=job["jobId"], output="Tools/artworks/pipeline/compiled/equipment.md"))
+        text = self.store.absolute(compiled["artifact"]["path"]).read_text(encoding="utf-8")
+        self.assertIn("local shape cue", text)
+        self.store.record("local-references", descriptor["localReferenceId"]).unlink()
+        with self.assertRaisesRegex(pipeline.PipelineError, "descriptor is missing"):
+            pipeline.compile_equipment_prompt(self.store, self.ns(
+                job_id=job["jobId"], output="Tools/artworks/pipeline/compiled/equipment-missing-ref.md"))
+        source = self.root / "Tools/artworks/concepts/gradient.png"; source.parent.mkdir(parents=True)
+        image = Image.new("RGBA", (160, 160), (0, 255, 0, 255)); draw = ImageDraw.Draw(image)
+        for y in range(20, 140):
+            draw.line((40, y, 119, y), fill=(y, 60, 40, 255))
+        image.save(source)
+        report = pipeline.prepare_equipment_candidate(self.store, self.ns(
+            contract_id=contract["contractId"], source=str(source),
+            output="Tools/artworks/candidates/armor.png", preview="Tools/artworks/candidates/armor_128.png",
+            attempt_id=None))
+        self.assertTrue(report["passed"])
+        self.assertFalse(report["quantized"])
+        self.assertIn("equipment_palette_complexity_review", report["advisories"])
+
+    def test_new_equipment_contract_rejects_reviewed_import(self):
+        contract, _profile = self.equipment_contract_fixture()
+        with self.assertRaisesRegex(pipeline.PipelineError, "cannot use reviewed_import"):
+            pipeline.adopt_reviewed_sprite(self.store, self.ns(
+                contract_id=contract["contractId"], source="missing", candidate="missing", preview="missing",
+                size_comparison="missing", reviewer="cty41", reason="bypass",
+                accepted_at="2026-08-25T00:00:00+08:00"))
+
+    def test_equipment_approval_requires_matching_cty41_style_verdict(self):
+        contract, _profile = self.equipment_contract_fixture()
+        prompt = self.root / "Tools/artworks/prompts/equipment-approval.md"
+        prompt.parent.mkdir(parents=True); prompt.write_text("make armor", encoding="utf-8")
+        job = pipeline.create_job(self.store, self.ns(contract_id=contract["contractId"], prompt=str(prompt),
+            input=[], pose_guide_id=None, series_id=None, pose_id=None, local_reference_id=[]))
+        compiled = pipeline.compile_equipment_prompt(self.store, self.ns(
+            job_id=job["jobId"], output="Tools/artworks/pipeline/compiled/equipment-approval.md"))
+        attempt = pipeline.retry(self.store, self.ns(
+            job_id=job["jobId"], parent_attempt=None, feedback_id=None, technical_remediation=False))
+        invocation = pipeline.begin_generation(self.store, self.ns(
+            attempt_id=attempt["attemptId"], compiled_prompt_id=compiled["compiledPromptId"],
+            provider="fixture", started_at="2026-08-25T01:00:00+08:00"))
+        source = self.root / "Tools/artworks/concepts/approved-flow.png"; source.parent.mkdir(parents=True)
+        image = Image.new("RGBA", (160, 160), (0, 255, 0, 255)); ImageDraw.Draw(image).rectangle((40, 20, 119, 139), fill=(80, 60, 40, 255)); image.save(source)
+        pipeline.ingest(self.store, self.ns(
+            attempt_id=attempt["attemptId"], source=str(source), invocation_id=invocation["invocationId"]))
+        swapped = self.root / "Tools/artworks/concepts/swapped-after-ingest.png"
+        Image.new("RGBA", (160, 160), (70, 50, 30, 255)).save(swapped)
+        with self.assertRaisesRegex(pipeline.PipelineError, "generation lineage"):
+            pipeline.prepare_equipment_candidate(self.store, self.ns(
+                contract_id=contract["contractId"], source=str(swapped), attempt_id=attempt["attemptId"],
+                output="Tools/artworks/candidates/swapped.png", preview="Tools/artworks/candidates/swapped_128.png"))
+        pipeline.prepare_equipment_candidate(self.store, self.ns(
+            contract_id=contract["contractId"], source=str(source), attempt_id=attempt["attemptId"],
+            output="Tools/artworks/candidates/approval.png", preview="Tools/artworks/candidates/approval_128.png"))
+        pipeline.render_equipment_review(self.store, self.ns(
+            attempt_id=attempt["attemptId"], output="Tools/artworks/reviews/equipment-panel.png"))
+        decision = self.ns(attempt_id=attempt["attemptId"], reviewer="cty41", reason="accepted",
+                           decided_at="2026-08-25T01:05:00+08:00")
+        with self.assertRaisesRegex(pipeline.PipelineError, "style verdict"):
+            pipeline.decide(self.store, decision, "approved")
+        pipeline.record_equipment_style_verdict(self.store, self.ns(
+            attempt_id=attempt["attemptId"], reviewer="cty41", decision="approved", reason="style matches",
+            decided_at="2026-08-25T01:04:00+08:00"))
+        receipt = pipeline.decide(self.store, decision, "approved")
+        self.assertEqual("approved", receipt["decision"])
+
 
 if __name__ == "__main__":
     unittest.main()

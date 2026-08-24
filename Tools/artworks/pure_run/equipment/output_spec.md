@@ -15,9 +15,11 @@
 
 ## 风格状态机
 
-- 新装备合同绑定 `style_profile_flat_v1.json`、目标可见高度及允许范围。
-- 候选统一使用 `prepare-equipment-candidate`；禁止绕过真实 Alpha 裁切或手工猜测缩放参数。
-- 自动门禁负责尺寸、基线、色幕、有限色阶与平滑渐变；AI 感、手绘线条和样式合理性继续通过角色、武器、皮甲 V4 同屏图人工确认。
+- 新装备合同绑定 `equipment_production_profile_v2.json`、品类、目标可见高度及允许范围；v1 profile 仅用于读取历史记录。
+- 正式流程为 `create-equipment-contract` → `create-job` → `compile-equipment-prompt` → `begin-generation` → `ingest` → `prepare-equipment-candidate` → `render-equipment-review` → `record-equipment-style-verdict` → `approve` → `promote`。
+- 默认候选处理保留生成图色阶，不执行量化；自动硬门禁只负责尺寸、基线、透明与哈希。内部色阶和平滑渐变是 advisory，AI 感、手绘线条和样式合理性由 cty41 对固定锚点 Review 人工确认。
+- 第三方本机参考只用 `register-local-reference` 登记来源标签、职责和 SHA；不复制原图、不记录绝对路径、不写入公开 provenance。
+- 只有明确技术修复才使用 `remediate-equipment-candidate` 建立 child attempt；不得覆盖原始 attempt。新装备不得使用 `reviewed_import`。
 
 ## 第一组编号
 

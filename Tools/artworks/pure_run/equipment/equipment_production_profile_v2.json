@@ -1,0 +1,55 @@
+{
+  "schemaVersion": 2,
+  "profileId": "pure-run-equipment-production-v2",
+  "baseline": 236,
+  "chroma": "00ff00",
+  "chromaTolerance": 48,
+  "baseRules": [
+    "clean readable silhouette at 128px",
+    "crisp controlled outline matching approved Pure Run class weapons",
+    "restrained flat material shading with only a few deliberate value regions",
+    "single isolated object on chroma green with no cast shadow"
+  ],
+  "negativeConstraints": [
+    "no photorealistic rendering",
+    "no glossy cinematic lighting or excessive specular highlights",
+    "no airbrushed gradients, bloom, depth of field, text, border, or watermark",
+    "do not copy layout, UI frame, or background from a third-party reference"
+  ],
+  "hardGates": {
+    "maxInteriorColorBins": 40,
+    "maxSmoothGradientRatio": 0.12
+  },
+  "remediation": {
+    "paletteColors": 24
+  },
+  "baseAnchors": [
+    {
+      "role": "character-style-anchor",
+      "path": "Tools/artworks/doge/calibrated/doge_capsule_hunter_color_calibrated_v01.png",
+      "sha256": "68a35da9d5d646d497ae7bf99eebc5871bcc5be26a893441d9fcece57877ac07"
+    }
+  ],
+  "categories": {
+    "weapon": {
+      "rules": ["use the approved diagonal inventory orientation", "keep edges bold and mechanically readable"],
+      "anchors": [{"role": "weapon-category-anchor", "path": "Tools/artworks/pure_run/equipment/approved/pure_run_equipment_necromancer_dagger_v01.png", "sha256": "7b5854a12e2515cabab1f8e263e444e2407d2e77fcfd7c808fb4314b1e837123"}]
+    },
+    "shield": {
+      "rules": ["show a compact three-quarter shield face", "avoid realistic metal glare"],
+      "anchors": [{"role": "shield-category-anchor", "path": "Tools/artworks/pure_run/equipment/approved/pure_run_equipment_amazon_round_shield_v01.png", "sha256": "d5e14d2259d2af05a5fe5c00c275ed245ae5b543d0507ab031a23919363a2b24"}]
+    },
+    "armor": {
+      "rules": ["front three-quarter inventory presentation", "describe material with line groups and restrained flat value steps"],
+      "anchors": [{"role": "armor-category-anchor", "path": "Tools/artworks/pure_run/equipment/approved/pure_run_equipment_leather_armor_v04.png", "sha256": "bfa2dd69f85136690106ebb1998845ff20fdc589417012167e4988861c722b3b"}]
+    },
+    "jewelry": {
+      "rules": ["three-quarter top-down ring presentation", "keep jewelry smaller than potion-scale items"],
+      "anchors": [{"role": "jewelry-category-anchor", "path": "Tools/artworks/pure_run/items/approved/pure_run_item_silver_ring_v01.png", "sha256": "d51b453bcc8ed25445379020eba3e232a2f99063be292661d98fd355d86e1a47"}]
+    },
+    "consumable": {
+      "rules": ["simple centered inventory silhouette", "use restrained liquid highlights and no realistic glass caustics"],
+      "anchors": [{"role": "consumable-category-anchor", "path": "Tools/artworks/pure_run/items/approved/pure_run_item_life_potion_v01.png", "sha256": "b4430957f839c381088a50536e2b32a27eac027126a1c1862a64fa737f74a121"}]
+    }
+  }
+}
