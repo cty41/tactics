@@ -80,7 +80,7 @@ public sealed class SkillRuntimeService
                     events.Add(new DamageAppliedEvent(actor.Unit.InstanceId, target.Unit.InstanceId, skill.ContentId,
                         detonationDamage, target.CurrentHealth));
                 next = next.WithUnit(target);
-                next = BattleDefeatResolver.Apply(next, originalTarget, target, events);
+                next = ApplyDefeat(next, actor, originalTarget, target, events);
                 if (!target.IsAlive) continue;
             }
             bool dodged = false;
@@ -145,19 +145,6 @@ public sealed class SkillRuntimeService
                 events.Add(new HealthRestoredEvent(actor.Unit.InstanceId, actor.Unit.InstanceId,
                     skill.ContentId, restoredAmount, restored.CurrentHealth));
             }
-            if (!target.IsAlive && beforeHealth > 0 && actor.DemonboundState?.IsPossessed == true &&
-                target.Unit.PlayerNumber == actor.Unit.PlayerNumber)
-            {
-                var permanentRandom = new DeterministicRandom(next.RandomState);
-                int permanentRoll = permanentRandom.NextInt(100);
-                bool permanent = permanentRoll < 25;
-                next = next.WithRandomState(permanentRandom.State);
-                if (permanent)
-                    target = target.WithStatus(new BattleStatusState(RunPermanentDeathStatusId,
-                        actor.Unit.InstanceId, int.MaxValue, 0, polarity: StatusPolarity.Harmful));
-                events.Add(new RunPermanentDeathRolledEvent(actor.Unit.InstanceId, target.Unit.InstanceId,
-                    permanentRoll, permanent, permanentRandom.State));
-            }
 
             if (target.IsAlive && !dodged && skill.StatusContentId is ContentId statusId)
             {
@@ -182,7 +169,7 @@ public sealed class SkillRuntimeService
                 }
             }
             next = next.WithUnit(target);
-            next = BattleDefeatResolver.Apply(next, originalTarget, target, events);
+            next = ApplyDefeat(next, actor, originalTarget, target, events);
 
             if (originalTarget.Unit.InstanceId == primaryTargetId && target.IsAlive && !dodged &&
                 actor.Unit.DefinitionId == new ContentId("unit.pure-run.amazon") && actor.CombatTechniquesLevel >= 2 &&
@@ -202,7 +189,7 @@ public sealed class SkillRuntimeService
                     events.Add(new DamageAppliedEvent(actor.Unit.InstanceId, current.Unit.InstanceId, skill.ContentId,
                         followUpDamage, followed.CurrentHealth));
                     next = next.WithUnit(followed);
-                    next = BattleDefeatResolver.Apply(next, current, followed, events);
+                    next = ApplyDefeat(next, actor, current, followed, events);
                 }
             }
         }
@@ -233,7 +220,7 @@ public sealed class SkillRuntimeService
                     events.Add(new StatusAppliedEvent(actor.Unit.InstanceId, damaged.Unit.InstanceId, slowId, 1));
                 }
                 next = next.WithUnit(damaged);
-                next = BattleDefeatResolver.Apply(next, bounce, damaged, events);
+                next = ApplyDefeat(next, actor, bounce, damaged, events);
             }
         }
         events.Add(new SemanticCueEmittedEvent(actor.Unit.InstanceId, targets[0].Unit.InstanceId, skill.ContentId, "resolution"));
@@ -245,8 +232,7 @@ public sealed class SkillRuntimeService
         if (skill.ExecutionKind == SkillExecutionKind.Mindfulness)
         {
             DemonboundBattleState current = actor.DemonboundState ?? new DemonboundBattleState();
-            BattleUnitState mindful = actor.WithDemonboundState(new DemonboundBattleState(current.Corruption,
-                skill.Level, isPossessed: current.IsPossessed));
+            BattleUnitState mindful = actor.WithDemonboundState(current.WithMindfulnessLevel(skill.Level));
             return new BattleTransition(state.WithUnit(mindful), new BattleEvent[]
             {
                 new SkillUsedEvent(actor.Unit.InstanceId, actor.Unit.InstanceId, skill.ContentId),
@@ -412,7 +398,7 @@ public sealed class SkillRuntimeService
                 BattleUnitState damaged = target.WithHealth(target.CurrentHealth - secondaryDamage);
                 next = next.WithUnit(damaged);
                 events.Add(new DamageAppliedEvent(actor.Unit.InstanceId, target.Unit.InstanceId, command.Definition.ContentId, target.CurrentHealth - damaged.CurrentHealth, damaged.CurrentHealth));
-                next = BattleDefeatResolver.Apply(next, target, damaged, events);
+                next = ApplyDefeat(next, actor, target, damaged, events);
             }
         }
         return new BattleTransition(next, events);
@@ -445,24 +431,43 @@ public sealed class SkillRuntimeService
             BattleUnitState damaged = target.WithHealth(before - damage);
             next = next.WithUnit(damaged);
             events.Add(new DamageAppliedEvent(actor.Unit.InstanceId, targetId, command.Definition.ContentId, before - damaged.CurrentHealth, damaged.CurrentHealth));
-            next = BattleDefeatResolver.Apply(next, target, damaged, events);
+            next = ApplyDefeat(next, actor, target, damaged, events);
         }
         return new BattleTransition(next, events);
     }
 
     private static int Manhattan(GridPoint left, GridPoint right) => Math.Abs(left.X - right.X) + Math.Abs(left.Y - right.Y);
 
-    private static bool IsHostile(BattleState state, BattleUnitState actor, BattleUnitState target)
+    /// <summary>
+    /// Applies the defeat transaction and then the unified permanent-death assessment for a
+    /// possessed demonbound that just defeated a friendly unit. Every damage source submits
+    /// its defeat fact through this single exit so no secondary damage branch can bypass the roll.
+    /// </summary>
+    private static BattleState ApplyDefeat(BattleState state, BattleUnitState actor, BattleUnitState previous,
+        BattleUnitState updated, ICollection<BattleEvent> events)
     {
-        if (actor.DemonboundState?.IsPossessed != true)
-            return target.Unit.PlayerNumber != actor.Unit.PlayerNumber;
-        bool livingAlly = state.Units.Values.Any(unit => unit.IsAlive &&
-            unit.Unit.InstanceId != actor.Unit.InstanceId &&
-            unit.Unit.PlayerNumber == actor.Unit.PlayerNumber);
-        return target.Unit.InstanceId != actor.Unit.InstanceId &&
-            (livingAlly
-                ? target.Unit.PlayerNumber == actor.Unit.PlayerNumber
-                : target.Unit.PlayerNumber != actor.Unit.PlayerNumber);
+        BattleState afterDefeat = BattleDefeatResolver.Apply(state, previous, updated, events);
+        return DemonboundPermanentDeathPostProcessor.Apply(afterDefeat, actor, previous, updated, events);
+    }
+
+    /// <summary>Gets whether the unit is a non-acting decoy placeholder that must never be targeted.</summary>
+    public static bool IsNonActingDecoy(BattleUnitState unit) =>
+        string.Equals(unit.SummonCategory, "Decoy", StringComparison.Ordinal) ||
+        unit.Unit.DefinitionId == new ContentId("unit.pure-run.amazon-decoy");
+
+    /// <summary>
+    /// Resolves hostile legality with the possessed form's unified target strategy.
+    /// Unpossessed actors target only the enemy faction (non-acting decoys remain
+    /// attackable so the decoy/bodyguard mechanic keeps working); possessed actors
+    /// treat every living formal unit and summon as hostile except themselves and
+    /// non-acting decoys — matching the AI candidate pool (TargetRelationshipStrategy).
+    /// </summary>
+    public static bool IsHostile(BattleState state, BattleUnitState actor, BattleUnitState target)
+    {
+        if (target.Unit.InstanceId == actor.Unit.InstanceId) return false;
+        if (actor.DemonboundState?.IsPossessed == true)
+            return target.IsAlive && !IsNonActingDecoy(target);
+        return target.IsAlive && target.Unit.PlayerNumber != actor.Unit.PlayerNumber;
     }
 
     private IEnumerable<BattleUnitState> ResolveTargets(BattleState state, BattleUnitState actor, UseSkillCommand command)

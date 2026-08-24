@@ -232,9 +232,13 @@ public sealed class DemonboundMeditationTests
 
         Assert.Multiple(() =>
         {
-            Assert.That(result.State.Units[state.ActiveUnitId].CurrentHealth, Is.EqualTo(19));
+            // 治疗 80% (16) 在腐化提交前完成:3 + 16 = 19。
+            // 随后腐化越过 10 进入附身,强化投影把 MaxHP 20→40,当前值按比例保持:floor(19*40/20)=38。
+            Assert.That(result.State.Units[state.ActiveUnitId].MaxHealth, Is.EqualTo(40));
+            Assert.That(result.State.Units[state.ActiveUnitId].CurrentHealth, Is.EqualTo(38));
             Assert.That(result.State.Units[state.ActiveUnitId].DemonboundState!.Corruption, Is.EqualTo(10));
             Assert.That(result.State.Units[state.ActiveUnitId].DemonboundState!.IsPossessed, Is.True);
+            Assert.That(result.State.Units[state.ActiveUnitId].DemonboundState!.PossessedBoostApplied, Is.True);
             Assert.That(result.Events.OfType<DemonboundPossessedEvent>().Count(), Is.EqualTo(1));
             Assert.That(result.Events.OfType<HealthRestoredEvent>().Single().Amount, Is.EqualTo(16));
         });

@@ -213,12 +213,15 @@ public sealed class PureRunSettlementService
             return "run.result_encounter_mismatch";
         if (result.TotalRounds < 1 || result.EnemiesDefeated < 0)
             return "run.result_invalid_totals";
-        if (result.Party.Count != state.Party.Count ||
-            result.Party.Select(item => item.CharacterId).Distinct(StringComparer.Ordinal).Count() != state.Party.Count)
+        HashSet<string> checkpointIds = state.Checkpoint.Party.Select(item => item.CharacterId)
+            .ToHashSet(StringComparer.Ordinal);
+        if (result.Party.Count != checkpointIds.Count ||
+            result.Party.Select(item => item.CharacterId).Distinct(StringComparer.Ordinal).Count() != checkpointIds.Count ||
+            !result.Party.All(item => checkpointIds.Contains(item.CharacterId)))
             return "run.result_invalid_party";
         foreach (BattlePartyResult member in result.Party)
         {
-            RunCharacterState? prior = state.Party.FirstOrDefault(item => item.CharacterId == member.CharacterId);
+            RunCharacterState? prior = state.Checkpoint.Party.FirstOrDefault(item => item.CharacterId == member.CharacterId);
             if (prior is null || member.CurrentHealth < 0 || member.CurrentHealth > prior.MaxHealth ||
                 member.CurrentMana < 0 || member.CurrentMana > prior.MaxMana || member.IsDead != (member.CurrentHealth == 0) ||
                 member.RunPermanentlyDead && !member.IsDead)
@@ -231,9 +234,17 @@ public sealed class PureRunSettlementService
 
     private static RunCharacterState[] MergeParty(PureRunState state, PureRunBattleResult result, bool recoverAfterVictory)
     {
-        return state.Party.Select(prior =>
+        if (state.Checkpoint is null)
+            return state.Party.ToArray();
+        Dictionary<string, BattlePartyResult> battleOutcomes = result.Party
+            .ToDictionary(item => item.CharacterId, StringComparer.Ordinal);
+        // Deceased roster members not in this battle's active party keep their
+        // tombstone exactly as-is (equipment/consumables intentionally retained
+        // for the terminal Summary; they never participate in later battles).
+        IEnumerable<RunCharacterState> tombstones = state.Party.Where(character => character.IsDead);
+        RunCharacterState[] survivors = state.Checkpoint.Party.Select(prior =>
         {
-            BattlePartyResult current = result.Party.Single(item => item.CharacterId == prior.CharacterId);
+            BattlePartyResult current = battleOutcomes[prior.CharacterId];
             bool wasDead = current.IsDead;
             int health = recoverAfterVictory && !current.RunPermanentlyDead ? Math.Min(prior.MaxHealth,
                 checked(current.CurrentHealth + prior.Attributes.Constitution * 2)) : current.CurrentHealth;
@@ -247,6 +258,11 @@ public sealed class PureRunSettlementService
                 wasDead ? Array.Empty<BattleConsumableState>() : current.CarriedConsumables,
                 prior.LearnedSkillStates, prior.StartingSkillContentId);
         }).ToArray();
+        // Preserve state.Party order (tombstones stay in their roster positions)
+        // so downstream UI/sequence and replay order are stable.
+        Dictionary<string, RunCharacterState> merged = survivors.Concat(tombstones)
+            .ToDictionary(item => item.CharacterId, StringComparer.Ordinal);
+        return state.Party.Select(prior => merged[prior.CharacterId]).ToArray();
     }
 
     private static int CalculateGold(int rounds) => 3 + (rounds switch

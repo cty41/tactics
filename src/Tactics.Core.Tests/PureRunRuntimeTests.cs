@@ -137,6 +137,43 @@ public sealed class PureRunRuntimeTests
             checkpoint: checkpoint);
     }
 
+    [Test]
+    public void Settlement_PreservesDeceasedRosterTombstoneAlongsideActivePartyOutcomes()
+    {
+        // A permanently dead "mage" was already removed from the battle party but must stay
+        // on the roster as a tombstone while the surviving members settle normally.
+        PureRunDefinition definition = TestDefinition();
+        var deadMage = new RunCharacterState("mage", new ContentId("unit.pure-run.mage"), 1,
+            new UnitAttributes(5, 5, 5, 6, 5, 5), 0, 20, 0, 18, true,
+            new[] { new ContentId("skill.mage.fireball.lv1") });
+        RunCharacterState[] active = definition.Party.Skip(1).Select(template => new RunCharacterState(
+            template.CharacterId, template.UnitContentId, 1, template.Attributes,
+            20, 20, 5, 18, false, new[] { template.StartingSkillContentId })).ToArray();
+        ContentId encounter = definition.Encounters[0];
+        var checkpoint = new RunEncounterCheckpoint(encounter, 0, 2, active,
+            Array.Empty<Tactics.Core.Items.BattleConsumableState>(), Array.Empty<RunEquipmentState>());
+        var pending = new PureRunState("run-test", 31, 2, PureRunPhase.PendingBattle, 0, encounter,
+            new[] { deadMage, active[0], active[1] }, checkpoint: checkpoint);
+        PureRunBattleResult battle = new("run-test", 2, encounter, true, 3, 3,
+            new[]
+            {
+                new BattlePartyResult("necro", 12, 2, false, Array.Empty<Tactics.Core.Items.BattleConsumableState>()),
+                new BattlePartyResult("amazon", 9, 1, false, Array.Empty<Tactics.Core.Items.BattleConsumableState>())
+            });
+
+        PureRunSettlementResult result = new PureRunSettlementService().Apply(
+            definition, pending, battle, Array.Empty<ContentId>());
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(result.Succeeded, Is.True);
+            Assert.That(result.ActiveRun!.Party.Count, Is.EqualTo(3));
+            Assert.That(result.ActiveRun.Party.Single(value => value.CharacterId == "mage").IsDead, Is.True);
+            Assert.That(result.ActiveRun.Party.Single(value => value.CharacterId == "necro").CurrentHealth, Is.EqualTo(20));
+            Assert.That(result.ActiveRun.Party.Single(value => value.CharacterId == "amazon").CurrentHealth, Is.EqualTo(19));
+        });
+    }
+
     internal static PureRunBattleResult Result(
         PureRunState state, bool victory, int rounds, int[] health, int[] mana) => new(
             state.RunId, state.Checkpoint!.Revision, state.EncounterContentId, victory, rounds, 3,

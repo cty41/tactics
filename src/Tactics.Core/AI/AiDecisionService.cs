@@ -7,6 +7,16 @@ using Tactics.Core.Units;
 
 namespace Tactics.Core.AI;
 
+/// <summary>Declares which units are legal targets for an AI actor's decisions.</summary>
+public enum TargetRelationshipStrategy
+{
+    /// <summary>Enemy faction only; the standard contract outside the possessed form.</summary>
+    StandardHostile,
+
+    /// <summary>Every living formal unit plus summons, excluding the actor and non-acting decoys.</summary>
+    UnifiedAll
+}
+
 /// <summary>Generates current-position, reposition and move-then-skill candidates through canonical transitions.</summary>
 public sealed class AiDecisionService
 {
@@ -15,13 +25,11 @@ public sealed class AiDecisionService
 
     public AiTurnPlan Decide(BattleState state, AiDefinition definition,
         IReadOnlyDictionary<ContentId, SkillDefinition> skills, int patternIndex = 0,
-        bool targetOwnFaction = false, UnitInstanceId? priorityTargetId = null)
+        TargetRelationshipStrategy strategy = TargetRelationshipStrategy.StandardHostile,
+        UnitInstanceId? priorityTargetId = null)
     {
         BattleUnitState actor = state.Units[state.ActiveUnitId];
-        BattleUnitState[] enemies = state.Units.Values.Where(unit => unit.IsAlive &&
-                (targetOwnFaction
-                    ? unit.Unit.PlayerNumber == actor.Unit.PlayerNumber && unit.Unit.InstanceId != actor.Unit.InstanceId
-                    : unit.Unit.PlayerNumber != actor.Unit.PlayerNumber))
+        BattleUnitState[] enemies = state.Units.Values.Where(unit => IsTarget(actor, unit, strategy))
             .OrderBy(unit => unit.Unit.InstanceId.Value, StringComparer.Ordinal).ToArray();
         var origins = new List<(GridPoint Cell, BattleState State)> { (actor.Unit.Position, state) };
         foreach (GridPoint cell in state.Board.Cells.Keys.OrderBy(cell => cell.X).ThenBy(cell => cell.Y))
@@ -62,7 +70,8 @@ public sealed class AiDecisionService
                 if (!probe.Succeeded) continue;
                 int distance = Manhattan(origin, target.Unit.Position);
                 int targets = skill.ExecutionKind == SkillExecutionKind.AreaBlast
-                    ? probeState.Units.Values.Count(unit => unit.IsAlive && unit.Unit.PlayerNumber != actor.Unit.PlayerNumber && Manhattan(unit.Unit.Position, target.Unit.Position) <= 2) : 1;
+                    ? probeState.Units.Values.Count(unit => IsTarget(actor, unit, strategy) &&
+                        Manhattan(unit.Unit.Position, target.Unit.Position) <= 2) : 1;
                 bool basic = skill.ExecutionKind is SkillExecutionKind.MeleeAttack or SkillExecutionKind.MagicAttack or SkillExecutionKind.RangedAttack;
                 AiIntentKind intent = skill.ExecutionKind == SkillExecutionKind.AreaBlast ? AiIntentKind.AreaAttack : skill.ExecutionKind == SkillExecutionKind.AmplifyDamage ? AiIntentKind.Debuff : AiIntentKind.Attack;
                 float basePriority = basic ? IntentPriority(definition, "BasicAttack", 25) : 10;
@@ -179,6 +188,16 @@ public sealed class AiDecisionService
         int dy = target.Y - origin.Y;
         if (dx != 0 && dy != 0) return target;
         return new GridPoint(origin.X + Math.Sign(dx), origin.Y + Math.Sign(dy));
+    }
+
+    private static bool IsTarget(BattleUnitState actor, BattleUnitState unit, TargetRelationshipStrategy strategy)
+    {
+        if (!unit.IsAlive || unit.Unit.InstanceId == actor.Unit.InstanceId) return false;
+        return strategy switch
+        {
+            TargetRelationshipStrategy.UnifiedAll => !SkillRuntimeService.IsNonActingDecoy(unit),
+            _ => unit.Unit.PlayerNumber != actor.Unit.PlayerNumber
+        };
     }
 
     private static float IntentPriority(AiDefinition definition, string intentType, float fallback) =>

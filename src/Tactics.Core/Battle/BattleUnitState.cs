@@ -10,22 +10,37 @@ public sealed record BattleDamageShieldState(int RemainingPoints, bool AbsorbsAl
 
 public sealed record DemonboundBattleState
 {
+    /// <summary>Default possessed-form identity used by the current corruption contract.</summary>
+    public static readonly ContentId DefaultPossessedFormId = new("demonbound.possessed-form.v1");
+
+    /// <summary>Default boost configuration bound when a possessed form is entered.</summary>
+    public static readonly ContentId DefaultPossessedBoostConfigurationId = new("demonbound.possessed-boost.v1");
+
     public DemonboundBattleState(
         int corruption = 0,
         int mindfulnessLevel = 0,
         bool meditationUsedThisTurn = false,
         bool basicAttackUsedThisTurn = false,
         bool nonMeditationSkillUsedThisTurn = false,
-        bool isPossessed = false)
+        bool isPossessed = false,
+        ContentId? possessedFormId = null,
+        ContentId? possessedBoostConfigurationId = null,
+        bool possessedBoostApplied = false)
     {
         if (corruption is < 0 or > 10) throw new ArgumentOutOfRangeException(nameof(corruption));
         if (mindfulnessLevel is < 0 or > 3) throw new ArgumentOutOfRangeException(nameof(mindfulnessLevel));
+        if (possessedBoostApplied && possessedFormId is null && !isPossessed)
+            throw new ArgumentException("Boost cannot be applied before a possessed form is entered.", nameof(possessedBoostApplied));
         Corruption = corruption;
         MindfulnessLevel = mindfulnessLevel;
         MeditationUsedThisTurn = meditationUsedThisTurn;
         BasicAttackUsedThisTurn = basicAttackUsedThisTurn;
         NonMeditationSkillUsedThisTurn = nonMeditationSkillUsedThisTurn;
-        IsPossessed = isPossessed;
+        PossessedFormId = possessedFormId ?? (isPossessed ? DefaultPossessedFormId : null);
+        PossessedBoostConfigurationId = PossessedFormId is null
+            ? null
+            : possessedBoostConfigurationId ?? DefaultPossessedBoostConfigurationId;
+        PossessedBoostApplied = possessedBoostApplied && PossessedFormId is not null;
     }
 
     public int Corruption { get; }
@@ -33,18 +48,53 @@ public sealed record DemonboundBattleState
     public bool MeditationUsedThisTurn { get; }
     public bool BasicAttackUsedThisTurn { get; }
     public bool NonMeditationSkillUsedThisTurn { get; }
-    public bool IsPossessed { get; }
 
-    public DemonboundBattleState PrepareForTurn() => new(Corruption, MindfulnessLevel, isPossessed: IsPossessed);
+    /// <summary>Gets whether the unit is inside the possessed demon form.</summary>
+    public bool IsPossessed => PossessedFormId is not null;
+
+    /// <summary>Gets the active possessed-form identity; null before corruption reaches ten.</summary>
+    public ContentId? PossessedFormId { get; }
+
+    /// <summary>Gets the boost configuration identity bound when the form was entered.</summary>
+    public ContentId? PossessedBoostConfigurationId { get; }
+
+    /// <summary>Gets whether the one-time form boost has already been applied to this battle unit.</summary>
+    public bool PossessedBoostApplied { get; }
+
+    public DemonboundBattleState PrepareForTurn() => new(Corruption, MindfulnessLevel, isPossessed: IsPossessed,
+        possessedFormId: PossessedFormId, possessedBoostConfigurationId: PossessedBoostConfigurationId,
+        possessedBoostApplied: PossessedBoostApplied);
+    public DemonboundBattleState WithMindfulnessLevel(int level) => new(Corruption, level,
+        MeditationUsedThisTurn, BasicAttackUsedThisTurn, NonMeditationSkillUsedThisTurn,
+        isPossessed: IsPossessed, possessedFormId: PossessedFormId,
+        possessedBoostConfigurationId: PossessedBoostConfigurationId, possessedBoostApplied: PossessedBoostApplied);
     public DemonboundBattleState WithCorruption(int value) => new(Math.Clamp(value, 0, 10), MindfulnessLevel,
         MeditationUsedThisTurn, BasicAttackUsedThisTurn, NonMeditationSkillUsedThisTurn,
-        IsPossessed || value >= 10);
+        isPossessed: IsPossessed || value >= 10,
+        possessedFormId: IsPossessed ? PossessedFormId : null,
+        possessedBoostConfigurationId: PossessedBoostConfigurationId,
+        possessedBoostApplied: PossessedBoostApplied);
     public DemonboundBattleState WithMeditationUsed() => new(Corruption, MindfulnessLevel, true,
-        BasicAttackUsedThisTurn, NonMeditationSkillUsedThisTurn, IsPossessed);
+        BasicAttackUsedThisTurn, NonMeditationSkillUsedThisTurn, isPossessed: IsPossessed,
+        possessedFormId: PossessedFormId, possessedBoostConfigurationId: PossessedBoostConfigurationId,
+        possessedBoostApplied: PossessedBoostApplied);
     public DemonboundBattleState WithBasicAttackUsed() => new(Corruption, MindfulnessLevel,
-        MeditationUsedThisTurn, true, NonMeditationSkillUsedThisTurn, IsPossessed);
+        MeditationUsedThisTurn, true, NonMeditationSkillUsedThisTurn, isPossessed: IsPossessed,
+        possessedFormId: PossessedFormId, possessedBoostConfigurationId: PossessedBoostConfigurationId,
+        possessedBoostApplied: PossessedBoostApplied);
     public DemonboundBattleState WithNonMeditationSkillUsed() => new(Corruption, MindfulnessLevel,
-        MeditationUsedThisTurn, BasicAttackUsedThisTurn, true, IsPossessed);
+        MeditationUsedThisTurn, BasicAttackUsedThisTurn, true, isPossessed: IsPossessed,
+        possessedFormId: PossessedFormId, possessedBoostConfigurationId: PossessedBoostConfigurationId,
+        possessedBoostApplied: PossessedBoostApplied);
+
+    /// <summary>
+    /// Marks the form boost as applied. Idempotent: repeated calls and Save/Reload replays
+    /// must never apply a per-battle attribute boost more than once.
+    /// </summary>
+    public DemonboundBattleState WithPossessedBoostApplied() => new(Corruption, MindfulnessLevel,
+        MeditationUsedThisTurn, BasicAttackUsedThisTurn, NonMeditationSkillUsedThisTurn,
+        isPossessed: IsPossessed, possessedFormId: PossessedFormId,
+        possessedBoostConfigurationId: PossessedBoostConfigurationId, possessedBoostApplied: true);
 }
 
 /// <summary>

@@ -121,7 +121,7 @@ public sealed class AiEncounterRuntimeTests
 
         AiTurnPlan plan = new AiDecisionService().Decide(state, definition,
             new Dictionary<ContentId, SkillDefinition> { [regeneration.ContentId] = regeneration },
-            targetOwnFaction: true);
+            strategy: TargetRelationshipStrategy.UnifiedAll);
 
         Assert.Multiple(() =>
         {
@@ -185,6 +185,95 @@ public sealed class AiEncounterRuntimeTests
             Assert.That(plan.Selected.TargetId, Is.EqualTo(killableId));
             Assert.That(plan.Selected.SkillId, Is.EqualTo(bite.ContentId));
             Assert.That(plan.Selected.Intent, Is.Not.EqualTo(AiIntentKind.Retreat));
+        });
+    }
+
+    [Test]
+    public void UnifiedStrategy_IncludesAllyOfSameFactionAsCandidateTarget()
+    {
+        var cells = new Dictionary<GridPoint, CellState>();
+        for (int x = 0; x < 5; x++) for (int y = 0; y < 3; y++) cells[new GridPoint(x, y)] = new CellState();
+        UnitInstanceId demonboundId = new("party-demonbound"), allyId = new("party-mage"), enemyId = new("enemy-goat");
+        BattleUnitState demonbound = new(new UnitState(demonboundId, new ContentId("unit.pure-run.demonbound"),
+            new GridPoint(1, 1), 0, 5, 0, 0), 20, 20, maxMana: 10, currentMana: 10,
+            demonboundState: new DemonboundBattleState(10, 3, isPossessed: true));
+        BattleUnitState ally = new(new UnitState(allyId, new ContentId("unit.pure-run.mage"),
+            new GridPoint(2, 1), 0, 4, 0, 1), 20, 20);
+        BattleUnitState enemy = new(new UnitState(enemyId, new ContentId("unit.pure-run.goat-charger"),
+            new GridPoint(4, 1), 1, 2, 1, 2), 20, 20);
+        BattleState state = new(new BoardSnapshot(cells), [demonbound, ally, enemy],
+            [demonboundId, allyId, enemyId]);
+        SkillDefinition bane = new(new ContentId("skill.demonbound.bane.lv1"), "bane",
+            SkillRole.Demonbound, SkillKind.Active, 1, 3, 1, 1, SkillExecutionKind.Bane, 5,
+            SkillDamageKind.Magical, executionProfile: new SkillExecutionProfile(CorruptionCost: 3));
+        AiDefinition definition = new(new ContentId("ai.demonbound"), AiArchetype.Charger,
+            new AiProfileDefinition(1, 1, 1, 1), [bane.ContentId], Array.Empty<ContentId>());
+
+        AiTurnPlan plan = new AiDecisionService().Decide(state, definition,
+            new Dictionary<ContentId, SkillDefinition> { [bane.ContentId] = bane },
+            strategy: TargetRelationshipStrategy.UnifiedAll);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(plan.Candidates.Any(candidate => candidate.TargetId == allyId), Is.True);
+            Assert.That(plan.Candidates.Any(candidate => candidate.TargetId == enemyId), Is.True);
+        });
+    }
+
+    [Test]
+    public void UnifiedStrategy_ExcludesNonActingDecoysFromTheCandidatePool()
+    {
+        var cells = new Dictionary<GridPoint, CellState>();
+        for (int x = 0; x < 5; x++) for (int y = 0; y < 3; y++) cells[new GridPoint(x, y)] = new CellState();
+        UnitInstanceId demonboundId = new("party-demonbound"), decoyId = new("party-decoy");
+        BattleUnitState demonbound = new(new UnitState(demonboundId, new ContentId("unit.pure-run.demonbound"),
+            new GridPoint(1, 1), 0, 5, 0, 0), 20, 20, maxMana: 10, currentMana: 10,
+            demonboundState: new DemonboundBattleState(10, 3, isPossessed: true));
+        BattleUnitState decoy = new(new UnitState(decoyId, new ContentId("unit.pure-run.amazon-decoy"),
+            new GridPoint(2, 1), 0, 4, 0, 1), 10, 10,
+            summonOwnerId: new UnitInstanceId("party-amazon"), summonCategory: "Decoy");
+        BattleState state = new(new BoardSnapshot(cells), [demonbound, decoy], [demonboundId, decoyId]);
+        SkillDefinition bane = new(new ContentId("skill.demonbound.bane.lv1"), "bane",
+            SkillRole.Demonbound, SkillKind.Active, 1, 3, 1, 1, SkillExecutionKind.Bane, 5,
+            SkillDamageKind.Magical, executionProfile: new SkillExecutionProfile(CorruptionCost: 3));
+        AiDefinition definition = new(new ContentId("ai.demonbound"), AiArchetype.Charger,
+            new AiProfileDefinition(1, 1, 1, 1), [bane.ContentId], Array.Empty<ContentId>());
+
+        AiTurnPlan plan = new AiDecisionService().Decide(state, definition,
+            new Dictionary<ContentId, SkillDefinition> { [bane.ContentId] = bane },
+            strategy: TargetRelationshipStrategy.UnifiedAll);
+
+        Assert.That(plan.Candidates.Any(candidate => candidate.TargetId == decoyId), Is.False);
+    }
+
+    [Test]
+    public void StandardStrategy_NeverIncludesOwnFactionCandidates()
+    {
+        var cells = new Dictionary<GridPoint, CellState>();
+        for (int x = 0; x < 5; x++) for (int y = 0; y < 3; y++) cells[new GridPoint(x, y)] = new CellState();
+        UnitInstanceId demonboundId = new("party-demonbound"), allyId = new("party-mage"), enemyId = new("enemy-goat");
+        BattleUnitState demonbound = new(new UnitState(demonboundId, new ContentId("unit.pure-run.demonbound"),
+            new GridPoint(1, 1), 0, 5, 0, 0), 20, 20, maxMana: 10, currentMana: 10,
+            demonboundState: new DemonboundBattleState(7, 1));
+        BattleUnitState ally = new(new UnitState(allyId, new ContentId("unit.pure-run.mage"),
+            new GridPoint(4, 1), 0, 4, 0, 1), 20, 20);
+        BattleUnitState enemy = new(new UnitState(enemyId, new ContentId("unit.pure-run.goat-charger"),
+            new GridPoint(2, 1), 1, 2, 1, 2), 20, 20);
+        BattleState state = new(new BoardSnapshot(cells), [demonbound, ally, enemy],
+            [demonboundId, allyId, enemyId]);
+        SkillDefinition bane = new(new ContentId("skill.demonbound.bane.lv1"), "bane",
+            SkillRole.Demonbound, SkillKind.Active, 1, 3, 1, 1, SkillExecutionKind.Bane, 5,
+            SkillDamageKind.Magical, executionProfile: new SkillExecutionProfile(CorruptionCost: 3));
+        AiDefinition definition = new(new ContentId("ai.demonbound"), AiArchetype.Charger,
+            new AiProfileDefinition(1, 1, 1, 1), [bane.ContentId], Array.Empty<ContentId>());
+
+        AiTurnPlan plan = new AiDecisionService().Decide(state, definition,
+            new Dictionary<ContentId, SkillDefinition> { [bane.ContentId] = bane });
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(plan.Candidates.Any(candidate => candidate.TargetId == allyId), Is.False);
+            Assert.That(plan.Candidates.Any(candidate => candidate.TargetId == enemyId), Is.True);
         });
     }
 }

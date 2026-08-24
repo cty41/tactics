@@ -100,8 +100,10 @@ public sealed class BattleTransitionService
                     corruptionCost, actionState.Corruption));
             if (!actor.DemonboundState.IsPossessed && actionState.IsPossessed)
                 events.Add(new DemonboundPossessedEvent(actor.Unit.InstanceId));
+            BattleUnitState withForm = updatedActor.WithDemonboundState(actionState);
+            withForm = DemonboundPossessedBoostService.Apply(withForm);
             return new BattleTransition(
-                genericTransition.State.WithUnit(updatedActor.WithDemonboundState(actionState)),
+                genericTransition.State.WithUnit(withForm),
                 events);
         }
         string? usageFailure = SkillRuntimeService.UsageFailure(actor, command.Definition);
@@ -333,7 +335,7 @@ public sealed class BattleTransitionService
             .WithUnit(updatedActor)
             .WithUnit(updatedTarget)
             .WithDroppedSpear(command.ActorId, dropCell.Value);
-        nextState = BattleDefeatResolver.Apply(nextState, target, updatedTarget, events);
+        nextState = ApplyDefeat(nextState, actor, target, updatedTarget, events);
         return new BattleTransition(nextState, events);
     }
 
@@ -525,11 +527,13 @@ public sealed class BattleTransitionService
 
         BattleUnitState incoming = nextState.Units[nextState.ActiveUnitId];
         BattleUnitState incomingBeforeTicks = incoming;
+        UnitInstanceId? tickSourceId = null;
         foreach (BattleStatusState status in incoming.Statuses.Values
                      .OrderBy(item => item.ContentId.Value, StringComparer.Ordinal))
         {
             if (!incoming.IsAlive)
                 continue;
+            tickSourceId = status.SourceId;
             int tickDamage = status.FrozenTotalDamageRemaining > 0
                 ? (int)Math.Ceiling(status.FrozenTotalDamageRemaining / (double)Math.Max(1, status.RemainingTurns))
                 : status.EffectKind == StatusEffectKind.Burning
@@ -569,10 +573,25 @@ public sealed class BattleTransitionService
         }
 
         nextState = nextState.WithUnit(incoming);
-        nextState = BattleDefeatResolver.Apply(nextState, incomingBeforeTicks, incoming, events);
+        BattleUnitState tickActor = tickSourceId is UnitInstanceId sourceId &&
+            nextState.TryGetUnit(sourceId, out BattleUnitState? sourceUnit) && sourceUnit is not null
+                ? sourceUnit
+                : incoming;
+        nextState = ApplyDefeat(nextState, tickActor, incomingBeforeTicks, incoming, events);
         return new BattleTransition(nextState, events);
     }
 
     private static BattleTransition Rejected(BattleState state, UnitInstanceId actorId, string reason) =>
         new(state, new BattleEvent[] { new CommandRejectedEvent(actorId, reason) });
+
+    /// <summary>
+    /// Applies the defeat transaction and then the unified permanent-death assessment, so secondary
+    /// damage branches (poison, burn ticks, bounce, follow-up) cannot bypass the possessed-demonbound roll.
+    /// </summary>
+    private static BattleState ApplyDefeat(BattleState state, BattleUnitState actor, BattleUnitState previous,
+        BattleUnitState updated, ICollection<BattleEvent> events)
+    {
+        BattleState afterDefeat = BattleDefeatResolver.Apply(state, previous, updated, events);
+        return DemonboundPermanentDeathPostProcessor.Apply(afterDefeat, actor, previous, updated, events);
+    }
 }

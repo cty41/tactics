@@ -97,9 +97,11 @@ public sealed class DemonboundFixedSeedBattleProbeTests
             }
 
             AiDefinition definition = fixture.Definitions[actor.Unit.InstanceId];
-            bool targetOwnFaction = demonbound?.IsPossessed == true;
+            TargetRelationshipStrategy strategy = demonbound?.IsPossessed == true
+                ? TargetRelationshipStrategy.UnifiedAll
+                : TargetRelationshipStrategy.StandardHostile;
             AiTurnPlan plan = decisions.Decide(state, definition, fixture.Skills,
-                patternIndices[actor.Unit.InstanceId], targetOwnFaction);
+                patternIndices[actor.Unit.InstanceId], strategy);
             AiPlanExecutionResult executed = turns.Execute(state, plan, fixture.Skills);
             if (firstPossessionRound is null && executed.Events.OfType<DemonboundPossessedEvent>().Any())
                 firstPossessionRound = state.Round;
