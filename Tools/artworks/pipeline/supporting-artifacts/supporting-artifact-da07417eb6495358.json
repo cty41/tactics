@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 2,
+  "supportingArtifactId": "supporting-artifact-da07417eb6495358",
+  "artifact": {
+    "path": "Tools/artworks/pure_run/equipment/reviews/equipment_flat_v1_tile_panel_shadow_cloak.png",
+    "sha256": "09158c29d7c1f9188b27fc63fed72739a385e119df0d9db910a48a990eb83640"
+  },
+  "role": "equipment-tile-review-panel",
+  "note": "Flat style profile V1 tile-scale panel."
+}

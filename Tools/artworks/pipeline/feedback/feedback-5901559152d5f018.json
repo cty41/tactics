@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 2,
+  "feedbackId": "feedback-5901559152d5f018",
+  "attemptId": "job-897833991fd2f552-a002",
+  "candidateSha256": "c1d6e21c9fd5618e20f6e5dcafc508ee65cfeb3f8fa71498297982a1de25d7d5",
+  "reviewer": "cty41",
+  "verdict": "retry",
+  "strengths": [],
+  "defects": [
+    "Idle front view is too frontal for the isometric board; match the approved red-shiba three-quarter down-right presentation."
+  ],
+  "nextPromptDelta": "Rotate face and capsule into a clear isometric three-quarter view with muzzle pointing screen left and asymmetric near/far features.",
+  "recordedAt": "2026-08-24T01:12:46.1202086Z",
+  "authorType": "human",
+  "categories": [
+    "pose_axis",
+    "gaze"
+  ],
+  "disposition": "retry",
+  "frozenInvariants": [],
+  "pendingFixes": [
+    "Idle front view is too frontal for the isometric board; match the approved red-shiba three-quarter down-right presentation."
+  ]
+}

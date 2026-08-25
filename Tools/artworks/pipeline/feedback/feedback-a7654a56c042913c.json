@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 2,
+  "feedbackId": "feedback-a7654a56c042913c",
+  "attemptId": "job-a3130635f06ad42d-a003",
+  "candidateSha256": "ad01502b682a273d65b2cb90334b7574289bfeb6d4d0b1676ddfc9f5e30354d2",
+  "reviewer": "codex",
+  "verdict": "technical_failed",
+  "strengths": [],
+  "defects": [
+    "The generated tear variant had an opaque black backdrop that survived the first normalization."
+  ],
+  "nextPromptDelta": "Keep pose and tears; remove only the edge-connected pure-black backdrop and renormalize.",
+  "recordedAt": "2026-08-24T02:09:48.0665715Z",
+  "authorType": "agent",
+  "categories": [
+    "processing"
+  ],
+  "disposition": "technical_failed",
+  "frozenInvariants": [],
+  "pendingFixes": [
+    "The generated tear variant had an opaque black backdrop that survived the first normalization."
+  ]
+}

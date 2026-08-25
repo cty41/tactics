@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 2,
+  "reviewedImportId": "reviewed-import-0ed5951d6cb81564",
+  "contractId": "contract-47753651548de126",
+  "source": {
+    "path": "Tools/artworks/pure_run/equipment/concepts/pure_run_equipment_necromancer_dagger_v01_chroma_source.png",
+    "sha256": "3ea416c309a9a93f464abbe77a97c9fffe39680bf3c6fb090601c47a3eff1fa8"
+  },
+  "candidate": {
+    "path": "Tools/artworks/pure_run/equipment/candidates/pure_run_equipment_necromancer_dagger_v01_promote_exact.png",
+    "sha256": "7b5854a12e2515cabab1f8e263e444e2407d2e77fcfd7c808fb4314b1e837123"
+  },
+  "preview": {
+    "path": "Tools/artworks/pure_run/equipment/candidates/pure_run_equipment_necromancer_dagger_v01_promote_exact_128.png",
+    "sha256": "7c5793e0a855ac9e0cd609371daa5a09cbe4755b26ce63757a8038d022dd1834"
+  },
+  "sizeComparison": {
+    "path": "Tools/artworks/pure_run/equipment/reviews/pure_run_equipment_necromancer_dagger_v01_promote_exact_size_comparison.png",
+    "sha256": "0e80641edf153ac4e36bc1765306172245eb8a65c1c7fe29b2dc590df64e6d5e"
+  },
+  "reviewer": "cty41",
+  "reason": "User approved weapons batch items 1-6; only exact chroma residue was removed before import.",
+  "acceptedAt": "2026-08-24T15:20:08.7600989+08:00",
+  "sourceMode": "reviewed_import"
+}

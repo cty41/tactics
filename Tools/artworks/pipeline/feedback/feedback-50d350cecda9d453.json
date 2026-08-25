@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 2,
+  "feedbackId": "feedback-50d350cecda9d453",
+  "attemptId": "job-897833991fd2f552-a014",
+  "candidateSha256": "9cbed15b75152d998dfa257bbc3bf391ae4a21fc7d3cdfc915ec0e2f3d562d0a",
+  "reviewer": "codex",
+  "verdict": "technical_failed",
+  "strengths": [],
+  "defects": [
+    "Transparent semantic-mask pixels retained nonzero hidden RGB values."
+  ],
+  "nextPromptDelta": "Zero RGB wherever mask alpha is zero; keep visible semantic labels unchanged.",
+  "recordedAt": "2026-08-24T01:54:10.8890691Z",
+  "authorType": "agent",
+  "categories": [
+    "processing"
+  ],
+  "disposition": "technical_failed",
+  "frozenInvariants": [],
+  "pendingFixes": [
+    "Transparent semantic-mask pixels retained nonzero hidden RGB values."
+  ]
+}

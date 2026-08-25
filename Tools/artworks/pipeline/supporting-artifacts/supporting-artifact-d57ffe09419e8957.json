@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 2,
+  "supportingArtifactId": "supporting-artifact-d57ffe09419e8957",
+  "artifact": {
+    "path": "Tools/artworks/pure_run/equipment/candidates/pure_run_equipment_leather_boots_v04_draft.png",
+    "sha256": "b3e05715af029a7ddc5d8c69e47be8431f0ae65ead28e45f40c1e3d1b2e36eb1"
+  },
+  "role": "equipment-review-intermediate",
+  "note": "Leather boots V4 non-quantized crop and placement intermediate."
+}

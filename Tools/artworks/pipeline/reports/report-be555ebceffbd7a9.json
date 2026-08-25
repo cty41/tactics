@@ -1,0 +1,79 @@
+{
+  "schemaVersion": 1,
+  "attemptId": "job-d1d20f1acf426ee0-a002",
+  "inputSha256": "45993fdf6f93c58c7b49d3f61311ddd908c8a8391e8f512f5f9ed62db50d6085",
+  "maskSha256": "e942a0500a7ce2722d879856f2d6fbf822e9234bf5e356915adc0672442da533",
+  "technical": {
+    "size": [
+      256,
+      256
+    ],
+    "alphaBbox": [
+      76,
+      115,
+      181,
+      237
+    ]
+  },
+  "geometry": {
+    "boxes": {
+      "core": [
+        109,
+        150,
+        150,
+        223
+      ],
+      "head_appendage": null,
+      "near_hand": [
+        96,
+        173,
+        112,
+        189
+      ],
+      "far_hand": [
+        149,
+        173,
+        165,
+        189
+      ],
+      "near_foot": [
+        134,
+        220,
+        147,
+        235
+      ],
+      "far_foot": [
+        111,
+        220,
+        127,
+        232
+      ],
+      "equipment": null,
+      "wings": null,
+      "effect": null,
+      "near_arm": null,
+      "far_arm": null,
+      "near_leg": null,
+      "far_leg": null
+    },
+    "core": {
+      "bbox": [
+        109,
+        150,
+        150,
+        223
+      ],
+      "center": [
+        129.5,
+        186.5
+      ],
+      "bandMaxWidths": [
+        42,
+        42,
+        42
+      ]
+    }
+  },
+  "issues": [],
+  "passed": true
+}

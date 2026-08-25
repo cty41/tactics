@@ -1,0 +1,21 @@
+{
+  "schemaVersion": 2,
+  "jobId": "job-7064b8a37678e1ef",
+  "state": "ready",
+  "contractId": "contract-cb930ed8c7e3be56",
+  "contractSha256": "adac40fe14e173b794c90c86661e9da24cbbb34f767177df7f52d0b512fe8ac4",
+  "prompt": {
+    "path": "Tools/artworks/pure_run/items/prompt_silver_ring.md",
+    "sha256": "242981ea0df95e5120fbba8f4b0102e37911b94cfcda12fe5466494ec4d04fc6"
+  },
+  "inputs": [],
+  "target": {
+    "direction": "down-right",
+    "pose": "display"
+  },
+  "series": null,
+  "conceptOnly": false,
+  "contractRequirements": null,
+  "requiresInvocation": false,
+  "poseGuide": null
+}

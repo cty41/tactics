@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 2,
+  "supportingArtifactId": "supporting-artifact-442b1c2499a2fb7a",
+  "artifact": {
+    "path": "Tools/artworks/pure_run/equipment/reviews/armor_tile_panel_shadow_cloak_v02.png",
+    "sha256": "2bc2d741b4ddf9a1d5cd5537d41d6f49778cf5a4ccbdc10c32930ad2b778bae0"
+  },
+  "role": "equipment-tile-review-panel",
+  "note": "Armor V2 tile-scale panel."
+}

@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 2,
+  "supportingArtifactId": "supporting-artifact-63eaa455d3ffe410",
+  "artifact": {
+    "path": "Tools/artworks/pure_run/villager/reviews/villager_idle_dr_clockwise20_comparison.png",
+    "sha256": "918e7702b502e4edffa9770b7e10ffbc7645103872e5ef13ccd64e4f48fec210"
+  },
+  "role": "direction-comparison",
+  "note": "Comparison of approved red-shiba DR, villager DR V03, and villager DR V04 yawed approximately 20 degrees clockwise; all share y=236 baseline."
+}

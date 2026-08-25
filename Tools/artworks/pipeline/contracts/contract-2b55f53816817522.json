@@ -1,0 +1,53 @@
+{
+  "schemaVersion": 2,
+  "contractId": "contract-2b55f53816817522",
+  "assetId": "prop-merchant-trade-oriented-review",
+  "approvedAssetId": "prop-merchant-trade-v02",
+  "kind": "projectile",
+  "direction": "down-right",
+  "pose": "display",
+  "anchor": null,
+  "maskRequired": false,
+  "noArms": false,
+  "handSides": {
+    "near_hand": null,
+    "far_hand": null
+  },
+  "occlusion": null,
+  "compositionSpec": null,
+  "identitySpec": null,
+  "requiresInvocation": false,
+  "canvasSpec": {
+    "masterSize": [
+      256,
+      256
+    ]
+  },
+  "tilePlacementSpec": {
+    "footprintTiles": [
+      1,
+      1
+    ],
+    "displayScale": 0.5,
+    "groundAnchorPx": [
+      128.0,
+      230.0
+    ],
+    "anchorMode": "contact_shape_center",
+    "boardRole": "target",
+    "screenFacing": "down_left"
+  },
+  "tolerances": {
+    "sizePx": 3,
+    "centerPx": 2
+  },
+  "outputs": {
+    "master": "Tools/artworks/pure_run/props/approved/pure_run_prop_merchant_trade_v02.png",
+    "preview": "Tools/artworks/pure_run/props/approved/pure_run_prop_merchant_trade_v02_128.png"
+  },
+  "rights": {
+    "rightsHolder": "cty41",
+    "license": "CC-BY-4.0",
+    "provenance": "project-owned-gpt-generated"
+  }
+}

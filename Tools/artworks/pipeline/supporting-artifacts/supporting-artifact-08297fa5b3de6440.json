@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 2,
+  "supportingArtifactId": "supporting-artifact-08297fa5b3de6440",
+  "artifact": {
+    "path": "Tools/artworks/pure_run/equipment/candidates/pure_run_equipment_leather_armor_v04_object.png",
+    "sha256": "81f816971dbdefdfdddbf10a9aab8cc465494c28cb2fcb7847c21d3ab93221cb"
+  },
+  "role": "equipment-derived-intermediate",
+  "note": "Leather armor V4 chroma-clean actual-object crop."
+}

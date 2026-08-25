@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 2,
+  "supportingArtifactId": "supporting-artifact-e98ba072e345806b",
+  "artifact": {
+    "path": "Tools/artworks/pure_run/equipment/candidates/pure_run_equipment_demonbound_bound_sword_v01_reviewed.png",
+    "sha256": "827056833326fe3e41a36f19a3ca9c30ad51dc8362ecb09a17cc9e5f36b8e563"
+  },
+  "role": "promotion-workflow-intermediate",
+  "note": "Intermediate created during reviewed sprite normalization or size comparison."
+}

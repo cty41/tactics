@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 2,
+  "supportingArtifactId": "supporting-artifact-1f3726e10024cf4b",
+  "artifact": {
+    "path": "Tools/artworks/pure_run/equipment/candidates/pure_run_equipment_wizard_hat_v01_128.png",
+    "sha256": "e0a27633d3c8caaa63c1ce3ab20df4bf0dd3c63a1d0d5c925d2f717bcd8a0e9f"
+  },
+  "role": "equipment-review-preview",
+  "note": "Armor batch V1 128px preview."
+}

@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 2,
+  "supportingArtifactId": "supporting-artifact-8b360a8097c9ab0a",
+  "artifact": {
+    "path": "Tools/artworks/pure_run/items/reviews/reviews_lucky_ring_confirm.png",
+    "sha256": "ffa9019655031087e88fb305b71e47bc25c85992f7cf1b94fb0355c92fe193d1"
+  },
+  "role": "supporting-derived",
+  "note": "Lucky ring overlay/tile/preview confirm composite"
+}

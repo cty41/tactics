@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 2,
+  "supportingArtifactId": "supporting-artifact-3f42150a69a7e530",
+  "artifact": {
+    "path": "Tools/artworks/pure_run/villager/reviews/villager_idle_ul_far_hand_fix_comparison.png",
+    "sha256": "acd1be8e126f0792ab818455e0a6928873f5515b9e19f9806e1f29904488fb6c"
+  },
+  "role": "topology-comparison",
+  "note": "UL V03 minimal topology correction adds only the required partially occluded far-side paw; compare against user-selected V02 before promotion."
+}

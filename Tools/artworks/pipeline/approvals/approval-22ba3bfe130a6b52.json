@@ -1,0 +1,18 @@
+{
+  "schemaVersion": 2,
+  "approvalId": "approval-22ba3bfe130a6b52",
+  "attemptId": "job-ed5f76ac4fb68184-a005",
+  "candidateSha256": "3ff1c0a1dd086a5fc9e1137ed5609f998e90ae1fe596a557519468f2e27bbb79",
+  "maskSha256": null,
+  "reviewer": "cty41",
+  "reviewSha256": {
+    "overlay": "fe40ca09a93e05ec399614a2fa77235254acd0ef28a0e396475a652fc56b947a",
+    "preview128": "aa92ac4395cd9f928c0ac8b3f194b584be2262f8e8e5016519f4ccdd5f55e5be",
+    "tile64x32": "b75b259a40eadab2199adf2b7ac8292d27c34c1cadf4ffeb52dc4f54b6239a33"
+  },
+  "decision": "approved",
+  "reason": "用户确认前视视线版伯恩山犬商人场景图并明确要求 promote；按现有 prop contract 晋升，不声明胶囊语义校准",
+  "decidedAt": "2026-08-23T11:51:07Z",
+  "annotation": null,
+  "reportSha256": "74292fea9a21379afaa7ad3c8cdb4ec6ed4470fd6a5db7958b655d144d244c7d"
+}

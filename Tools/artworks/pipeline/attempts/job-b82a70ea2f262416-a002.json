@@ -1,0 +1,53 @@
+{
+  "schemaVersion": 2,
+  "attemptId": "job-b82a70ea2f262416-a002",
+  "jobId": "job-b82a70ea2f262416",
+  "ordinal": 2,
+  "parentAttemptId": "job-b82a70ea2f262416-a001",
+  "retryFeedbackId": "feedback-db51c4009875360d",
+  "promptDelta": null,
+  "technicalRemediation": false,
+  "state": "review_pending",
+  "artifacts": {
+    "source": {
+      "path": "Tools/artworks/pure_run/props/concepts/pure_run_prop_exit_portal_v01_transparent_source_v02_left_down.png",
+      "sha256": "3dabce27868f55b091177f5ba193f72b251c2ec26f8e96877aab0581093711ce"
+    },
+    "raw": {
+      "path": "Tools/artworks/pipeline/artifacts/job-b82a70ea2f262416/job-b82a70ea2f262416-a002/raw.png",
+      "sha256": "3dabce27868f55b091177f5ba193f72b251c2ec26f8e96877aab0581093711ce"
+    },
+    "prepared": {
+      "path": "Tools/artworks/pipeline/artifacts/job-b82a70ea2f262416/job-b82a70ea2f262416-a002/prepared.png",
+      "sha256": "2d1a5f242971aba6b3b31c76e73e67c8e1591ad689ad3770395e35c84b010823"
+    },
+    "tilePlacementMetrics": {
+      "path": "Tools/artworks/pipeline/reviews/job-b82a70ea2f262416-a002/tilePlacementMetrics.json",
+      "sha256": "3b2eb916adf63927d6d0feb28203fa61062c9cda7e9a016aa7adebca7bdbd97f"
+    },
+    "review": {
+      "overlay": {
+        "path": "Tools/artworks/pipeline/reviews/job-b82a70ea2f262416-a002/overlay.png",
+        "sha256": "33fd7fcf9dc42b210c41f0ec757ecefdf645416640a2433c79e97dbb31add366"
+      },
+      "preview128": {
+        "path": "Tools/artworks/pipeline/reviews/job-b82a70ea2f262416-a002/preview128.png",
+        "sha256": "d2f7b49af26458e9d6d626dbe73eeaf074bc8120a0a248a2576007d9cc528fa9"
+      },
+      "tile64x32": {
+        "path": "Tools/artworks/pipeline/reviews/job-b82a70ea2f262416-a002/tile64x32.png",
+        "sha256": "1772d2703e3fb49bbac18df189a4053b922cd5ee4e2cee3c4f1e19e7a4ab26a1"
+      }
+    }
+  },
+  "report": {
+    "path": "Tools/artworks/pipeline/reports/report-4a0442a29446f2d8.json",
+    "sha256": "396c9c990189da8ec3631f755dbff9988be8174e29838f49b5b290a2168f5874"
+  },
+  "approvalId": null,
+  "feedbackId": null,
+  "preparation": {
+    "chroma": null,
+    "chromaTolerance": 0
+  }
+}

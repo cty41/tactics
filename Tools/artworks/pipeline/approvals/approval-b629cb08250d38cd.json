@@ -1,0 +1,18 @@
+{
+  "schemaVersion": 2,
+  "approvalId": "approval-b629cb08250d38cd",
+  "attemptId": "job-99aedfb38c55287e-a002",
+  "candidateSha256": "e469edddab44b01d8d242a18e35b7a96b197e72b177fa90a5ced9caab6c8bb4d",
+  "maskSha256": null,
+  "reviewer": "cty41",
+  "reviewSha256": {
+    "overlay": "5ee2d66fd10d0fe3892d0cba525edecb220ef2fb0ac1aa0d25faa12bb1ece115",
+    "preview128": "6fc5d291b0b8c9a21986ee8f0ee5f41f8c01e1c6120ec47c0a0d67ad0c197ae6",
+    "tile64x32": "0b76cc90a8541e91e59e9d1de1f17db26f9fbf912c082e94b604bd2afa581cfa"
+  },
+  "decision": "approved",
+  "reason": "User explicitly confirmed the unified-color monochrome elite node mask and requested promote.",
+  "decidedAt": "2026-08-23T11:33:13.3931577+08:00",
+  "annotation": null,
+  "reportSha256": "b2a9ba92cc8f4d0e4dcc85861761cde617e85ce217055f55f7397b61bc54b0e9"
+}

@@ -1,0 +1,92 @@
+{
+  "schemaVersion": 1,
+  "sizeComparisonId": "size-comparison-19b82c5274ccc913",
+  "inputs": [
+    {
+      "label": "Identity",
+      "artifact": {
+        "path": "Tools/artworks/pure_run/equipment/approved/pure_run_equipment_leather_armor_v04.png",
+        "sha256": "bfa2dd69f85136690106ebb1998845ff20fdc589417012167e4988861c722b3b"
+      }
+    },
+    {
+      "label": "Previous",
+      "artifact": {
+        "path": "Tools/artworks/pure_run/equipment/candidates/pure_run_equipment_leather_boots_v04.png",
+        "sha256": "1e52ff8bbab341bab299b2f260465075f7c76174ffac97df1cceb8e4bad64067"
+      }
+    },
+    {
+      "label": "Pose reference",
+      "artifact": {
+        "path": "Tools/artworks/pure_run/equipment/approved/pure_run_equipment_iron_helmet_v04.png",
+        "sha256": "ee67ec9e8445a37d26a2db9e434402ef53861dfd82c83723f2681bf70dab0f56"
+      }
+    },
+    {
+      "label": "Candidate",
+      "artifact": {
+        "path": "Tools/artworks/pure_run/equipment/candidates/pure_run_equipment_leather_boots_v05_alpha_fixed.png",
+        "sha256": "cdff834d777578766e5b85297aee2060f4a682c0140eb3ef5e260f3a3bd6ec52"
+      }
+    }
+  ],
+  "measurements": [
+    {
+      "label": "Identity",
+      "bbox": [
+        39,
+        64,
+        88,
+        119
+      ],
+      "bboxSize": [
+        49,
+        55
+      ]
+    },
+    {
+      "label": "Previous",
+      "bbox": [
+        37,
+        68,
+        91,
+        119
+      ],
+      "bboxSize": [
+        54,
+        51
+      ]
+    },
+    {
+      "label": "Pose reference",
+      "bbox": [
+        43,
+        66,
+        85,
+        119
+      ],
+      "bboxSize": [
+        42,
+        53
+      ]
+    },
+    {
+      "label": "Candidate",
+      "bbox": [
+        36,
+        68,
+        91,
+        119
+      ],
+      "bboxSize": [
+        55,
+        51
+      ]
+    }
+  ],
+  "artifact": {
+    "path": "Tools/artworks/pure_run/equipment/reviews/pure_run_equipment_leather_boots_v05_alpha_fixed_size_comparison.png",
+    "sha256": "9f3d2b1ffab85c3cba16a2465420bece6e551af409dac1a8d51377921b8d8b04"
+  }
+}

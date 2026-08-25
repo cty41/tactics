@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 2,
+  "supportingArtifactId": "supporting-artifact-2ad65be3efc05dec",
+  "artifact": {
+    "path": "Tools/artworks/pure_run/equipment/candidates/pure_run_equipment_iron_helmet_v04_object.png",
+    "sha256": "62ed41a461b928bbdc35e79ce4fc93f4c1e590cf02fe4c45fe93a6839a4b727c"
+  },
+  "role": "equipment-promotion-intermediate",
+  "note": "User-approved helmet V4 chroma removal and proportional placement intermediate."
+}

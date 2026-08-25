@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 2,
+  "supportingArtifactId": "supporting-artifact-025620b7afd9c451",
+  "artifact": {
+    "path": "Tools/artworks/pipeline/reviews/job-a95411a55ccd0bbe-a001/tilemap_scale_with_altar_v03.png",
+    "sha256": "73acd8456da983ce1e2e7e3918f3c350ece282ebe66c15963804615c712ede2e"
+  },
+  "role": "intermediate-tilemap-layer",
+  "note": "Intermediate V03 altar composite layer."
+}

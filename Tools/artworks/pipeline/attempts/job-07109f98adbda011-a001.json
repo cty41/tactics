@@ -1,0 +1,49 @@
+{
+  "schemaVersion": 2,
+  "attemptId": "job-07109f98adbda011-a001",
+  "jobId": "job-07109f98adbda011",
+  "ordinal": 1,
+  "parentAttemptId": null,
+  "retryFeedbackId": null,
+  "promptDelta": null,
+  "technicalRemediation": false,
+  "state": "promoted",
+  "sourceMode": "reviewed_import",
+  "reviewedImportId": "reviewed-import-f838f82417076888",
+  "artifacts": {
+    "source": {
+      "path": "Tools/artworks/pure_run/equipment/concepts/pure_run_equipment_plain_iron_sword_v01_chroma_source.png",
+      "sha256": "9e0e8391a9689ec02965eee8cc8f77763c818620ed56ad90aed948f457678ddc"
+    },
+    "prepared": {
+      "path": "Tools/artworks/pure_run/equipment/candidates/pure_run_equipment_plain_iron_sword_v01_promote_exact.png",
+      "sha256": "4ca459c8a4ba3e40344707af10648218e9e34feeb022c7d453352fdbe4ded942"
+    },
+    "importedPreview": {
+      "path": "Tools/artworks/pure_run/equipment/candidates/pure_run_equipment_plain_iron_sword_v01_promote_exact_128.png",
+      "sha256": "0489d52554c6de949e9ba35344f8f051e4e4bbc76c8e5694c7b62b23d103741f"
+    },
+    "review": {
+      "sizeComparison": {
+        "path": "Tools/artworks/pure_run/equipment/reviews/pure_run_equipment_plain_iron_sword_v01_promote_exact_size_comparison.png",
+        "sha256": "9d2d8d79fa3d8d253aeb58a08b528fb2db899dd8f3232bac19a627efcb602638"
+      }
+    },
+    "promoted": {
+      "master": {
+        "path": "Tools/artworks/pure_run/equipment/approved/pure_run_equipment_plain_iron_sword_v01.png",
+        "sha256": "4ca459c8a4ba3e40344707af10648218e9e34feeb022c7d453352fdbe4ded942"
+      },
+      "preview": {
+        "path": "Tools/artworks/pure_run/equipment/approved/pure_run_equipment_plain_iron_sword_v01_128.png",
+        "sha256": "0489d52554c6de949e9ba35344f8f051e4e4bbc76c8e5694c7b62b23d103741f"
+      }
+    }
+  },
+  "report": {
+    "path": "Tools/artworks/pipeline/reports/report-60ce1e7edaf283f0.json",
+    "sha256": "d65c975af118bb312f901c54b57dda90a6430adacb0e312385a3612b181b440e"
+  },
+  "approvalId": "approval-f8672ad0a3a1b5b2",
+  "feedbackId": null
+}

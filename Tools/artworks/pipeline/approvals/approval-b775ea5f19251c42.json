@@ -1,0 +1,18 @@
+{
+  "schemaVersion": 2,
+  "approvalId": "approval-b775ea5f19251c42",
+  "attemptId": "job-b93319722a68d5b8-a001",
+  "candidateSha256": "34f5dba94e31fd415b4d77bcf21ffe22bcf93118b7da8b7e668ca4bd776ad34e",
+  "maskSha256": null,
+  "reviewer": "cty41",
+  "reviewSha256": {
+    "overlay": "0864c0da617cd162b2280beb8b32f62f69ad4cc2f0f0e05e5f5201fb3270ef33",
+    "preview128": "c8c389ada0ea42e67dfc118dcd7a33a49e090c896b4aeebf211abf31a81d15c7",
+    "tile64x32": "6ba2c20f66212daeeeb930c23304e6c08bff541eed0008bbbd977960c25772f7"
+  },
+  "decision": "approved",
+  "reason": "用户确认互动任务目的地感叹号图标并要求 promote",
+  "decidedAt": "2026-08-23T03:56:46Z",
+  "annotation": null,
+  "reportSha256": "ebbe10810c1876337aa2f523a5e288552646f11fae485673dd7772543b2c4e64"
+}

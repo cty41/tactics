@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 2,
+  "feedbackId": "feedback-e7f40250083dc54a",
+  "attemptId": "job-a3130635f06ad42d-a004",
+  "candidateSha256": "5d26b3879fd7247633db9b0425e789cdf24e34235e67578e2d4bdd308803fe3f",
+  "reviewer": "codex",
+  "verdict": "technical_failed",
+  "strengths": [],
+  "defects": [
+    "The first hit-pose core mask followed the leaning silhouette as a widening polygon, producing disconnected/non-rigid core geometry."
+  ],
+  "nextPromptDelta": "Keep candidate unchanged; label a narrow equal-width internal capsule core and reconnect paw labels.",
+  "recordedAt": "2026-08-24T02:12:26.1986899Z",
+  "authorType": "agent",
+  "categories": [
+    "processing"
+  ],
+  "disposition": "technical_failed",
+  "frozenInvariants": [],
+  "pendingFixes": [
+    "The first hit-pose core mask followed the leaning silhouette as a widening polygon, producing disconnected/non-rigid core geometry."
+  ]
+}

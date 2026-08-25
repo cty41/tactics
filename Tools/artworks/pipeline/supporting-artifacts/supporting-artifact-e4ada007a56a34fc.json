@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 2,
+  "supportingArtifactId": "supporting-artifact-e4ada007a56a34fc",
+  "artifact": {
+    "path": "Tools/artworks/pure_run/equipment/tmp/review-panels/pure_run_equipment_plain_iron_sword_v01_128.png",
+    "sha256": "006c9e50683fb8eff891832a9a041b9e85c75e860b741d277d8477403ad369dd"
+  },
+  "role": "transient-review-panel",
+  "note": "Deterministic intermediate panel used to compose the registered weapon batch V01 contact sheets"
+}

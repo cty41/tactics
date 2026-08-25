@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 2,
+  "supportingArtifactId": "supporting-artifact-2f8469c0c6284e12",
+  "artifact": {
+    "path": "Tools/artworks/pure_run/equipment/tmp/review-panels/pure_run_equipment_necromancer_dagger_v01_128.png",
+    "sha256": "a5458546ee1794da6503dcdd3cef3f0b5a6c0a0a78277fbce049f7ebe181e506"
+  },
+  "role": "transient-review-panel",
+  "note": "Deterministic intermediate panel used to compose the registered weapon batch V01 contact sheets"
+}

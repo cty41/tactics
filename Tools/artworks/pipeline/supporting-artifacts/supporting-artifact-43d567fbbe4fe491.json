@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 2,
+  "supportingArtifactId": "supporting-artifact-43d567fbbe4fe491",
+  "artifact": {
+    "path": "Tools/artworks/pure_run/equipment/candidates/pure_run_equipment_leather_boots_v01_128.png",
+    "sha256": "c727cfdcae6c966526e5b249fe1511edaff8f1d90a1e3ede47b24f6799ee3334"
+  },
+  "role": "equipment-review-preview",
+  "note": "Armor batch V1 128px preview."
+}

@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 2,
+  "supportingArtifactId": "supporting-artifact-467fd3e6310edd7f",
+  "artifact": {
+    "path": "Tools/artworks/pure_run/villager/reviews/villager_hit_ul_v02_tears_comparison.png",
+    "sha256": "7bc637b7869a504a1f3f0f254097ba75af7e2b0a52985d2c848342ef652becb0"
+  },
+  "role": "pose-comparison",
+  "note": "Next villager pose review: UL hit V02 preserves the approved UL back-three-quarter identity, complete four-paw topology, grounded y=236 recoil, and bilateral streaming tears."
+}

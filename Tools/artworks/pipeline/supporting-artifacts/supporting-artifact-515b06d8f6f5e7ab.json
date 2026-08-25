@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 2,
+  "supportingArtifactId": "supporting-artifact-515b06d8f6f5e7ab",
+  "artifact": {
+    "path": "Tools/artworks/pure_run/equipment/candidates/pure_run_equipment_leather_armor_v04.png",
+    "sha256": "bfa2dd69f85136690106ebb1998845ff20fdc589417012167e4988861c722b3b"
+  },
+  "role": "equipment-review-candidate",
+  "note": "Leather armor V4 corrected visible scale and preserved edge antialiasing."
+}

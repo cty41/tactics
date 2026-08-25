@@ -1,0 +1,59 @@
+{
+  "schemaVersion": 2,
+  "attemptId": "job-66bf33da4cb41b4f-a001",
+  "jobId": "job-66bf33da4cb41b4f",
+  "ordinal": 1,
+  "parentAttemptId": null,
+  "retryFeedbackId": null,
+  "promptDelta": null,
+  "technicalRemediation": false,
+  "state": "promoted",
+  "artifacts": {
+    "source": {
+      "path": "Tools/artworks/pure_run/props/concepts/pure_run_prop_altar_2x2_v01_transparent_source_v02.png",
+      "sha256": "837644138902e99fb3c0776ee1abd08e3aad204eba94954f030c6323a81fe1d0"
+    },
+    "raw": {
+      "path": "Tools/artworks/pipeline/artifacts/job-66bf33da4cb41b4f/job-66bf33da4cb41b4f-a001/raw.png",
+      "sha256": "837644138902e99fb3c0776ee1abd08e3aad204eba94954f030c6323a81fe1d0"
+    },
+    "prepared": {
+      "path": "Tools/artworks/pipeline/artifacts/job-66bf33da4cb41b4f/job-66bf33da4cb41b4f-a001/prepared.png",
+      "sha256": "4ad1514ac8e4cdf2162675da0243cb409b5b80b11e2ae73f06c2c46ba1241cb5"
+    },
+    "review": {
+      "overlay": {
+        "path": "Tools/artworks/pipeline/reviews/job-66bf33da4cb41b4f-a001/overlay.png",
+        "sha256": "8c20bbed7a0b5880b8e7f64480b24838c98e9ab854fbe0c2703a2d2507f12ed4"
+      },
+      "preview128": {
+        "path": "Tools/artworks/pipeline/reviews/job-66bf33da4cb41b4f-a001/preview128.png",
+        "sha256": "093ed560ee10562d7f113e6a96f60e089be92d687be49390c63c92c2776d4ca5"
+      },
+      "tile64x32": {
+        "path": "Tools/artworks/pipeline/reviews/job-66bf33da4cb41b4f-a001/tile64x32.png",
+        "sha256": "b7fc03e463fcbd27bd27f52e74c23e63de360b130b19e98db2a9eb1f1c749199"
+      }
+    },
+    "promoted": {
+      "master": {
+        "path": "Tools/artworks/pure_run/props/approved/pure_run_prop_altar_v01.png",
+        "sha256": "4ad1514ac8e4cdf2162675da0243cb409b5b80b11e2ae73f06c2c46ba1241cb5"
+      },
+      "preview": {
+        "path": "Tools/artworks/pure_run/props/approved/pure_run_prop_altar_v01_128.png",
+        "sha256": "093ed560ee10562d7f113e6a96f60e089be92d687be49390c63c92c2776d4ca5"
+      }
+    }
+  },
+  "report": {
+    "path": "Tools/artworks/pipeline/reports/report-b527304a874ac7ac.json",
+    "sha256": "0e02284fb3a66ecdc955ac1797097ccb410ef1c8926058cb8c0e216a9d443f55"
+  },
+  "approvalId": "approval-24fe738d80cb2aa0",
+  "feedbackId": null,
+  "preparation": {
+    "chroma": "00ff00",
+    "chromaTolerance": 72
+  }
+}

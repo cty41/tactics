@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 2,
+  "feedbackId": "feedback-38e0378ad7535fb0",
+  "attemptId": "job-50ee228ca9e56495-a003",
+  "candidateSha256": "e7c56a71054ab2b1d86af08a87ae4e435fbde5d576fe0cc1bc55f17c7b824913",
+  "reviewer": "codex",
+  "verdict": "technical_failed",
+  "strengths": [],
+  "defects": [
+    "The new far paw label touched less than three pixels of the core label at its occluded emergence edge."
+  ],
+  "nextPromptDelta": "Keep candidate unchanged; extend the semantic core three pixels to the far-paw occlusion boundary.",
+  "recordedAt": "2026-08-24T02:02:53.7389469Z",
+  "authorType": "agent",
+  "categories": [
+    "processing"
+  ],
+  "disposition": "technical_failed",
+  "frozenInvariants": [],
+  "pendingFixes": [
+    "The new far paw label touched less than three pixels of the core label at its occluded emergence edge."
+  ]
+}

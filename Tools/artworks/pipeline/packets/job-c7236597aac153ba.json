@@ -1,0 +1,21 @@
+{
+  "schemaVersion": 2,
+  "jobId": "job-c7236597aac153ba",
+  "state": "ready",
+  "contractId": "contract-8b6f8ad03d5c32c2",
+  "contractSha256": "f2b224beacddc16c5a00efc11a47bdcd1e738111e117de72a0aad12b660b2b91",
+  "prompt": {
+    "path": "Tools/artworks/pure_run/props/prompt_merchant_trade.md",
+    "sha256": "73a7fa057ed7d4bc4cd9f5b99f1ab01e850a78e55d25945b0a681134ee0c1700"
+  },
+  "inputs": [],
+  "target": {
+    "direction": "down-right",
+    "pose": "display"
+  },
+  "series": null,
+  "conceptOnly": false,
+  "contractRequirements": null,
+  "requiresInvocation": false,
+  "poseGuide": null
+}

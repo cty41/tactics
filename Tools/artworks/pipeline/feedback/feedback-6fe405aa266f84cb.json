@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 2,
+  "feedbackId": "feedback-6fe405aa266f84cb",
+  "attemptId": "job-50ee228ca9e56495-a001",
+  "candidateSha256": "ac58cf2fda9d23127ff8fad9f8b33a5c67c35f1154490349e4e9c20a3bcf87a4",
+  "reviewer": "codex",
+  "verdict": "retry",
+  "strengths": [],
+  "defects": [
+    "The overnight UL draft predates the promoted DR identity and reads too close to a straight rear view."
+  ],
+  "nextPromptDelta": "Regenerate from the promoted DR identity using the calibrated red-shiba UL back-three-quarter direction reference.",
+  "recordedAt": "2026-08-24T01:57:04.7160335Z",
+  "authorType": "agent",
+  "categories": [
+    "identity",
+    "pose_axis"
+  ],
+  "disposition": "retry",
+  "frozenInvariants": [],
+  "pendingFixes": [
+    "The overnight UL draft predates the promoted DR identity and reads too close to a straight rear view."
+  ]
+}

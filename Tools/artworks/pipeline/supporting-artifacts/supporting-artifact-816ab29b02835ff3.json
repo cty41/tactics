@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 2,
+  "supportingArtifactId": "supporting-artifact-816ab29b02835ff3",
+  "artifact": {
+    "path": "Tools/artworks/pure_run/equipment/reviews/equipment_armor_remaining_flat_v1.png",
+    "sha256": "c12cc21599a3e14217107543daf1004ff0e1f110b398f93b43d89de04dc995cf"
+  },
+  "role": "equipment-review-sheet",
+  "note": "Remaining armor candidates with approved leather armor V4 style anchor."
+}

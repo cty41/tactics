@@ -1,0 +1,53 @@
+{
+  "schemaVersion": 2,
+  "attemptId": "job-65c53a1e145fc2d5-a001",
+  "jobId": "job-65c53a1e145fc2d5",
+  "ordinal": 1,
+  "parentAttemptId": null,
+  "retryFeedbackId": null,
+  "promptDelta": null,
+  "technicalRemediation": false,
+  "state": "review_pending",
+  "artifacts": {
+    "source": {
+      "path": "Tools/artworks/pure_run/props/approved/pure_run_prop_altar_v01.png",
+      "sha256": "4ad1514ac8e4cdf2162675da0243cb409b5b80b11e2ae73f06c2c46ba1241cb5"
+    },
+    "raw": {
+      "path": "Tools/artworks/pipeline/artifacts/job-65c53a1e145fc2d5/job-65c53a1e145fc2d5-a001/raw.png",
+      "sha256": "4ad1514ac8e4cdf2162675da0243cb409b5b80b11e2ae73f06c2c46ba1241cb5"
+    },
+    "prepared": {
+      "path": "Tools/artworks/pipeline/artifacts/job-65c53a1e145fc2d5/job-65c53a1e145fc2d5-a001/prepared.png",
+      "sha256": "4ad1514ac8e4cdf2162675da0243cb409b5b80b11e2ae73f06c2c46ba1241cb5"
+    },
+    "tilePlacementMetrics": {
+      "path": "Tools/artworks/pipeline/reviews/job-65c53a1e145fc2d5-a001/tilePlacementMetrics.json",
+      "sha256": "4964e9bd9969f0d59af12da1e06a9fccc0d4b73e9aeef3d2766832966054761b"
+    },
+    "review": {
+      "overlay": {
+        "path": "Tools/artworks/pipeline/reviews/job-65c53a1e145fc2d5-a001/overlay.png",
+        "sha256": "8c20bbed7a0b5880b8e7f64480b24838c98e9ab854fbe0c2703a2d2507f12ed4"
+      },
+      "preview128": {
+        "path": "Tools/artworks/pipeline/reviews/job-65c53a1e145fc2d5-a001/preview128.png",
+        "sha256": "093ed560ee10562d7f113e6a96f60e089be92d687be49390c63c92c2776d4ca5"
+      },
+      "tile64x32": {
+        "path": "Tools/artworks/pipeline/reviews/job-65c53a1e145fc2d5-a001/tile64x32.png",
+        "sha256": "5c58804aebecab616962947b6faa939fdce0b064dc31f30283863f95dc7640a7"
+      }
+    }
+  },
+  "report": {
+    "path": "Tools/artworks/pipeline/reports/report-8808780a8b76a3f8.json",
+    "sha256": "6e760c3c708d66082a677cc67ee1fe9696007de44c5fa59234d50ccbe8d8d7b5"
+  },
+  "approvalId": null,
+  "feedbackId": null,
+  "preparation": {
+    "chroma": null,
+    "chromaTolerance": 0
+  }
+}

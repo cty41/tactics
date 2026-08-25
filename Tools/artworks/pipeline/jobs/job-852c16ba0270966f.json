@@ -1,0 +1,21 @@
+{
+  "schemaVersion": 2,
+  "jobId": "job-852c16ba0270966f",
+  "state": "ready",
+  "contractId": "contract-eba247d8d118d640",
+  "contractSha256": "3e313b8d66cd66732dbcf65c27c71c44145be0bd0661e375641ba0a2822e7b2a",
+  "prompt": {
+    "path": "Tools/artworks/pure_run/equipment/prompt_leather_armor_v02.md",
+    "sha256": "0678d17d5c6f46345694c8cf7b0c9c84bb3dcc4a40f98c1c782d5da99ea61e3c"
+  },
+  "inputs": [],
+  "target": {
+    "direction": "down-right",
+    "pose": "display"
+  },
+  "series": null,
+  "conceptOnly": false,
+  "contractRequirements": null,
+  "requiresInvocation": false,
+  "poseGuide": null
+}

@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 2,
+  "supportingArtifactId": "supporting-artifact-7f4e182572b53ca1",
+  "artifact": {
+    "path": "Tools/artworks/pure_run/equipment/candidates/pure_run_equipment_leather_boots_v03_128.png",
+    "sha256": "62e5ab6e531a0840b6830a1de706766e59108ff7f69d7e87fbded12417a4b3b1"
+  },
+  "role": "equipment-rejected-processing-evidence",
+  "note": "Pre-fix candidate retained as green-background crop regression evidence."
+}

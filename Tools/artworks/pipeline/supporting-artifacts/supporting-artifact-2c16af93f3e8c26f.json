@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 2,
+  "supportingArtifactId": "supporting-artifact-2c16af93f3e8c26f",
+  "artifact": {
+    "path": "Tools/artworks/pure_run/equipment/candidates/pure_run_equipment_amazon_round_shield_v01.png",
+    "sha256": "6ab00e46d0742c5ed130af2946f151b7334d96ec6380cee3dc0a675de35c321b"
+  },
+  "role": "equipment-review-candidate",
+  "note": "Unapproved equipment batch V01 transformed candidate for numbered human review"
+}

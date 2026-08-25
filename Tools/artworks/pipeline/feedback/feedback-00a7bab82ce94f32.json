@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 2,
+  "feedbackId": "feedback-00a7bab82ce94f32",
+  "attemptId": "job-897833991fd2f552-a005",
+  "candidateSha256": "86feacaead84250178533429c93421ba9ac721a10bb56eb93205366c83f8aa4e",
+  "reviewer": "cty41",
+  "verdict": "retry",
+  "strengths": [],
+  "defects": [
+    "Try rotating the DR facing approximately 20 degrees clockwise while keeping the body upright."
+  ],
+  "nextPromptDelta": "Yaw the face and near/far features 20 degrees clockwise; preserve baseline, capsule identity, and scale.",
+  "recordedAt": "2026-08-24T01:35:31.1961741Z",
+  "authorType": "human",
+  "categories": [
+    "pose_axis"
+  ],
+  "disposition": "retry",
+  "frozenInvariants": [],
+  "pendingFixes": [
+    "Try rotating the DR facing approximately 20 degrees clockwise while keeping the body upright."
+  ]
+}

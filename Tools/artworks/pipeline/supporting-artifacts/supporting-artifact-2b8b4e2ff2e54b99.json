@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 2,
+  "supportingArtifactId": "supporting-artifact-2b8b4e2ff2e54b99",
+  "artifact": {
+    "path": "Tools/artworks/pure_run/equipment/candidates/pure_run_equipment_iron_helmet_v03_128.png",
+    "sha256": "64aef068e6ebb7a8edc96e3127acfea2566bab26b9f09181f1f33830a87f13b9"
+  },
+  "role": "equipment-rejected-processing-evidence",
+  "note": "Pre-fix candidate retained as green-background crop regression evidence."
+}

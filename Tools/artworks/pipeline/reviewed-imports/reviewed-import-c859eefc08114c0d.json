@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 2,
+  "reviewedImportId": "reviewed-import-c859eefc08114c0d",
+  "contractId": "contract-def442ba287568ed",
+  "source": {
+    "path": "Tools/artworks/pure_run/equipment/concepts/pure_run_equipment_amazon_javelin_v01_chroma_source.png",
+    "sha256": "81715ef5064c46049f74f88a9446e325ae258084dd9d0c1fa393f7bb03f030fe"
+  },
+  "candidate": {
+    "path": "Tools/artworks/pure_run/equipment/candidates/pure_run_equipment_amazon_javelin_v01_promote_exact.png",
+    "sha256": "2ca1328677a5c83cc3e79bb9c0165c3814ae332ea981cb3a4984daf9ce85f06e"
+  },
+  "preview": {
+    "path": "Tools/artworks/pure_run/equipment/candidates/pure_run_equipment_amazon_javelin_v01_promote_exact_128.png",
+    "sha256": "3f0484620a4ac8044012494c7841cc565545da9bd55bb008b472e9459903604d"
+  },
+  "sizeComparison": {
+    "path": "Tools/artworks/pure_run/equipment/reviews/pure_run_equipment_amazon_javelin_v01_promote_exact_size_comparison.png",
+    "sha256": "88e30077bc862a36a28bd98d22be5d211b2be5daa6f517ce42b8aede974b4e84"
+  },
+  "reviewer": "cty41",
+  "reason": "User approved weapons batch items 1-6; only exact chroma residue was removed before import.",
+  "acceptedAt": "2026-08-24T15:19:39.3259666+08:00",
+  "sourceMode": "reviewed_import"
+}

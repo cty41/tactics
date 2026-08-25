@@ -1,0 +1,43 @@
+{
+  "schemaVersion": 2,
+  "reportId": "report-c5d2d669a451ca76",
+  "passed": true,
+  "issues": [],
+  "candidateGeometry": {
+    "bbox": [
+      70,
+      137,
+      187,
+      237
+    ],
+    "bboxSize": [
+      117,
+      100
+    ],
+    "center": [
+      128.0,
+      186.5
+    ]
+  },
+  "previewGeometry": {
+    "bbox": [
+      34,
+      68,
+      94,
+      119
+    ],
+    "bboxSize": [
+      60,
+      51
+    ],
+    "center": [
+      63.5,
+      93.0
+    ]
+  },
+  "reviewedImportId": "reviewed-import-fdee0b4ff822b5ed",
+  "styleReport": {
+    "path": "Tools/artworks/pipeline/style-reports/equipment-style-report-4c28bb85d878e1f3.json",
+    "sha256": "09bb3f879a82d3b0faade0adcd4b848426e6529a43ba93d1b83856d520e5cd86"
+  }
+}

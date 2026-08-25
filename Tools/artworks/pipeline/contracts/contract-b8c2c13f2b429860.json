@@ -1,0 +1,51 @@
+{
+  "schemaVersion": 2,
+  "contractId": "contract-b8c2c13f2b429860",
+  "assetId": "prop-altar-2x2-placement-review",
+  "approvedAssetId": "prop-altar",
+  "kind": "projectile",
+  "direction": "down-right",
+  "pose": "display",
+  "anchor": null,
+  "maskRequired": false,
+  "noArms": false,
+  "handSides": {
+    "near_hand": null,
+    "far_hand": null
+  },
+  "occlusion": null,
+  "compositionSpec": null,
+  "identitySpec": null,
+  "requiresInvocation": false,
+  "canvasSpec": {
+    "masterSize": [
+      384,
+      384
+    ]
+  },
+  "tilePlacementSpec": {
+    "footprintTiles": [
+      2,
+      2
+    ],
+    "displayScale": 0.5,
+    "groundAnchorPx": [
+      192.0,
+      342.0
+    ],
+    "anchorMode": "contact_shape_center"
+  },
+  "tolerances": {
+    "sizePx": 3,
+    "centerPx": 2
+  },
+  "outputs": {
+    "master": "Tools/artworks/pure_run/props/approved/pure_run_prop_altar_v01.png",
+    "preview": "Tools/artworks/pure_run/props/approved/pure_run_prop_altar_v01_128.png"
+  },
+  "rights": {
+    "rightsHolder": "cty41",
+    "license": "CC-BY-4.0",
+    "provenance": "project-owned-gpt-generated"
+  }
+}

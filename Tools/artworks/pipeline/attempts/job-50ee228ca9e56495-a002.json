@@ -1,0 +1,57 @@
+{
+  "schemaVersion": 2,
+  "attemptId": "job-50ee228ca9e56495-a002",
+  "jobId": "job-50ee228ca9e56495",
+  "ordinal": 2,
+  "parentAttemptId": "job-50ee228ca9e56495-a001",
+  "retryFeedbackId": "feedback-6fe405aa266f84cb",
+  "promptDelta": null,
+  "technicalRemediation": false,
+  "state": "technical_failed",
+  "artifacts": {
+    "source": {
+      "path": "Tools/artworks/pure_run/villager/concepts/pure_run_villager_idle_ul_v02_normalized_source_v01.png",
+      "sha256": "a770811c3ca604f8ac1dd86c232ec3d28bb507308a8bc9b32e5e4e9398465641"
+    },
+    "raw": {
+      "path": "Tools/artworks/pipeline/artifacts/job-50ee228ca9e56495/job-50ee228ca9e56495-a002/raw.png",
+      "sha256": "a770811c3ca604f8ac1dd86c232ec3d28bb507308a8bc9b32e5e4e9398465641"
+    },
+    "prepared": {
+      "path": "Tools/artworks/pipeline/artifacts/job-50ee228ca9e56495/job-50ee228ca9e56495-a002/prepared.png",
+      "sha256": "6f857fadbe71ce53c124803d465b63f66ca9672695bdd65a3764cebe7f9b0b2d"
+    },
+    "maskSource": {
+      "path": "Tools/artworks/pure_run/villager/masks/pure_run_villager_idle_ul_v02_semantic_mask_v01.png",
+      "sha256": "2054cd6417145e2d842bbc319ef21736c18904b26a13c8769d2168b85e8f84bd"
+    },
+    "mask": {
+      "path": "Tools/artworks/pipeline/artifacts/job-50ee228ca9e56495/job-50ee228ca9e56495-a002/mask.png",
+      "sha256": "2054cd6417145e2d842bbc319ef21736c18904b26a13c8769d2168b85e8f84bd"
+    },
+    "review": {
+      "overlay": {
+        "path": "Tools/artworks/pipeline/reviews/job-50ee228ca9e56495-a002/overlay.png",
+        "sha256": "95306db64743822bb1ba1e3fec074c0942ea94490c983738609d73e14c88fcf0"
+      },
+      "preview128": {
+        "path": "Tools/artworks/pipeline/reviews/job-50ee228ca9e56495-a002/preview128.png",
+        "sha256": "4e88855b2acfed6a94cae771ef5ee670025f84f22849bd10362bec65ab2cc520"
+      },
+      "tile64x32": {
+        "path": "Tools/artworks/pipeline/reviews/job-50ee228ca9e56495-a002/tile64x32.png",
+        "sha256": "a5522daec2ef890a3f8ef305fb25c8ffa48847b5377d94d7210d310f3fcda5d8"
+      }
+    }
+  },
+  "report": {
+    "path": "Tools/artworks/pipeline/reports/report-988fc1218db525b0.json",
+    "sha256": "7602ef454e4cb6625fb9d6ed5f96a4ad9a425167a057118fec0b93474d53a300"
+  },
+  "approvalId": null,
+  "feedbackId": "feedback-04a985546b72eefc",
+  "preparation": {
+    "chroma": null,
+    "chromaTolerance": 0
+  }
+}

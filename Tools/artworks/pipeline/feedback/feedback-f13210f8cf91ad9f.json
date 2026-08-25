@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 2,
+  "feedbackId": "feedback-f13210f8cf91ad9f",
+  "attemptId": "job-7a32a988b5b56657-a005",
+  "candidateSha256": "e87562a8f3184d0f6a9ead468abf9d35b4a740a356ac79c8a6a054603fb7ffef",
+  "reviewer": "codex",
+  "verdict": "technical_failed",
+  "strengths": [],
+  "defects": [
+    "Paw labels drawn over the diagonal core cut gaps into core rows and left insufficient near-hand contact."
+  ],
+  "nextPromptDelta": "Keep candidate unchanged; draw paws first, then overlay the connected core through body-paw joints and extend to near-hand edge.",
+  "recordedAt": "2026-08-24T02:32:51.3853897Z",
+  "authorType": "agent",
+  "categories": [
+    "processing"
+  ],
+  "disposition": "technical_failed",
+  "frozenInvariants": [],
+  "pendingFixes": [
+    "Paw labels drawn over the diagonal core cut gaps into core rows and left insufficient near-hand contact."
+  ]
+}

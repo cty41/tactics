@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 2,
+  "supportingArtifactId": "supporting-artifact-9e92ff4d662c4a26",
+  "artifact": {
+    "path": "Tools/artworks/pure_run/equipment/candidates/pure_run_equipment_mage_oak_staff_v01_reviewed_128.png",
+    "sha256": "b28756d35f2e0bb2e22430037c2aa6893028a0a8bbc69120e2d386a0a4a994f8"
+  },
+  "role": "promotion-workflow-intermediate",
+  "note": "Intermediate created during reviewed sprite normalization or size comparison."
+}

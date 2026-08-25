@@ -1,0 +1,11 @@
+{
+  "schemaVersion": 2,
+  "transactionId": "transaction-530a7d33eefc68f1",
+  "operation": "ingest",
+  "payload": {
+    "attemptId": "job-852c16ba0270966f-a001",
+    "sourceSha256": "302d7f60c96fc75f7914a2e428414af19cd0fd735b94fc561a4177dc90e8682d",
+    "invocationId": null
+  },
+  "state": "committed"
+}

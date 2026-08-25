@@ -1,0 +1,92 @@
+{
+  "schemaVersion": 1,
+  "sizeComparisonId": "size-comparison-09f1b867ab434617",
+  "inputs": [
+    {
+      "label": "Identity",
+      "artifact": {
+        "path": "Tools/artworks/pure_run/equipment/approved/pure_run_equipment_leather_armor_v04.png",
+        "sha256": "bfa2dd69f85136690106ebb1998845ff20fdc589417012167e4988861c722b3b"
+      }
+    },
+    {
+      "label": "Previous",
+      "artifact": {
+        "path": "Tools/artworks/pure_run/equipment/candidates/pure_run_equipment_wizard_hat_v03b.png",
+        "sha256": "2da1f2141d7576edca201561e709b7b272a220db4d764755ffa807e8068a1699"
+      }
+    },
+    {
+      "label": "Pose reference",
+      "artifact": {
+        "path": "Tools/artworks/pure_run/equipment/approved/pure_run_equipment_iron_helmet_v04.png",
+        "sha256": "ee67ec9e8445a37d26a2db9e434402ef53861dfd82c83723f2681bf70dab0f56"
+      }
+    },
+    {
+      "label": "Candidate",
+      "artifact": {
+        "path": "Tools/artworks/pure_run/equipment/candidates/pure_run_equipment_wizard_hat_v04_alpha_fixed.png",
+        "sha256": "752963c4df58947c87c21d754e65aa6f16bead35a69e0e05a9d9f74022f0c8a7"
+      }
+    }
+  ],
+  "measurements": [
+    {
+      "label": "Identity",
+      "bbox": [
+        39,
+        64,
+        88,
+        119
+      ],
+      "bboxSize": [
+        49,
+        55
+      ]
+    },
+    {
+      "label": "Previous",
+      "bbox": [
+        25,
+        64,
+        103,
+        119
+      ],
+      "bboxSize": [
+        78,
+        55
+      ]
+    },
+    {
+      "label": "Pose reference",
+      "bbox": [
+        43,
+        66,
+        85,
+        119
+      ],
+      "bboxSize": [
+        42,
+        53
+      ]
+    },
+    {
+      "label": "Candidate",
+      "bbox": [
+        34,
+        68,
+        94,
+        119
+      ],
+      "bboxSize": [
+        60,
+        51
+      ]
+    }
+  ],
+  "artifact": {
+    "path": "Tools/artworks/pure_run/equipment/reviews/pure_run_equipment_wizard_hat_v04_alpha_fixed_size_comparison.png",
+    "sha256": "93f93f82561920c630e4e91fdc63f365a5a82b479bfa07c4d798bb589e5dc10f"
+  }
+}

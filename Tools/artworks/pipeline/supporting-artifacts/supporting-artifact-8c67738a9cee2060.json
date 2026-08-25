@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 2,
+  "supportingArtifactId": "supporting-artifact-8c67738a9cee2060",
+  "artifact": {
+    "path": "Tools/artworks/pure_run/equipment/candidates/pure_run_equipment_leather_armor_v01.png",
+    "sha256": "bfe8790b5274c4cf2dae399da8c316aa7fdb8552556658d376941c8e731eba11"
+  },
+  "role": "equipment-review-candidate",
+  "note": "Armor batch V1 controlled 256px review candidate; baseline y=236."
+}

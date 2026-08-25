@@ -1,0 +1,27 @@
+{
+  "schemaVersion": 2,
+  "feedbackId": "feedback-748cb678ec3a7843",
+  "attemptId": "job-bcbd77a57ecbea0b-a001",
+  "candidateSha256": "3b6492fe7b935ff1df4c4d154abf1c32e866e1e47e9115f80b3c2bd2a9545edf",
+  "reviewer": "cty41",
+  "verdict": "retry",
+  "strengths": [
+    "旧候选作为抽象图形轮廓尚可"
+  ],
+  "defects": [
+    "旧候选无法表达 Start 的含义，且与统一节点 mask 体系不协调"
+  ],
+  "nextPromptDelta": "使用已批准的场景篝火作为直接视觉来源，压成 #6B4657 单色 Start 节点 mask",
+  "recordedAt": "2026-08-23T04:03:37Z",
+  "authorType": "human",
+  "categories": [
+    "identity"
+  ],
+  "disposition": "retry",
+  "frozenInvariants": [
+    "256x256 透明画布、统一 #6B4657、无底板、节点图尺寸与居中规范"
+  ],
+  "pendingFixes": [
+    "保留彩色篝火的火焰与交叉木柴识别轮廓并转为单色 mask"
+  ]
+}

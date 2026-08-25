@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 2,
+  "supportingArtifactId": "supporting-artifact-3bde340afa2b0ae5",
+  "artifact": {
+    "path": "Tools/artworks/pure_run/props/concepts/pure_run_prop_altar_2x2_v01_clawlines_preview.png",
+    "sha256": "427b6649e0c5c80a947c523cf5b74bcd9d2b6628f3abf78ad49ab80f07196d09"
+  },
+  "role": "intermediate-transparent-preview",
+  "note": "Intermediate transparent 384 master used to construct Tilemap comparisons; superseded by attempt a002 prepared artifact."
+}

@@ -65,6 +65,8 @@ WAIVABLE_GATE_ISSUES = {"core_size_out_of_tolerance"}
 ASSET_ROLES = {"component", "assembled_sprite"}
 COMPONENT_KINDS = {"body", "equipment", "paw_overlay", "foot_overlay", "death_expression_overlay"}
 SOURCE_MODES = {"generated", "derived", "pre_v3_import"}
+EQUIPMENT_CATEGORIES = {"weapon", "shield", "armor", "jewelry", "consumable"}
+LOCAL_REFERENCE_ROLES = {"shape_reference", "style_reference", "material_reference"}
 ASSEMBLY_CANONICAL_LAYER_ORDER = (
     "far_foot_overlay", "far_paw_overlay", "body", "equipment",
     "near_paw_overlay", "near_foot_overlay",
@@ -206,6 +208,8 @@ def approved_anchor_mask(store: Store, candidate_hash: str) -> dict[str, str] | 
 
 
 def required_review_keys(attempt: dict[str, Any], contract: dict[str, Any]) -> set[str]:
+    if contract.get("equipmentProductionSpec"):
+        return {"equipmentPanel"}
     if attempt.get("sourceMode") == "reviewed_import":
         return {"sizeComparison"}
     required = {"overlay", "preview128", "tile64x32"}
@@ -216,6 +220,68 @@ def required_review_keys(attempt: dict[str, Any], contract: dict[str, Any]) -> s
     if contract.get("assetRole") == "assembled_sprite":
         required.add("assemblyLayerReview")
     return required
+
+
+def render_equipment_review(store: Store, args: argparse.Namespace) -> dict[str, Any]:
+    attempt = load_json(store.record("attempts", args.attempt_id))
+    job = load_json(store.record("jobs", attempt["jobId"]))
+    contract = load_json(store.record("contracts", job["contractId"]))
+    spec = contract.get("equipmentProductionSpec")
+    if not spec or attempt.get("state") != "prepared":
+        raise PipelineError("equipment review requires a prepared equipment attempt")
+    report = load_json(store.absolute(attempt["report"]["path"], must_exist=True))
+    if not report.get("passed"):
+        raise PipelineError("equipment technical gate did not pass")
+    candidate = Image.open(store.absolute(candidate_artifact(attempt)["path"], must_exist=True)).convert("RGBA")
+    previous = None
+    if attempt.get("parentAttemptId"):
+        parent = load_json(store.record("attempts", attempt["parentAttemptId"]))
+        parent_artifact = candidate_artifact(parent)
+        if parent_artifact:
+            previous = Image.open(store.absolute(parent_artifact["path"], must_exist=True)).convert("RGBA")
+    anchors = [Image.open(store.absolute(item["path"], must_exist=True)).convert("RGBA") for item in spec["anchors"]]
+    cells = anchors + ([previous] if previous else []) + [candidate, make_preview(candidate)]
+    panel = Image.new("RGBA", (max(1, len(cells)) * 272, 300), (28, 30, 34, 255))
+    draw = ImageDraw.Draw(panel)
+    labels = [item["role"] for item in spec["anchors"]] + (["previous"] if previous else []) + ["candidate", "preview128"]
+    for index, (cell, label) in enumerate(zip(cells, labels)):
+        thumb = cell.copy(); thumb.thumbnail((256, 256), Image.Resampling.LANCZOS)
+        x = index * 272 + (272 - thumb.width) // 2
+        panel.alpha_composite(thumb, (x, 8 + (256 - thumb.height) // 2))
+        draw.text((index * 272 + 8, 276), label, fill=(240, 240, 240, 255))
+    output_rel = store.relative(args.output)
+    output = store.absolute(output_rel); output.parent.mkdir(parents=True, exist_ok=True)
+    panel.save(output, format="PNG", optimize=False, compress_level=9)
+    artifact = {"path": output_rel, "sha256": sha256_file(output)}
+    attempt["artifacts"]["review"] = {"equipmentPanel": artifact}
+    transition(attempt, {"prepared"}, "review_pending")
+    save_attempt(store, attempt)
+    register_public_artifacts(store, [artifact], "project-owned-artwork-review")
+    return {"schemaVersion": 2, "attemptId": attempt["attemptId"], "outputs": {"equipmentPanel": artifact}}
+
+
+def record_equipment_style_verdict(store: Store, args: argparse.Namespace) -> dict[str, Any]:
+    attempt = load_json(store.record("attempts", args.attempt_id))
+    job = load_json(store.record("jobs", attempt["jobId"]))
+    contract = load_json(store.record("contracts", job["contractId"]))
+    if not contract.get("equipmentProductionSpec") or attempt.get("state") != "review_pending":
+        raise PipelineError("style verdict requires equipment review_pending attempt")
+    if args.reviewer != "cty41":
+        raise PipelineError("equipment style verdict must be issued by cty41")
+    _iso_timestamp(args.decided_at, "--decided-at")
+    review_hashes = approval_review_hashes(store, attempt, contract)
+    payload = {"attemptId": attempt["attemptId"], "candidateSha256": candidate_artifact(attempt)["sha256"],
+               "reviewSha256": review_hashes, "reviewer": args.reviewer,
+               "decision": args.decision, "reason": args.reason, "decidedAt": args.decided_at}
+    verdict_id = stable_id("equipment-style-verdict", payload)
+    record = {"schemaVersion": 2, "equipmentStyleVerdictId": verdict_id, **payload}
+    write_json_idempotent(store.record("equipment-style-verdicts", verdict_id), record, immutable=True)
+    attempt["equipmentStyleVerdictId"] = verdict_id
+    attempt.setdefault("equipmentStyleVerdictIds", [])
+    if verdict_id not in attempt["equipmentStyleVerdictIds"]:
+        attempt["equipmentStyleVerdictIds"].append(verdict_id)
+    save_attempt(store, attempt)
+    return record
 
 
 def approval_review_hashes(store: Store, attempt: dict[str, Any], contract: dict[str, Any]) -> dict[str, str]:
@@ -487,6 +553,116 @@ def create_contract(store: Store, args: argparse.Namespace) -> dict[str, Any]:
             "foreheadBlazeMinIou": getattr(args, "forehead_blaze_min_iou", 0.45),
             "foreheadBlazeAreaRatio": [0.65, 1.45],
         }
+    master_width = getattr(args, "master_width", 256)
+    master_height = getattr(args, "master_height", 256)
+    if master_width <= 0 or master_height <= 0:
+        raise PipelineError("master dimensions must be positive")
+    placement_values = {
+        "footprint_width": getattr(args, "footprint_width", None),
+        "footprint_height": getattr(args, "footprint_height", None),
+        "display_scale": getattr(args, "display_scale", None),
+        "ground_anchor_x": getattr(args, "ground_anchor_x", None),
+        "ground_anchor_y": getattr(args, "ground_anchor_y", None),
+        "anchor_mode": getattr(args, "anchor_mode", None),
+    }
+    requested_board_role = getattr(args, "board_role", None)
+    requested_screen_facing = getattr(args, "screen_facing", None)
+    if not any(value is not None for value in placement_values.values()) and (
+            requested_board_role is not None or requested_screen_facing is not None):
+        raise PipelineError("board orientation requires tile placement")
+    tile_placement = None
+    if any(value is not None for value in placement_values.values()):
+        if any(value is None for value in placement_values.values()):
+            raise PipelineError("tile placement requires footprint, display scale, ground anchor, and anchor mode")
+        footprint_width = placement_values["footprint_width"]
+        footprint_height = placement_values["footprint_height"]
+        display_scale = placement_values["display_scale"]
+        anchor_x = placement_values["ground_anchor_x"]
+        anchor_y = placement_values["ground_anchor_y"]
+        if footprint_width <= 0 or footprint_height <= 0:
+            raise PipelineError("tile footprint dimensions must be positive")
+        if display_scale <= 0:
+            raise PipelineError("tile placement display scale must be positive")
+        if not 0 <= anchor_x < master_width or not 0 <= anchor_y < master_height:
+            raise PipelineError("tile placement ground anchor must be inside the master canvas")
+        tile_placement = {
+            "footprintTiles": [footprint_width, footprint_height],
+            "displayScale": display_scale,
+            "groundAnchorPx": [anchor_x, anchor_y],
+            "anchorMode": placement_values["anchor_mode"],
+        }
+        board_role = requested_board_role
+        screen_facing = requested_screen_facing
+        if (board_role is None) != (screen_facing is None):
+            raise PipelineError("tile placement board role and screen facing must be declared together")
+        if board_role is not None:
+            allowed_facing = {
+                "target": {"down_left", "non_directional"},
+                "player": {"up_right", "non_directional"},
+                "neutral": {"non_directional"},
+            }
+            if screen_facing not in allowed_facing[board_role]:
+                raise PipelineError(f"screen facing {screen_facing} is invalid for board role {board_role}")
+            tile_placement.update({"boardRole": board_role, "screenFacing": screen_facing})
+    style_spec = None
+    style_profile_path = getattr(args, "style_profile", None)
+    style_values = (
+        getattr(args, "target_visible_height", None),
+        getattr(args, "visible_height_min", None),
+        getattr(args, "visible_height_max", None),
+    )
+    if style_profile_path or (any(value is not None for value in style_values)
+                              and not getattr(args, "equipment_production_profile", None)):
+        if not style_profile_path or any(value is None for value in style_values):
+            raise PipelineError("equipment style requires profile, target height, and visible height range")
+        target_height, minimum_height, maximum_height = style_values
+        if not 0 < minimum_height <= target_height <= maximum_height <= master_height:
+            raise PipelineError("invalid equipment visible height range")
+        profile_rel = store.relative(style_profile_path, must_exist=True)
+        profile = load_json(store.absolute(profile_rel))
+        if profile.get("schemaVersion") != 1 or not profile.get("profileId"):
+            raise PipelineError("equipment style profile must use schemaVersion 1 and declare profileId")
+        for reference in profile.get("references", []):
+            reference_path = store.absolute(reference["path"], must_exist=True)
+            if sha256_file(reference_path) != reference.get("sha256"):
+                raise PipelineError("equipment style reference hash mismatch")
+        style_spec = {
+            "profileId": profile["profileId"],
+            "profilePath": profile_rel,
+            "profileSha256": sha256_file(store.absolute(profile_rel)),
+            "targetVisibleHeight": target_height,
+            "visibleHeightRange": [minimum_height, maximum_height],
+        }
+    equipment_spec = None
+    production_profile_path = getattr(args, "equipment_production_profile", None)
+    equipment_category = getattr(args, "equipment_category", None)
+    if production_profile_path or equipment_category:
+        if not production_profile_path or equipment_category not in EQUIPMENT_CATEGORIES:
+            raise PipelineError("equipment production requires a profile and supported category")
+        profile_rel = store.relative(production_profile_path, must_exist=True)
+        profile = load_json(store.absolute(profile_rel))
+        if profile.get("schemaVersion") != 2 or not profile.get("profileId"):
+            raise PipelineError("equipment production profile must use schemaVersion 2")
+        category_profile = profile.get("categories", {}).get(equipment_category)
+        if not category_profile:
+            raise PipelineError("equipment category is missing from production profile")
+        anchors = []
+        for reference in profile.get("baseAnchors", []) + category_profile.get("anchors", []):
+            target = store.absolute(reference["path"], must_exist=True)
+            if sha256_file(target) != reference.get("sha256"):
+                raise PipelineError("equipment production anchor hash mismatch")
+            anchors.append(reference)
+        target_height, minimum_height, maximum_height = style_values
+        if any(value is None for value in (target_height, minimum_height, maximum_height)):
+            raise PipelineError("equipment production requires target height and visible height range")
+        if not 0 < minimum_height <= target_height <= maximum_height <= master_height:
+            raise PipelineError("invalid equipment production visible height range")
+        equipment_spec = {
+            "profileId": profile["profileId"], "profilePath": profile_rel,
+            "profileSha256": sha256_file(store.absolute(profile_rel)), "category": equipment_category,
+            "anchors": anchors, "targetVisibleHeight": target_height,
+            "visibleHeightRange": [minimum_height, maximum_height],
+        }
     payload = {
         "assetId": args.asset_id,
         "approvedAssetId": args.approved_asset_id or args.asset_id,
@@ -500,8 +676,12 @@ def create_contract(store: Store, args: argparse.Namespace) -> dict[str, Any]:
         "occlusion": occlusion,
         "compositionSpec": composition,
         "identitySpec": identity_spec,
-        "requiresInvocation": ((writes_v2 and high_risk and source_mode != "derived")
+        "requiresInvocation": (bool(equipment_spec) or (writes_v2 and high_risk and source_mode != "derived")
                                or (asset_role == "component" and source_mode == "generated")),
+        "canvasSpec": {"masterSize": [master_width, master_height]},
+        "tilePlacementSpec": tile_placement,
+        "styleSpec": style_spec,
+        "equipmentProductionSpec": equipment_spec,
         "tolerances": {"sizePx": args.size_tolerance, "centerPx": args.center_tolerance},
         "outputs": {"master": store.relative(args.output_master), "preview": store.relative(args.output_preview)},
         "rights": {"rightsHolder": args.rights_holder, "license": args.license, "provenance": args.provenance},
@@ -520,11 +700,241 @@ def create_contract(store: Store, args: argparse.Namespace) -> dict[str, Any]:
     return record
 
 
+def create_equipment_contract(store: Store, args: argparse.Namespace) -> dict[str, Any]:
+    values = vars(args).copy()
+    values.update({
+        "kind": "tile", "direction": "non_directional", "pose": "inventory",
+        "equipment_production_profile": args.production_profile,
+        "equipment_category": args.category, "style_profile": None,
+        "asset_role": None, "component_kind": None, "source_mode": None,
+        "anchor": None, "anchor_mask": None, "mask_required": False, "no_arms": False,
+        "near_hand_side": None, "far_hand_side": None,
+        "composition_id": None,
+    })
+    return create_contract(store, argparse.Namespace(**values))
+
+
+def _equipment_style_profile(store: Store, contract: dict[str, Any]) -> dict[str, Any]:
+    spec = contract.get("equipmentProductionSpec") or contract.get("styleSpec")
+    if not spec:
+        raise PipelineError("operation requires a contract-bound equipment style profile")
+    profile_path = store.absolute(spec["profilePath"], must_exist=True)
+    if sha256_file(profile_path) != spec["profileSha256"]:
+        raise PipelineError("equipment style profile hash mismatch")
+    profile = load_json(profile_path)
+    if profile.get("profileId") != spec["profileId"]:
+        raise PipelineError("equipment style profile id mismatch")
+    for reference in spec.get("anchors", []):
+        if sha256_file(store.absolute(reference["path"], must_exist=True)) != reference["sha256"]:
+            raise PipelineError("equipment production anchor hash mismatch")
+    for reference in profile.get("references", []):
+        if sha256_file(store.absolute(reference["path"], must_exist=True)) != reference["sha256"]:
+            raise PipelineError("equipment style reference hash mismatch")
+    return profile
+
+
+def register_local_reference(store: Store, args: argparse.Namespace) -> dict[str, Any]:
+    source = Path(args.path).resolve()
+    if not source.is_file():
+        raise PipelineError("local reference file does not exist")
+    if args.role not in LOCAL_REFERENCE_ROLES:
+        raise PipelineError("unsupported local reference role")
+    payload = {"role": args.role, "sourceLabel": args.source_label,
+               "fileName": source.name, "sha256": sha256_file(source),
+               "localOnly": True, "publish": False}
+    reference_id = stable_id("local-reference", payload)
+    record = {"schemaVersion": 1, "localReferenceId": reference_id, **payload}
+    write_json_idempotent(store.record("local-references", reference_id), record, immutable=True)
+    return record
+
+
+def _interior_style_metrics(image: Image.Image) -> dict[str, Any]:
+    rgba = image.convert("RGBA")
+    pixels = pixel_data(rgba)
+    width, height = rgba.size
+    interior: list[tuple[int, int, int]] = []
+    smooth_pixels = 0
+    scanned_pixels = 0
+    for y in range(1, height - 1):
+        row: list[tuple[int, tuple[int, int, int]]] = []
+        for x in range(1, width - 1):
+            index = y * width + x
+            value = pixels[index]
+            if value[3] == 255 and all(pixels[index + delta][3] == 255 for delta in (-1, 1, -width, width)):
+                rgb = value[:3]
+                interior.append(rgb)
+                row.append((x, rgb))
+        run = 1
+        previous_sign = 0
+        for index in range(1, len(row)):
+            if row[index][0] != row[index - 1][0] + 1:
+                run = 1
+                previous_sign = 0
+                continue
+            left = row[index - 1][1]
+            right = row[index][1]
+            delta = round(sum(right) / 3) - round(sum(left) / 3)
+            sign = 1 if 1 <= delta <= 8 else (-1 if -8 <= delta <= -1 else 0)
+            if sign and sign == previous_sign:
+                run += 1
+            else:
+                if run >= 8:
+                    smooth_pixels += run
+                run = 2 if sign else 1
+            previous_sign = sign
+            scanned_pixels += 1
+        if run >= 8:
+            smooth_pixels += run
+    bins = {(red // 16, green // 16, blue // 16) for red, green, blue in interior}
+    return {
+        "interiorPixels": len(interior),
+        "interiorColorBins": len(bins),
+        "smoothGradientRatio": round(smooth_pixels / max(1, scanned_pixels), 6),
+    }
+
+
+def prepare_equipment_candidate(store: Store, args: argparse.Namespace) -> dict[str, Any]:
+    contract = load_json(store.record("contracts", args.contract_id))
+    profile = _equipment_style_profile(store, contract)
+    spec = contract.get("equipmentProductionSpec") or contract["styleSpec"]
+    source = _bound_artifact(store, args.source)
+    attempt = None
+    attempt_id = getattr(args, "attempt_id", None)
+    if attempt_id:
+        attempt = load_json(store.record("attempts", attempt_id))
+        job = load_json(store.record("jobs", attempt["jobId"]))
+        if job["contractId"] != args.contract_id or attempt["state"] != "ingested":
+            raise PipelineError("equipment candidate attempt does not match contract or ingested state")
+        expected_source = (attempt.get("artifacts", {}).get("remediatedSource")
+                           if attempt.get("technicalRemediation") else attempt.get("artifacts", {}).get("raw"))
+        if not expected_source or source["sha256"] != expected_source.get("sha256"):
+            raise PipelineError("equipment candidate source must match the attempt generation lineage")
+    with Image.open(store.absolute(source["path"])) as opened:
+        image = opened.convert("RGBA")
+    chroma = profile.get("chroma", "00ff00").lstrip("#")
+    tolerance = int(profile.get("chromaTolerance", 48))
+    key = tuple(int(chroma[index:index + 2], 16) for index in (0, 2, 4))
+    cleaned = []
+    for red, green, blue, alpha in pixel_data(image):
+        distance = (red - key[0]) ** 2 + (green - key[1]) ** 2 + (blue - key[2]) ** 2
+        green_screen = green >= 120 and green >= red + 40 and green >= blue + 40
+        cleaned.append((0, 0, 0, 0) if distance <= tolerance ** 2 or green_screen else (red, green, blue, alpha))
+    image.putdata(cleaned)
+    bbox = image.getchannel("A").getbbox()
+    if not bbox:
+        raise PipelineError("equipment source is empty after chroma removal")
+    cropped = image.crop(bbox)
+    target_height = spec["targetVisibleHeight"]
+    target_width = max(1, round(cropped.width * target_height / cropped.height))
+    resized = cropped.resize((target_width, target_height), Image.Resampling.LANCZOS)
+    master_size = tuple(contract.get("canvasSpec", {}).get("masterSize", [256, 256]))
+    canvas = Image.new("RGBA", master_size, (0, 0, 0, 0))
+    baseline = int(profile.get("baseline", 236))
+    x = round((master_size[0] - target_width) / 2)
+    y = baseline - target_height + 1
+    would_clip = x < 0 or y < 0 or x + target_width > master_size[0] or baseline >= master_size[1]
+    canvas.alpha_composite(resized, (x, y))
+    canvas = normalize_transparent_rgb(canvas)
+    output_rel = store.relative(args.output)
+    preview_rel = store.relative(args.preview)
+    output_path = store.absolute(output_rel)
+    preview_path = store.absolute(preview_rel)
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    preview_path.parent.mkdir(parents=True, exist_ok=True)
+    canvas.save(output_path, format="PNG", optimize=False, compress_level=9)
+    make_preview(canvas).save(preview_path, format="PNG", optimize=False, compress_level=9)
+    candidate = _bound_artifact(store, output_rel)
+    preview = _bound_artifact(store, preview_rel)
+    visible = canvas.getchannel("A").getbbox()
+    metrics = _interior_style_metrics(canvas)
+    metrics.update({"visibleBbox": list(visible) if visible else None,
+                    "visibleSize": [visible[2] - visible[0], visible[3] - visible[1]] if visible else None,
+                    "baseline": visible[3] - 1 if visible else None})
+    minimum_height, maximum_height = spec["visibleHeightRange"]
+    limits = profile.get("hardGates", {})
+    hard_issues = []
+    if would_clip:
+        hard_issues.append("equipment_canvas_clipped")
+    advisories = []
+    if not visible or not minimum_height <= metrics["visibleSize"][1] <= maximum_height:
+        hard_issues.append("equipment_visible_height_out_of_range")
+    if metrics["baseline"] != baseline:
+        hard_issues.append("equipment_baseline_mismatch")
+    if metrics["interiorColorBins"] > int(limits.get("maxInteriorColorBins", 40)):
+        advisories.append("equipment_palette_complexity_review")
+    if metrics["smoothGradientRatio"] > float(limits.get("maxSmoothGradientRatio", 0.12)):
+        advisories.append("equipment_smooth_gradient_review")
+    payload = {"contractId": args.contract_id,
+               "contractSha256": sha256_file(store.record("contracts", args.contract_id)),
+               "profile": {"path": spec["profilePath"], "sha256": spec["profileSha256"]},
+               "source": source, "candidate": candidate, "preview": preview, "metrics": metrics,
+               "processingMode": "preserve-fidelity", "quantized": False,
+               "remediation": attempt.get("remediation") if attempt else None,
+               "hardIssues": sorted(hard_issues), "advisories": sorted(advisories),
+               "issues": sorted(hard_issues), "passed": not hard_issues}
+    report_id = stable_id("equipment-style-report", payload)
+    report = {"schemaVersion": 1, "styleReportId": report_id, **payload}
+    write_json_idempotent(store.record("style-reports", report_id), report, immutable=True)
+    register_public_artifacts(store, [candidate, preview], "project-owned-supporting-derived")
+    if attempt:
+        attempt["artifacts"]["prepared"] = candidate
+        attempt["artifacts"]["equipmentPreview"] = preview
+        attempt["report"] = {"path": store.relative(store.record("style-reports", report_id)),
+                             "sha256": sha256_file(store.record("style-reports", report_id))}
+        attempt["equipmentStyleReportId"] = report_id
+        attempt["state"] = "prepared"
+        save_attempt(store, attempt)
+    return report
+
+
+def remediate_equipment_candidate(store: Store, args: argparse.Namespace) -> dict[str, Any]:
+    parent = load_json(store.record("attempts", args.parent_attempt))
+    job = load_json(store.record("jobs", parent["jobId"]))
+    contract = load_json(store.record("contracts", job["contractId"]))
+    if not contract.get("equipmentProductionSpec"):
+        raise PipelineError("equipment remediation requires a production contract")
+    feedback = load_json(store.record("feedback", args.feedback_id))
+    attempts = list_attempts(store, job["jobId"])
+    if not attempts or attempts[-1]["attemptId"] != parent["attemptId"] or feedback.get("attemptId") != parent["attemptId"]:
+        raise PipelineError("equipment remediation must branch from the latest feedback-bound attempt")
+    raw = parent.get("artifacts", {}).get("raw")
+    if not raw:
+        raise PipelineError("equipment remediation parent has no raw artifact")
+    raw_path = store.absolute(raw["path"], must_exist=True)
+    if sha256_file(raw_path) != raw["sha256"]:
+        raise PipelineError("equipment remediation parent raw hash mismatch")
+    child = retry(store, argparse.Namespace(job_id=job["jobId"], parent_attempt=parent["attemptId"],
+                                            feedback_id=args.feedback_id, technical_remediation=True))
+    ingest(store, argparse.Namespace(attempt_id=child["attemptId"], source=raw["path"], invocation_id=None))
+    profile = _equipment_style_profile(store, contract)
+    source = Image.open(store.absolute(raw["path"], must_exist=True)).convert("RGBA")
+    if args.mode == "palette":
+        alpha = source.getchannel("A")
+        colors = int(profile.get("remediation", {}).get("paletteColors", 24))
+        source = source.quantize(colors=colors, method=Image.Quantize.FASTOCTREE).convert("RGBA")
+        source.putalpha(alpha)
+    source = normalize_transparent_rgb(source)
+    derived = store.pipeline / "artifacts" / job["jobId"] / child["attemptId"] / f"remediated-{args.mode}.png"
+    derived.parent.mkdir(parents=True, exist_ok=True)
+    source.save(derived, format="PNG", optimize=False, compress_level=9)
+    artifact = {"path": store.relative(derived), "sha256": sha256_file(derived)}
+    register_public_artifacts(store, [artifact], "project-owned-derived-artwork")
+    child = load_json(store.record("attempts", child["attemptId"]))
+    child["artifacts"]["remediatedSource"] = artifact
+    child["remediation"] = {"mode": args.mode, "parentAttemptId": parent["attemptId"],
+                            "originalSha256": raw["sha256"], "derived": artifact}
+    save_attempt(store, child)
+    report = prepare_equipment_candidate(store, argparse.Namespace(
+        contract_id=contract["contractId"], source=artifact["path"], output=args.output,
+        preview=args.preview, attempt_id=child["attemptId"]))
+    return {"schemaVersion": 2, "attemptId": child["attemptId"], "report": report}
+
+
 def create_job(store: Store, args: argparse.Namespace) -> dict[str, Any]:
     contract = load_json(store.record("contracts", args.contract_id))
     pose_guide = None
     pose_guide_id = getattr(args, "pose_guide_id", None)
-    if contract.get("requiresInvocation"):
+    if contract.get("requiresInvocation") and contract.get("compositionSpec"):
         if not pose_guide_id:
             raise PipelineError("high-risk schema v2 job requires --pose-guide-id")
         guide_record = load_json(store.record("pose-guides", pose_guide_id))
@@ -557,6 +967,18 @@ def create_job(store: Store, args: argparse.Namespace) -> dict[str, Any]:
         rel = store.relative(raw_path, must_exist=True)
         inputs.append({"role": role, "path": rel, "sha256": sha256_file(store.absolute(rel))})
     inputs.sort(key=lambda item: (item["role"], item["path"]))
+    local_references = []
+    for reference_id in getattr(args, "local_reference_id", []) or []:
+        reference = load_json(store.record("local-references", reference_id))
+        if not reference.get("localOnly") or reference.get("publish") is not False:
+            raise PipelineError("invalid local reference descriptor")
+        local_references.append({
+            "localReferenceId": reference_id, "role": reference["role"],
+            "sourceLabel": reference["sourceLabel"], "fileName": reference["fileName"],
+            "sha256": reference["sha256"],
+            "descriptorSha256": sha256_file(store.record("local-references", reference_id)),
+        })
+    local_references.sort(key=lambda item: item["localReferenceId"])
     for item in inputs:
         if "anchor" in item["role"].lower() or "mother" in item["role"].lower():
             anchor = contract.get("anchor")
@@ -580,6 +1002,7 @@ def create_job(store: Store, args: argparse.Namespace) -> dict[str, Any]:
         "contractRequirements": requirements,
         "requiresInvocation": bool(contract.get("requiresInvocation")),
         "poseGuide": pose_guide,
+        "localReferences": local_references,
     }
     jid = stable_id("job", payload)
     record = {"schemaVersion": contract.get("schemaVersion", 1), "jobId": jid, "state": "ready", **payload}
@@ -603,7 +1026,8 @@ def retry(store: Store, args: argparse.Namespace) -> dict[str, Any]:
     job = load_json(store.record("jobs", args.job_id))
     attempts = list_attempts(store, args.job_id)
     feedback = None
-    if attempts and job.get("series"):
+    contract = load_json(store.record("contracts", job["contractId"]))
+    if attempts and (job.get("series") or contract.get("equipmentProductionSpec")):
         latest = attempts[-1]
         feedback_id = getattr(args, "feedback_id", None)
         if not feedback_id:
@@ -1018,14 +1442,15 @@ def anchor_core_bbox(image: Image.Image) -> tuple[int, int, int, int] | None:
     return None
 
 
-def inspect_technical(path: Path, kind: str, *, require_master_canvas: bool = True) -> tuple[dict[str, Any], list[str]]:
+def inspect_technical(path: Path, kind: str, *, require_master_canvas: bool = True,
+                      expected_master_size: tuple[int, int] = (256, 256)) -> tuple[dict[str, Any], list[str]]:
     image = Image.open(path).convert("RGBA")
     pixels = pixel_data(image)
     alpha = image.getchannel("A")
     bbox = alpha.getbbox()
     issues = []
-    if require_master_canvas and image.size != (256, 256):
-        issues.append("master_not_256x256")
+    if require_master_canvas and image.size != expected_master_size:
+        issues.append("master_size_mismatch")
     max_x, max_y = image.width - 1, image.height - 1
     if require_master_canvas and any(image.getpixel(point)[3] != 0 for point in ((0, 0), (max_x, 0), (0, max_y), (max_x, max_y))):
         issues.append("corner_not_transparent")
@@ -1353,7 +1778,8 @@ def validate_attempt(store: Store, args: argparse.Namespace) -> dict[str, Any]:
     candidate = candidate_artifact(attempt)
     prepared = store.absolute(candidate["path"], must_exist=True)
     technical, issues = inspect_technical(
-        prepared, contract["kind"], require_master_canvas=contract.get("assetRole") != "component")
+        prepared, contract["kind"], require_master_canvas=contract.get("assetRole") != "component",
+        expected_master_size=tuple(contract.get("canvasSpec", {}).get("masterSize", [256, 256])))
     if contract.get("assetRole") == "component" and contract.get("componentKind") != "body":
         mask_artifact = candidate_mask_artifact(attempt)
         geometry = {"componentKind": contract.get("componentKind")}
@@ -1388,6 +1814,78 @@ def make_preview(master: Image.Image) -> Image.Image:
     preview.putdata([(0, 0, 0, 0) if alpha < 8 else (red, green, blue, alpha)
                      for red, green, blue, alpha in pixel_data(preview)])
     return preview
+
+
+def render_tile_placement_review(prepared: Image.Image, spec: dict[str, Any]) -> tuple[Image.Image, dict[str, Any]]:
+    tile_width, tile_height = 64, 32
+    footprint_width, footprint_height = spec["footprintTiles"]
+    scale = float(spec["displayScale"])
+    anchor_x, anchor_y = spec["groundAnchorPx"]
+    scaled_size = (round(prepared.width * scale), round(prepared.height * scale))
+    scaled = prepared.resize(scaled_size, Image.Resampling.LANCZOS)
+    board_role = spec.get("boardRole")
+    screen_facing = spec.get("screenFacing")
+    contextual = board_role in {"player", "target"}
+    canvas_width = max(320 if contextual else 256, scaled_size[0] + (128 if contextual else tile_width))
+    canvas_height = max(224 if contextual else 160, scaled_size[1] + (96 if contextual else tile_height * 2))
+    if board_role == "target":
+        front_center = (canvas_width // 2 + 48, canvas_height - 80)
+        reference_center = (front_center[0] - 96, front_center[1] + 48)
+    elif board_role == "player":
+        front_center = (canvas_width // 2 - 48, canvas_height - 32)
+        reference_center = (front_center[0] + 96, front_center[1] - 48)
+    else:
+        front_center = (canvas_width // 2, canvas_height - tile_height)
+        reference_center = None
+    scaled_anchor = (round(anchor_x * scale), round(anchor_y * scale))
+    sprite_origin = (front_center[0] - scaled_anchor[0], front_center[1] - scaled_anchor[1])
+    review = Image.new("RGBA", (canvas_width, canvas_height), (36, 36, 42, 255))
+    draw = ImageDraw.Draw(review)
+    if reference_center is not None:
+        draw.polygon(((reference_center[0] - tile_width // 2, reference_center[1]),
+                      (reference_center[0], reference_center[1] - tile_height // 2),
+                      (reference_center[0] + tile_width // 2, reference_center[1]),
+                      (reference_center[0], reference_center[1] + tile_height // 2)),
+                     fill=(76, 62, 46, 255), outline=(226, 181, 92, 255), width=2)
+        start, end = (reference_center, front_center) if board_role == "target" else (front_center, reference_center)
+        draw.line((*start, *end), fill=(226, 181, 92, 255), width=2)
+    tile_centers = []
+    for row in range(footprint_height):
+        for column in range(footprint_width):
+            center = (
+                front_center[0] + (column - row - (footprint_width - footprint_height)) * tile_width // 2,
+                front_center[1] - ((footprint_width - 1 - column) + (footprint_height - 1 - row)) * tile_height // 2,
+            )
+            tile_centers.append(list(center))
+            draw.polygon(((center[0] - tile_width // 2, center[1]),
+                          (center[0], center[1] - tile_height // 2),
+                          (center[0] + tile_width // 2, center[1]),
+                          (center[0], center[1] + tile_height // 2)),
+                         fill=(53, 66, 82, 255), outline=(157, 180, 204, 255), width=2)
+    review.alpha_composite(scaled, sprite_origin)
+    draw.line((front_center[0] - 5, front_center[1], front_center[0] + 5, front_center[1]),
+              fill=(255, 80, 80, 255), width=1)
+    draw.line((front_center[0], front_center[1] - 5, front_center[0], front_center[1] + 5),
+              fill=(255, 80, 80, 255), width=1)
+    metrics = {
+        "masterSize": list(prepared.size),
+        "displayScale": scale,
+        "displaySize": list(scaled_size),
+        "footprintTiles": [footprint_width, footprint_height],
+        "tileCenters": tile_centers,
+        "logicalTileCenter": list(front_center),
+        "groundAnchorPx": [anchor_x, anchor_y],
+        "scaledGroundAnchorPx": list(scaled_anchor),
+        "spriteOrigin": list(sprite_origin),
+        "anchorScreenPoint": [sprite_origin[0] + scaled_anchor[0], sprite_origin[1] + scaled_anchor[1]],
+        "anchorMode": spec["anchorMode"],
+        "boardRole": board_role,
+        "screenFacing": screen_facing,
+        "playerReferenceTileCenter": list(reference_center) if board_role == "target" else None,
+        "targetReferenceTileCenter": list(reference_center) if board_role == "player" else list(front_center) if board_role == "target" else None,
+        "explorationDirection": "up_right" if contextual else None,
+    }
+    return review, metrics
 
 
 def render_anchor_tile_compare(prepared: Image.Image, anchor: Image.Image,
@@ -1428,17 +1926,23 @@ def render_review(store: Store, args: argparse.Namespace) -> dict[str, Any]:
     job = load_json(store.record("jobs", attempt["jobId"]))
     contract = load_json(store.record("contracts", job["contractId"]))
     anchor_art = contract.get("anchor")
-    review = Image.new("RGBA", (768 if anchor_art else 512, 256), (36, 36, 42, 255))
+    panel_width, panel_height = prepared.size
+    review = Image.new(
+        "RGBA", (panel_width * (3 if anchor_art else 2), panel_height), (36, 36, 42, 255))
     review.alpha_composite(prepared, (0, 0))
-    review.alpha_composite(overlay, (256, 0))
+    review.alpha_composite(overlay, (panel_width, 0))
     if anchor_art:
         anchor = Image.open(store.absolute(anchor_art["path"], must_exist=True)).convert("RGBA")
-        review.alpha_composite(anchor, (512, 0))
-    tile = Image.new("RGBA", (256, 160), (36, 36, 42, 255))
-    tile_draw = ImageDraw.Draw(tile)
-    tile_draw.polygon(((96, 144), (128, 128), (160, 144), (128, 159)), fill=(94, 96, 104, 255), outline=(160, 162, 170, 255))
+        review.alpha_composite(anchor, (panel_width * 2, 0))
     preview = make_preview(prepared)
-    tile.alpha_composite(preview, (64, 26))  # preview anchor (64,118) -> tile center (128,144)
+    placement_metrics = None
+    if contract.get("tilePlacementSpec"):
+        tile, placement_metrics = render_tile_placement_review(prepared, contract["tilePlacementSpec"])
+    else:
+        tile = Image.new("RGBA", (256, 160), (36, 36, 42, 255))
+        tile_draw = ImageDraw.Draw(tile)
+        tile_draw.polygon(((96, 144), (128, 128), (160, 144), (128, 159)), fill=(94, 96, 104, 255), outline=(160, 162, 170, 255))
+        tile.alpha_composite(preview, (64, 26))  # preview anchor (64,118) -> tile center (128,144)
     out_dir = store.pipeline / "reviews" / attempt["attemptId"]
     out_dir.mkdir(parents=True, exist_ok=True)
     review_images = [("overlay", review), ("preview128", preview), ("tile64x32", tile)]
@@ -1497,6 +2001,11 @@ def render_review(store: Store, args: argparse.Namespace) -> dict[str, Any]:
         else:
             image.save(path, format="PNG", optimize=False, compress_level=9)
         outputs[name] = {"path": store.relative(path), "sha256": sha256_file(path)}
+    if placement_metrics is not None:
+        metrics_path = out_dir / "tilePlacementMetrics.json"
+        write_json_idempotent(metrics_path, {"schemaVersion": 1, "attemptId": attempt["attemptId"], **placement_metrics})
+        attempt["artifacts"]["tilePlacementMetrics"] = {
+            "path": store.relative(metrics_path), "sha256": sha256_file(metrics_path)}
     attempt["artifacts"]["review"] = outputs
     register_public_artifacts(store, list(outputs.values()), "project-owned-artwork-review")
     save_attempt(store, attempt)
@@ -1525,6 +2034,16 @@ def decide(store: Store, args: argparse.Namespace, decision: str) -> dict[str, A
         raise PipelineError("approval decision requires review_pending attempt")
     if contract.get("schemaVersion") in {2, 3} and args.reviewer != "cty41":
         raise PipelineError("schema v2/v3 formal approval must be issued by cty41")
+    if decision == "approved" and contract.get("equipmentProductionSpec"):
+        verdict_id = attempt.get("equipmentStyleVerdictId")
+        if not verdict_id:
+            raise PipelineError("equipment approval requires a cty41 style verdict")
+        verdict = load_json(store.record("equipment-style-verdicts", verdict_id))
+        current_reviews = approval_review_hashes(store, attempt, contract)
+        if (verdict.get("decision") != "approved" or verdict.get("reviewer") != "cty41"
+                or verdict.get("candidateSha256") != candidate_artifact(attempt)["sha256"]
+                or verdict.get("reviewSha256") != current_reviews):
+            raise PipelineError("equipment style verdict does not match candidate and review")
     annotation = None
     if contract.get("compositionSpec") and attempt.get("sourceMode") != "reviewed_import":
         annotation_id = attempt.get("annotationId")
@@ -2019,10 +2538,64 @@ def compile_prompt(store: Store, args: argparse.Namespace) -> dict[str, Any]:
     return record
 
 
+def compile_equipment_prompt(store: Store, args: argparse.Namespace) -> dict[str, Any]:
+    job = load_json(store.record("jobs", args.job_id))
+    _validate_job_local_references(store, job)
+    contract = load_json(store.record("contracts", job["contractId"]))
+    spec = contract.get("equipmentProductionSpec")
+    if not spec:
+        raise PipelineError("compile-equipment-prompt requires an equipment production contract")
+    profile = _equipment_style_profile(store, contract)
+    category = profile["categories"][spec["category"]]
+    unresolved = []
+    for attempt in list_attempts(store, job["jobId"]):
+        if attempt.get("feedbackId"):
+            feedback = load_json(store.record("feedback", attempt["feedbackId"]))
+            unresolved.extend(feedback.get("pendingFixes", feedback.get("defects", [])))
+    reference_lines = [f"- {item['role']}: {item['path']} @ {item['sha256']}" for item in spec["anchors"]]
+    reference_lines.extend(
+        f"- local {item['role']}: {item['sourceLabel']} ({item['fileName']}) @ {item['sha256']}"
+        for item in job.get("localReferences", []))
+    sections = [
+        "# Pure Run Equipment ImageGen Task Packet",
+        f"## Category\n- {spec['category']}",
+        "## Frozen base style\n" + "\n".join(f"- {item}" for item in profile.get("baseRules", [])),
+        "## Category rules\n" + "\n".join(f"- {item}" for item in category.get("rules", [])),
+        "## Reference responsibilities\n" + ("\n".join(reference_lines) or "- none"),
+        "## Negative constraints\n" + "\n".join(f"- {item}" for item in profile.get("negativeConstraints", [])),
+        "## Feedback delta\n" + ("\n".join(f"- {item}" for item in unresolved) or "- none"),
+        "## Base prompt\n" + store.absolute(job["prompt"]["path"]).read_text(encoding="utf-8"),
+    ]
+    output_rel = store.relative(args.output)
+    output = store.absolute(output_rel)
+    output.parent.mkdir(parents=True, exist_ok=True)
+    output.write_bytes(("\n\n".join(sections) + "\n").encode("utf-8"))
+    artifact = {"path": output_rel, "sha256": sha256_file(output)}
+    payload = {"jobId": job["jobId"], "equipmentProfileSha256": spec["profileSha256"], "artifact": artifact}
+    prompt_id = stable_id("compiled-prompt", payload)
+    record = {"schemaVersion": 2, "compiledPromptId": prompt_id, **payload}
+    write_json_idempotent(store.record("compiled-prompts", prompt_id), record, immutable=True)
+    return record
+
+
+def _validate_job_local_references(store: Store, job: dict[str, Any]) -> None:
+    for binding in job.get("localReferences", []):
+        path = store.record("local-references", binding.get("localReferenceId", ""))
+        if not path.is_file() or sha256_file(path) != binding.get("descriptorSha256"):
+            raise PipelineError("job local reference descriptor is missing or changed")
+        descriptor = load_json(path)
+        if (descriptor.get("sha256") != binding.get("sha256")
+                or descriptor.get("role") != binding.get("role")
+                or descriptor.get("sourceLabel") != binding.get("sourceLabel")):
+            raise PipelineError("job local reference binding mismatch")
+
+
 def begin_generation(store: Store, args: argparse.Namespace) -> dict[str, Any]:
     attempt = load_json(store.record("attempts", args.attempt_id))
     if attempt["state"] != "ready":
         raise PipelineError("generation can only begin for a ready attempt")
+    job = load_json(store.record("jobs", attempt["jobId"]))
+    _validate_job_local_references(store, job)
     compiled = load_json(store.record("compiled-prompts", args.compiled_prompt_id))
     if compiled["jobId"] != attempt["jobId"]:
         raise PipelineError("compiled prompt belongs to another job")
@@ -2191,6 +2764,10 @@ def render_size_comparison(store: Store, args: argparse.Namespace) -> dict[str, 
 def adopt_reviewed_sprite(store: Store, args: argparse.Namespace) -> dict[str, Any]:
     contract_path = store.record("contracts", args.contract_id)
     contract = load_json(contract_path)
+    if contract.get("equipmentProductionSpec"):
+        raise PipelineError("new equipment contracts cannot use reviewed_import")
+    if contract.get("styleSpec"):
+        _equipment_style_profile(store, contract)
     if contract.get("assetRole") == "component" or contract.get("runtimeEligible") is False:
         raise PipelineError("reviewed imports must be complete Sprite assets")
     if args.reviewer != "cty41":
@@ -2205,6 +2782,19 @@ def adopt_reviewed_sprite(store: Store, args: argparse.Namespace) -> dict[str, A
     candidate = _bound_artifact(store, args.candidate)
     preview = _bound_artifact(store, args.preview)
     comparison = _bound_artifact(store, args.size_comparison)
+    style_report_artifact = None
+    if contract.get("styleSpec"):
+        matches = []
+        for path in (store.pipeline / "style-reports").glob("*.json"):
+            report = load_json(path)
+            if (report.get("contractId") == args.contract_id
+                    and report.get("candidate") == candidate
+                    and report.get("preview") == preview):
+                matches.append(report)
+        if len(matches) != 1 or not matches[0].get("passed"):
+            raise PipelineError("reviewed import requires one passing matching equipment style report")
+        style_path = store.record("style-reports", matches[0]["styleReportId"])
+        style_report_artifact = {"path": store.relative(style_path), "sha256": sha256_file(style_path)}
     comparison_records = [
         load_json(path) for path in (store.pipeline / "size-comparisons").glob("*.json")
         if load_json(path).get("artifact") == comparison
@@ -2235,6 +2825,8 @@ def adopt_reviewed_sprite(store: Store, args: argparse.Namespace) -> dict[str, A
     write_json_idempotent(store.record("jobs", job_id), job, immutable=True)
     report_payload = {"passed": True, "issues": [], "candidateGeometry": candidate_geometry,
                       "previewGeometry": preview_geometry, "reviewedImportId": adoption_id}
+    if style_report_artifact:
+        report_payload["styleReport"] = style_report_artifact
     report_id = stable_id("report", report_payload)
     report_path = store.record("reports", report_id)
     write_json_idempotent(report_path, {"schemaVersion": 2, "reportId": report_id, **report_payload}, immutable=True)
@@ -2844,6 +3436,13 @@ def promote(store: Store, args: argparse.Namespace) -> dict[str, Any]:
         if job.get("conceptOnly") or bound_pose["state"] == "provisional" or bound_series.get("provisionalAnchorAttemptId") == attempt["attemptId"]:
             raise PipelineError("provisional series artwork cannot be promoted")
     contract = load_json(store.record("contracts", job["contractId"]))
+    if contract.get("equipmentProductionSpec"):
+        verdict_id = attempt.get("equipmentStyleVerdictId")
+        verdict = load_json(store.record("equipment-style-verdicts", verdict_id or "")) if verdict_id else None
+        if not verdict or verdict.get("decision") != "approved" or verdict.get("candidateSha256") != candidate["sha256"]:
+            raise PipelineError("equipment promotion requires matching approved style verdict")
+        if verdict.get("reviewSha256") != approval_review_hashes(store, attempt, contract):
+            raise PipelineError("equipment style verdict review hash mismatch")
     if contract.get("assetRole") == "component" or contract.get("runtimeEligible") is False:
         raise PipelineError("approved components cannot be promoted as runtime sprites")
     master = copy_bound(store, candidate["path"], contract["outputs"]["master"])
@@ -3060,12 +3659,27 @@ def strict_check(store: Store, strict: bool) -> dict[str, Any]:
             target = store.absolute(bound.get("path", ""))
             if not target.is_file() or sha256_file(target) != bound.get("sha256"):
                 issues.append(f"job_input_hash:{job.get('jobId')}:{bound.get('path')}")
+        try:
+            _validate_job_local_references(store, job)
+        except PipelineError:
+            issues.append(f"job_local_reference:{job.get('jobId')}")
         if job.get("conceptOnly"):
             for attempt in list_attempts(store, job["jobId"]):
                 if attempt.get("state") in {"approved", "promoted"}:
                     issues.append(f"concept_only_formal:{attempt.get('attemptId')}")
     for path in sorted((store.pipeline / "contracts").glob("*.json")):
         contract = load_json(path)
+        equipment_spec = contract.get("equipmentProductionSpec")
+        if equipment_spec:
+            if equipment_spec.get("category") not in EQUIPMENT_CATEGORIES or not contract.get("requiresInvocation"):
+                issues.append(f"contract_equipment_shape:{contract.get('contractId')}")
+            profile_path = store.absolute(equipment_spec.get("profilePath", ""))
+            if not profile_path.is_file() or sha256_file(profile_path) != equipment_spec.get("profileSha256"):
+                issues.append(f"contract_equipment_profile_hash:{contract.get('contractId')}")
+            for anchor_ref in equipment_spec.get("anchors", []):
+                target = store.absolute(anchor_ref.get("path", ""))
+                if not target.is_file() or sha256_file(target) != anchor_ref.get("sha256"):
+                    issues.append(f"contract_equipment_anchor_hash:{contract.get('contractId')}")
         if contract.get("schemaVersion") == 3:
             role = contract.get("assetRole")
             if role not in ASSET_ROLES:
@@ -3127,6 +3741,21 @@ def strict_check(store: Store, strict: bool) -> dict[str, Any]:
             )
             if not remediated:
                 issues.append(f"feedback_candidate_hash:{feedback.get('feedbackId')}")
+    for path in sorted((store.pipeline / "local-references").glob("*.json")):
+        reference = load_json(path)
+        if (reference.get("role") not in LOCAL_REFERENCE_ROLES or reference.get("localOnly") is not True
+                or reference.get("publish") is not False or "path" in reference):
+            issues.append(f"local_reference_shape:{reference.get('localReferenceId')}")
+    for path in sorted((store.pipeline / "equipment-style-verdicts").glob("*.json")):
+        verdict = load_json(path)
+        attempt_path = store.record("attempts", verdict.get("attemptId", ""))
+        if not attempt_path.is_file():
+            issues.append(f"equipment_style_verdict_attempt:{verdict.get('equipmentStyleVerdictId')}")
+            continue
+        attempt = load_json(attempt_path)
+        if verdict.get("equipmentStyleVerdictId") not in attempt.get(
+                "equipmentStyleVerdictIds", [attempt.get("equipmentStyleVerdictId")]):
+            issues.append(f"equipment_style_verdict_backlink:{verdict.get('equipmentStyleVerdictId')}")
     for path in sorted((store.pipeline / "feedback-addenda").glob("*.json")):
         addendum = load_json(path)
         feedback_path = store.record("feedback", addendum.get("parentFeedbackId", ""))
@@ -3269,6 +3898,16 @@ def build_parser() -> argparse.ArgumentParser:
     create.add_argument("--no-arms", action="store_true"); create.add_argument("--size-tolerance", type=int, default=3)
     create.add_argument("--near-hand-side", choices=("left", "right")); create.add_argument("--far-hand-side", choices=("left", "right"))
     create.add_argument("--center-tolerance", type=int, default=2); create.add_argument("--output-master", required=True)
+    create.add_argument("--master-width", type=int, default=256)
+    create.add_argument("--master-height", type=int, default=256)
+    create.add_argument("--footprint-width", type=int)
+    create.add_argument("--footprint-height", type=int)
+    create.add_argument("--display-scale", type=float)
+    create.add_argument("--ground-anchor-x", type=float)
+    create.add_argument("--ground-anchor-y", type=float)
+    create.add_argument("--anchor-mode", choices=("contact_shape_center", "virtual_ground_point", "visual_bounds_center", "texture_center"))
+    create.add_argument("--board-role", choices=("player", "target", "neutral"))
+    create.add_argument("--screen-facing", choices=("up_right", "down_left", "non_directional"))
     create.add_argument("--layer-rule", action="append", default=[])
     create.add_argument("--visibility-cap", action="append", default=[])
     create.add_argument("--composition-id")
@@ -3280,9 +3919,29 @@ def build_parser() -> argparse.ArgumentParser:
     create.add_argument("--asset-role", choices=sorted(ASSET_ROLES))
     create.add_argument("--component-kind", choices=sorted(COMPONENT_KINDS))
     create.add_argument("--source-mode", choices=sorted(SOURCE_MODES))
+    create.add_argument("--style-profile")
+    create.add_argument("--target-visible-height", type=int)
+    create.add_argument("--visible-height-min", type=int)
+    create.add_argument("--visible-height-max", type=int)
+    equipment_contract = commands.add_parser("create-equipment-contract")
+    equipment_contract.add_argument("--asset-id", required=True); equipment_contract.add_argument("--approved-asset-id")
+    equipment_contract.add_argument("--category", choices=sorted(EQUIPMENT_CATEGORIES), required=True)
+    equipment_contract.add_argument("--production-profile", required=True)
+    equipment_contract.add_argument("--target-visible-height", type=int, required=True)
+    equipment_contract.add_argument("--visible-height-min", type=int, required=True)
+    equipment_contract.add_argument("--visible-height-max", type=int, required=True)
+    equipment_contract.add_argument("--master-width", type=int, default=256); equipment_contract.add_argument("--master-height", type=int, default=256)
+    equipment_contract.add_argument("--size-tolerance", type=int, default=3); equipment_contract.add_argument("--center-tolerance", type=int, default=2)
+    equipment_contract.add_argument("--output-master", required=True); equipment_contract.add_argument("--output-preview", required=True)
+    equipment_contract.add_argument("--rights-holder", default="cty41"); equipment_contract.add_argument("--license", default="CC-BY-4.0")
+    equipment_contract.add_argument("--provenance", default="project-owned-gpt-generated")
+    local_ref = commands.add_parser("register-local-reference")
+    local_ref.add_argument("--path", required=True); local_ref.add_argument("--source-label", required=True)
+    local_ref.add_argument("--role", choices=sorted(LOCAL_REFERENCE_ROLES), required=True)
     job = commands.add_parser("create-job"); job.add_argument("--contract-id", required=True)
     job.add_argument("--prompt", required=True); job.add_argument("--input", action="append", default=[])
     job.add_argument("--pose-guide-id")
+    job.add_argument("--local-reference-id", action="append", default=[])
     job.add_argument("--series-id"); job.add_argument("--pose-id")
     retry_p = commands.add_parser("retry"); retry_p.add_argument("--job-id", required=True); retry_p.add_argument("--parent-attempt")
     retry_p.add_argument("--feedback-id")
@@ -3324,6 +3983,8 @@ def build_parser() -> argparse.ArgumentParser:
     guide = commands.add_parser("render-pose-guide"); guide.add_argument("--composition-id", required=True); guide.add_argument("--output", required=True)
     compiled = commands.add_parser("compile-prompt"); compiled.add_argument("--job-id", required=True)
     compiled.add_argument("--pose-guide-id", required=True); compiled.add_argument("--output", required=True)
+    equipment_compiled = commands.add_parser("compile-equipment-prompt")
+    equipment_compiled.add_argument("--job-id", required=True); equipment_compiled.add_argument("--output", required=True)
     begin = commands.add_parser("begin-generation"); begin.add_argument("--attempt-id", required=True)
     begin.add_argument("--compiled-prompt-id", required=True); begin.add_argument("--provider", default="openai-gpt-image")
     begin.add_argument("--started-at", required=True)
@@ -3343,6 +4004,22 @@ def build_parser() -> argparse.ArgumentParser:
     normalize_import_p = commands.add_parser("normalize-reviewed-sprite")
     normalize_import_p.add_argument("--source", required=True); normalize_import_p.add_argument("--output", required=True)
     normalize_import_p.add_argument("--preview", required=True)
+    equipment_candidate_p = commands.add_parser("prepare-equipment-candidate")
+    equipment_candidate_p.add_argument("--contract-id", required=True)
+    equipment_candidate_p.add_argument("--source", required=True)
+    equipment_candidate_p.add_argument("--output", required=True)
+    equipment_candidate_p.add_argument("--preview", required=True)
+    equipment_candidate_p.add_argument("--attempt-id")
+    equipment_remediation = commands.add_parser("remediate-equipment-candidate")
+    equipment_remediation.add_argument("--parent-attempt", required=True); equipment_remediation.add_argument("--feedback-id", required=True)
+    equipment_remediation.add_argument("--mode", choices=("palette", "transparent-rgb"), required=True)
+    equipment_remediation.add_argument("--output", required=True); equipment_remediation.add_argument("--preview", required=True)
+    equipment_review = commands.add_parser("render-equipment-review")
+    equipment_review.add_argument("--attempt-id", required=True); equipment_review.add_argument("--output", required=True)
+    style_verdict = commands.add_parser("record-equipment-style-verdict")
+    style_verdict.add_argument("--attempt-id", required=True); style_verdict.add_argument("--reviewer", required=True)
+    style_verdict.add_argument("--decision", choices=("approved", "retry"), required=True)
+    style_verdict.add_argument("--reason", required=True); style_verdict.add_argument("--decided-at", required=True)
     runtime_copy_p = commands.add_parser("register-runtime-copy")
     runtime_copy_p.add_argument("--source", required=True); runtime_copy_p.add_argument("--target", required=True)
     relicense_p = commands.add_parser("relicense-public-artifact")
@@ -3379,7 +4056,8 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
     handlers = {
         "migrate-legacy": migrate_legacy, "approve-anchor": approve_anchor, "create-series": create_series,
         "set-series-output-limit": set_series_output_limit,
-        "create-contract": create_contract, "create-job": create_job,
+        "create-contract": create_contract, "create-equipment-contract": create_equipment_contract,
+        "register-local-reference": register_local_reference, "create-job": create_job,
         "retry": retry, "ingest": ingest, "prepare": prepare, "attach-mask": attach_mask,
         "attach-identity-mask": attach_identity_mask,
         "calibrate-core": calibrate_core,
@@ -3392,11 +4070,16 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
         "refresh-promoted-preview": refresh_promoted_preview,
         "create-composition": create_composition, "render-pose-guide": render_pose_guide,
         "compile-prompt": compile_prompt, "begin-generation": begin_generation,
+        "compile-equipment-prompt": compile_equipment_prompt,
         "record-generation-failure": record_generation_failure,
         "attach-annotations": attach_annotations, "record-advisory-review": record_advisory_review,
         "register-supporting-artifact": register_supporting_artifact,
         "render-size-comparison": render_size_comparison,
         "normalize-reviewed-sprite": normalize_reviewed_sprite,
+        "prepare-equipment-candidate": prepare_equipment_candidate,
+        "remediate-equipment-candidate": remediate_equipment_candidate,
+        "render-equipment-review": render_equipment_review,
+        "record-equipment-style-verdict": record_equipment_style_verdict,
         "register-runtime-copy": register_runtime_copy,
         "relicense-public-artifact": relicense_public_artifacts,
         "adopt-reviewed-sprite": adopt_reviewed_sprite,

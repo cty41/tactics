@@ -1,0 +1,18 @@
+{
+  "schemaVersion": 2,
+  "approvalId": "approval-301520e8ad0098b8",
+  "attemptId": "job-77044603ff5204d8-a002",
+  "candidateSha256": "4426ce27b09ee1cf057f389ff2d73b089fa6d35ee7f83f7e0a7a5d2b421aa3cf",
+  "maskSha256": null,
+  "reviewer": "cty41",
+  "reviewSha256": {
+    "overlay": "ba8e755f09ab954dcc8032e64bfe366f734b9612de4faca157c1c1915fbe835f",
+    "preview128": "89cf13cd2393be50e96d12fd66b30c4c333031882c2b651221e3181cda890e99",
+    "tile64x32": "056f45143c515fa4a095e91dcf27833d6b4f9813211a551c744ff422d16495b2"
+  },
+  "decision": "approved",
+  "reason": "用户明确确认 Rest 节点图并要求 promote",
+  "decidedAt": "2026-08-23T03:39:46Z",
+  "annotation": null,
+  "reportSha256": "859cc315f5c753fc27a4bce23e4f8c0f4778884017698b0fdbf6cd88324a1e30"
+}

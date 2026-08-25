@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 2,
+  "supportingArtifactId": "supporting-artifact-11cc7cb994bbcbdb",
+  "artifact": {
+    "path": "Tools/artworks/pure_run/equipment/tmp/review-panels/pure_run_equipment_demonbound_bound_sword_v01_128.png",
+    "sha256": "8c6cbcc21559f9d221fd4e891e83c8e8de9ac1193dde84b83a6ea7f50179af42"
+  },
+  "role": "transient-review-panel",
+  "note": "Deterministic intermediate panel used to compose the registered weapon batch V01 contact sheets"
+}

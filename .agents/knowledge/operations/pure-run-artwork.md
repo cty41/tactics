@@ -4,7 +4,7 @@ resource: https://github.com/cty41/tactics/tree/main/Tools/artworks
 title: Pure Run Artwork Pipeline
 description: Pure Run 角色美术的生成、去幕、尺寸校准、Review 与提交入口。
 tags: [operations, pure-run, artwork, sprite, godot]
-timestamp: "2026-08-22T16:06:56+08:00"
+timestamp: "2026-08-25T01:36:09+08:00"
 status: active
 catalog_scope: pure-run-artwork
 repo_paths:
@@ -14,7 +14,7 @@ repo_paths:
   - godot/assets
   - Tools/public-release/asset-provenance.json
 verified_revision: c68dbebe
-source_fingerprint: sha256:261840ebd1e843328d6a5d6e12ba2715c9866e479c8aaa19d71b7e7bc78b0dff
+source_fingerprint: sha256:0049d09e04f5a74522afefe34244048c03483fbc673096b0507a57d29f925e2e
 ---
 
 # Pure Run 角色美术流水线
@@ -23,6 +23,7 @@ source_fingerprint: sha256:261840ebd1e843328d6a5d6e12ba2715c9866e479c8aaa19d71b7
 
 ## Current State
 
+- Pure Run 装备图使用独立 v2 生产策略层：`equipmentProductionSpec` 绑定共享基础画风、weapon/shield/armor/jewelry/consumable 品类锚点及目标尺寸，新装备强制正式 ImageGen invocation 和逐版结构化 feedback。默认 `prepare-equipment-candidate` 保留原始色阶，只做去幕、透明 RGB、真实 Alpha 裁切、等比缩放和基线定位；色阶/渐变指标降为 advisory，“AI 味”由绑定候选与固定锚点 Review 哈希的 `cty41` style verdict 决定。技术量化只允许通过 child remediation attempt，不能覆盖原始输出。第三方截图只登记无绝对路径的本机 descriptor（职责、来源标签、文件名、SHA），不复制、不进入公开 provenance；新装备禁止 reviewed import，历史 `styleSpec` 记录继续只读兼容。当前正式装备包含亚马逊长矛/圆盾、法师橡木杖、死灵匕首、魔剑士绑定剑、普通铁剑，以及皮甲 V04、铁头盔 V04、皮靴 V05、暗影斗篷 V04 与法师帽 V04。
 - `Tools/artworks/pipeline` 读取 schema v1/v2/v3 且不改写历史记录。v2 对高风险动作增加 `compositionSpec`、确定性 pose guide、candidate annotations、编译 prompt、ImageGen invocation/delivery/failure receipt、结构化 feedback 与非绑定 advisory。v3 增加胶囊角色受控 `body/equipment/paw_overlay/foot_overlay` 组件与 `assembled_sprite`：新 Assembly 必须包含远/近脚、远/近手、身体和装备六个 role 各一次，`layers` 数组按姿态声明由后到前的深度计划，near/far 不再机械绑定身体前/后层；完整获批姿势的正式语义蒙版可确定性派生身体、装备、手爪和脚爪，派生组件以源 approval、derivation receipt 与通过的验证报告为门禁，独立生成组件仍需 `cty41` approval，旧组件迁入需 migration receipt。Assembly 绑定全部输入、蒙版、顺序和变换哈希，并拒绝 role/kind 不匹配、语义污染、未标注主体像素、缺失/重复 role 与手脚断裂接触；`assemblyLayerReview` 同时展示单层和累积合成。组件永不直接晋升，最终 Sprite 必须另行验证并获得独立 `cty41` receipt。动作、死亡、遮挡或含姿态参考的生成 job 没有构图规范和导引时不得创建；成功输出必须匹配 invocation 才能 ingest，调用失败不产生 raw SHA。Agent/advisory 不能批准。相同 raw 的技术重处理不增加唯一输出数；唯一几何例外仍是 `core_size_out_of_tolerance`，且不能覆盖其他技术或语义问题。纯美术任务默认不运行完整 Godot Verify。
 - Demonbound UL 六姿态 Tilemap 对比已登记为 supporting review。Idle UL 与 Melee UL 可从已晋升姿势及正式语义蒙版继续确定性拆层，但不得自动覆盖现有 Sprite。Cast UL v08 的离线视觉排列已获用户人工通过：两手完全由身体遮挡，两脚只露身体下缘，装备直接复用正式 Cast DR 剑并位于身体后层，仅露双耳之间的剑尖；该 verdict 不代表运行时接入，组件和最终 Assembly 仍需按状态机落成正式证据。
 - Demonbound 九姿态 series 的顺序固定为 Idle、Melee、Cast、Hit 的 DR/UL 与单张 Death。Melee DR v9 已正式晋升；Melee UL 采用用户选定的 v7，保持 raw SHA `d1f47af...3ddf`，经技术重处理后只豁免核心宽度相对 Idle UL 锚点 `-4px` 的尺寸差，并以 `approval-b416727c3f90417d` 晋升。v6 以 Human feedback addendum 保留为 backup。Series 已推进到 Cast DR；它是首个原生 v2 job，已具备 composition、pose guide、compiled prompt、invocation 和 delivery receipt，真实 v1 候选等待逐版本人工视觉审核，不得自动批准。

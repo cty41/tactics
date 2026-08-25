@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 2,
+  "supportingArtifactId": "supporting-artifact-e0f14e746d629a6d",
+  "artifact": {
+    "path": "Tools/artworks/pure_run/equipment/reviews/equipment_armor_remaining_flat_tile_v1.png",
+    "sha256": "9b7d7d4bd1ca47e2753f5f322d64013bf4f32da15d6ca3ee443b1ca118e701c3"
+  },
+  "role": "equipment-tile-review-sheet",
+  "note": "Remaining armor tile-scale candidates with approved leather armor V4 style anchor."
+}

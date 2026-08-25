@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 2,
+  "supportingArtifactId": "supporting-artifact-7dffd7290863608d",
+  "artifact": {
+    "path": "Tools/artworks/pipeline/reviews/job-a95411a55ccd0bbe-a001/tilemap_base.png",
+    "sha256": "cd6a95abb30d9c931142b9cfe298d6d909de13518e51592c3e199e123a2b29f7"
+  },
+  "role": "intermediate-tilemap-layer",
+  "note": "Intermediate Tilemap background layer."
+}

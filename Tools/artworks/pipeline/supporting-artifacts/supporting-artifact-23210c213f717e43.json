@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 2,
+  "supportingArtifactId": "supporting-artifact-23210c213f717e43",
+  "artifact": {
+    "path": "Tools/artworks/pure_run/equipment/tmp/pure_run_equipment_shadow_cloak_v04_alpha_fixed_128.png",
+    "sha256": "efeddf897407ee457505bfa9896f4c57936fa5e2d3e16f76203fb8791fe02cae"
+  },
+  "role": "equipment-production-evidence",
+  "note": "Retained equipment generation reference, rejected/intermediate candidate, or technical remediation evidence; not a promotable runtime sprite."
+}

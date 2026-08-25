@@ -1,0 +1,33 @@
+{
+  "schemaVersion": 2,
+  "contractId": "contract-700692c962b15db2",
+  "assetId": "villager-death",
+  "approvedAssetId": "villager-death",
+  "kind": "ground_character",
+  "direction": "down-right",
+  "pose": "death",
+  "anchor": null,
+  "maskRequired": true,
+  "noArms": true,
+  "handSides": {
+    "near_hand": null,
+    "far_hand": null
+  },
+  "occlusion": null,
+  "compositionSpec": null,
+  "identitySpec": null,
+  "requiresInvocation": false,
+  "tolerances": {
+    "sizePx": 3,
+    "centerPx": 2
+  },
+  "outputs": {
+    "master": "Tools/artworks/pure_run/villager/approved/pure_run_villager_death_v01.png",
+    "preview": "Tools/artworks/pure_run/villager/approved/pure_run_villager_death_v01_128.png"
+  },
+  "rights": {
+    "rightsHolder": "cty41",
+    "license": "CC-BY-4.0",
+    "provenance": "project-owned-gpt-generated"
+  }
+}

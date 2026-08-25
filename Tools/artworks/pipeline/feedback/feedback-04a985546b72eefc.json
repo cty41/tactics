@@ -1,0 +1,27 @@
+{
+  "schemaVersion": 2,
+  "feedbackId": "feedback-04a985546b72eefc",
+  "attemptId": "job-50ee228ca9e56495-a002",
+  "candidateSha256": "6f857fadbe71ce53c124803d465b63f66ca9672695bdd65a3764cebe7f9b0b2d",
+  "reviewer": "cty41",
+  "verdict": "selected",
+  "strengths": [
+    "Approved UL identity, direction, scale, and grounding."
+  ],
+  "defects": [
+    "Far hand is fully occluded in the accepted back-three-quarter pose."
+  ],
+  "nextPromptDelta": "",
+  "recordedAt": "2026-08-24T01:59:16.8337003Z",
+  "authorType": "human",
+  "categories": [
+    "occlusion"
+  ],
+  "disposition": "selected",
+  "frozenInvariants": [
+    "UL back-three-quarter direction and y=236 baseline"
+  ],
+  "pendingFixes": [
+    "Waive far_hand_missing for this fully occluded view"
+  ]
+}

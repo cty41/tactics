@@ -1,0 +1,18 @@
+{
+  "schemaVersion": 2,
+  "approvalId": "approval-41878eb2b5986f15",
+  "attemptId": "job-7064b8a37678e1ef-a005",
+  "candidateSha256": "d51b453bcc8ed25445379020eba3e232a2f99063be292661d98fd355d86e1a47",
+  "maskSha256": null,
+  "reviewer": "cty41",
+  "reviewSha256": {
+    "overlay": "6cb71f29a4f0d5e459956f93cdef4e95b774a4e7c1b49bf083c1cbdda2b06d32",
+    "preview128": "69b15a0123c7947d211340aed5db912b102030ce7ea4ae1c173712e39cf5a3de",
+    "tile64x32": "f54a779aa89c93fe99b71670dd9d857d94b793a2498fcf9566fa2e3fd393567d"
+  },
+  "decision": "approved",
+  "reason": "User explicitly confirmed the simple unadorned silver ring without gemstone and requested promote.",
+  "decidedAt": "2026-08-23T10:24:53.6926690+08:00",
+  "annotation": null,
+  "reportSha256": "faf6b6c31a255953e3ce0285119c449dd5af510ff5939031071a45a2d872c889"
+}

@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 2,
+  "supportingArtifactId": "supporting-artifact-b517bbd8a8a63de5",
+  "artifact": {
+    "path": "Tools/artworks/pipeline/reviews/job-a95411a55ccd0bbe-a001/tilemap_scale_base.png",
+    "sha256": "3f4798ab869b2762c1a37d8f3b24f1f020710a72b6c97df6c31941793abb435b"
+  },
+  "role": "intermediate-tilemap-layer",
+  "note": "Intermediate labeled Tilemap scale background."
+}

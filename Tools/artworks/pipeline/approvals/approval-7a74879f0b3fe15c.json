@@ -1,0 +1,18 @@
+{
+  "schemaVersion": 2,
+  "approvalId": "approval-7a74879f0b3fe15c",
+  "attemptId": "job-50ee228ca9e56495-a004",
+  "candidateSha256": "e7c56a71054ab2b1d86af08a87ae4e435fbde5d576fe0cc1bc55f17c7b824913",
+  "maskSha256": "df0f6039f50811afe101515ebfb4ac9ca4d520a92dc0f1eeb1d598a95b11c83f",
+  "reviewer": "cty41",
+  "reviewSha256": {
+    "overlay": "b59a156e242a6aa05dcb833ead5d173090004aabc68e612f93561a7219f19c3b",
+    "preview128": "7ab6453ba980b85c525c7294d7ceae496ef4d773e6e8e2097c0d01844162427a",
+    "tile64x32": "73dc0db7679370f4be4ef66ff8809f722bb4f42394a4af5190c1c3831a6568be"
+  },
+  "decision": "approved",
+  "reason": "User explicitly approved the UL candidate with the required partially occluded far paw and requested promote.",
+  "decidedAt": "2026-08-24T02:03:09.6619896Z",
+  "annotation": null,
+  "reportSha256": "e44fa89d403c8855526f9a9fe6a43e7e0407a495dac9d59d1bc5cfa34931eb1e"
+}

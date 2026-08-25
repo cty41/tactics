@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 2,
+  "supportingArtifactId": "supporting-artifact-c863b80b3bcae87b",
+  "artifact": {
+    "path": "Tools/artworks/pure_run/equipment/reviews/armor_tile_panel_leather_boots_v01.png",
+    "sha256": "d02b48d85d0b06a8a954782e417c1008a88d83da130ff1786df4006e51ba9500"
+  },
+  "role": "equipment-tile-review-panel",
+  "note": "Armor batch V1 tile-scale review panel."
+}

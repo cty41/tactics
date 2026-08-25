@@ -1,0 +1,15 @@
+{
+  "schemaVersion": 1,
+  "approvalId": "approval-ca265a87d06a32aa",
+  "attemptId": "bootstrap:Tools/artworks/pure_run/villager/approved/pure_run_villager_idle_ul_v01.png",
+  "candidateSha256": "e7c56a71054ab2b1d86af08a87ae4e435fbde5d576fe0cc1bc55f17c7b824913",
+  "maskSha256": "df0f6039f50811afe101515ebfb4ac9ca4d520a92dc0f1eeb1d598a95b11c83f",
+  "reviewSha256": "acd1be8e126f0792ab818455e0a6928873f5515b9e19f9806e1f29904488fb6c",
+  "candidatePath": "Tools/artworks/pure_run/villager/approved/pure_run_villager_idle_ul_v01.png",
+  "maskPath": "Tools/artworks/pure_run/villager/masks/pure_run_villager_idle_ul_v03_semantic_mask_v02.png",
+  "reviewPath": "Tools/artworks/pure_run/villager/reviews/villager_idle_ul_far_hand_fix_comparison.png",
+  "reviewer": "cty41",
+  "decision": "approved",
+  "reason": "Establish the user-approved UL villager with complete four-paw topology as the formal UL anchor.",
+  "decidedAt": "2026-08-24T02:03:10.4381498Z"
+}

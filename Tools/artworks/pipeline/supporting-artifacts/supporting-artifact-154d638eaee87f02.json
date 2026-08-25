@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 2,
+  "supportingArtifactId": "supporting-artifact-154d638eaee87f02",
+  "artifact": {
+    "path": "Tools/artworks/pure_run/equipment/candidates/pure_run_equipment_mage_oak_staff_v01.png",
+    "sha256": "983d87a3a3482e0b309bc51494e2e6653d385738dd195c9136a38e89adbcb108"
+  },
+  "role": "equipment-review-candidate",
+  "note": "Unapproved equipment batch V01 transformed candidate for numbered human review"
+}

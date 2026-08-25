@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 2,
+  "feedbackId": "feedback-3889d29b10f4a80f",
+  "attemptId": "job-897833991fd2f552-a010",
+  "candidateSha256": "9cbed15b75152d998dfa257bbc3bf391ae4a21fc7d3cdfc915ec0e2f3d562d0a",
+  "reviewer": "codex",
+  "verdict": "technical_failed",
+  "strengths": [],
+  "defects": [
+    "The attached bootstrap mask was grayscale rather than the required semantic label colors."
+  ],
+  "nextPromptDelta": "Keep the approved candidate unchanged; replace only the mask with core, near/far hand, and near/far foot semantic labels.",
+  "recordedAt": "2026-08-24T01:52:12.8422405Z",
+  "authorType": "agent",
+  "categories": [
+    "processing"
+  ],
+  "disposition": "technical_failed",
+  "frozenInvariants": [],
+  "pendingFixes": [
+    "The attached bootstrap mask was grayscale rather than the required semantic label colors."
+  ]
+}

@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 2,
+  "supportingArtifactId": "supporting-artifact-65dc2f1169e57df4",
+  "artifact": {
+    "path": "Tools/artworks/pure_run/villager/reviews/villager_idle_ul_v02_direction_comparison.png",
+    "sha256": "d0b5bcba8ce0f020af9a8c98ecc024d085ce5150064e6cf674e4aa3888016ea8"
+  },
+  "role": "direction-comparison",
+  "note": "Next villager pose review: approved villager DR identity paired with a regenerated UL back-three-quarter candidate, shown beside red-shiba DR/UL direction references on the same y=236 tile baseline."
+}

@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 2,
+  "supportingArtifactId": "supporting-artifact-0e5dce8113b27156",
+  "artifact": {
+    "path": "Tools/artworks/pure_run/equipment/candidates/pure_run_equipment_leather_boots_v03b.png",
+    "sha256": "4dab39c0217549b9d9c3a2f8791caa738b1c05bdc0f48ebd6935546cafaa91cd"
+  },
+  "role": "equipment-review-candidate",
+  "note": "Flat style profile V1 passing equipment candidate."
+}

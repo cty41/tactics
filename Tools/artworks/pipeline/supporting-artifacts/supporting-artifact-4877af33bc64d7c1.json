@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 2,
+  "supportingArtifactId": "supporting-artifact-4877af33bc64d7c1",
+  "artifact": {
+    "path": "Tools/artworks/pure_run/equipment/reviews/equipment_armor_batch_v02.png",
+    "sha256": "0fbb53b54e6d767ac12b93d1a6fedd5a2377600da16bf792db7333ff1d912f56"
+  },
+  "role": "equipment-review-sheet",
+  "note": "Armor batch V2 flatter-style review sheet."
+}

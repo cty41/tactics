@@ -1,0 +1,32 @@
+{
+  "schemaVersion": 2,
+  "attemptId": "job-1ecbb1d8a2c991dd-a001",
+  "jobId": "job-1ecbb1d8a2c991dd",
+  "ordinal": 1,
+  "parentAttemptId": null,
+  "retryFeedbackId": null,
+  "promptDelta": null,
+  "technicalRemediation": false,
+  "state": "prepared",
+  "artifacts": {
+    "source": {
+      "path": "Tools/artworks/pure_run/equipment/concepts/pure_run_equipment_mage_oak_staff_v01_chroma_source.png",
+      "sha256": "de27f1e032a56e114d8da819bc24e637a4492eceda95fc3d6df2d5c6443c0fae"
+    },
+    "raw": {
+      "path": "Tools/artworks/pipeline/artifacts/job-1ecbb1d8a2c991dd/job-1ecbb1d8a2c991dd-a001/raw.png",
+      "sha256": "de27f1e032a56e114d8da819bc24e637a4492eceda95fc3d6df2d5c6443c0fae"
+    },
+    "prepared": {
+      "path": "Tools/artworks/pipeline/artifacts/job-1ecbb1d8a2c991dd/job-1ecbb1d8a2c991dd-a001/prepared.png",
+      "sha256": "1b6d2a4cf3e74d5d98b264f70175249b511066ed5f089de10f848cb45aa3558e"
+    }
+  },
+  "report": null,
+  "approvalId": null,
+  "feedbackId": null,
+  "preparation": {
+    "chroma": "00ff00",
+    "chromaTolerance": 40
+  }
+}

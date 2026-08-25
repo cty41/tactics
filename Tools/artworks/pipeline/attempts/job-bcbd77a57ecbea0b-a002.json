@@ -1,0 +1,59 @@
+{
+  "schemaVersion": 2,
+  "attemptId": "job-bcbd77a57ecbea0b-a002",
+  "jobId": "job-bcbd77a57ecbea0b",
+  "ordinal": 2,
+  "parentAttemptId": "job-bcbd77a57ecbea0b-a001",
+  "retryFeedbackId": "feedback-748cb678ec3a7843",
+  "promptDelta": null,
+  "technicalRemediation": false,
+  "state": "promoted",
+  "artifacts": {
+    "source": {
+      "path": "Tools/artworks/pure_run/node_icons/concepts/pure_run_node_start_v01_mask_source_v02.png",
+      "sha256": "ffa75fdfab27d0a0288c85151ed12452b208fe221ca0a44234e3349cbf82ca1a"
+    },
+    "raw": {
+      "path": "Tools/artworks/pipeline/artifacts/job-bcbd77a57ecbea0b/job-bcbd77a57ecbea0b-a002/raw.png",
+      "sha256": "ffa75fdfab27d0a0288c85151ed12452b208fe221ca0a44234e3349cbf82ca1a"
+    },
+    "prepared": {
+      "path": "Tools/artworks/pipeline/artifacts/job-bcbd77a57ecbea0b/job-bcbd77a57ecbea0b-a002/prepared.png",
+      "sha256": "8be43b9437886fd3f98bdedc80089cfc41162d8e252e270bcfecd2d7c1c15e20"
+    },
+    "review": {
+      "overlay": {
+        "path": "Tools/artworks/pipeline/reviews/job-bcbd77a57ecbea0b-a002/overlay.png",
+        "sha256": "463c8f0706b331bd36f78a3d83d63c0216370d1fd9825d5bad26cd301edc4ef3"
+      },
+      "preview128": {
+        "path": "Tools/artworks/pipeline/reviews/job-bcbd77a57ecbea0b-a002/preview128.png",
+        "sha256": "9e853117a5818e037a8cabc85a5158b7a9703d89ecfb1955c8c9b48004906219"
+      },
+      "tile64x32": {
+        "path": "Tools/artworks/pipeline/reviews/job-bcbd77a57ecbea0b-a002/tile64x32.png",
+        "sha256": "5ff889c9e89b2f09c128af096b36af8efa533f973aa909385cee1fc5f0bd5a89"
+      }
+    },
+    "promoted": {
+      "master": {
+        "path": "Tools/artworks/pure_run/node_icons/approved/pure_run_node_start_v01.png",
+        "sha256": "8be43b9437886fd3f98bdedc80089cfc41162d8e252e270bcfecd2d7c1c15e20"
+      },
+      "preview": {
+        "path": "Tools/artworks/pure_run/node_icons/approved/pure_run_node_start_v01_128.png",
+        "sha256": "9e853117a5818e037a8cabc85a5158b7a9703d89ecfb1955c8c9b48004906219"
+      }
+    }
+  },
+  "report": {
+    "path": "Tools/artworks/pipeline/reports/report-b85a07ac319263e9.json",
+    "sha256": "a3d4c0210839e6ff0ada7332bc2c4e9a4c3f5be7e6247c486b02548885b56124"
+  },
+  "approvalId": "approval-6190d83cb3712a8d",
+  "feedbackId": null,
+  "preparation": {
+    "chroma": "00ff00",
+    "chromaTolerance": 48
+  }
+}

@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 2,
+  "annotationId": "annotations-ed8baf6ea815e418",
+  "attemptId": "job-22d5112e679b2e7d-a002",
+  "candidateSha256": "e87562a8f3184d0f6a9ead468abf9d35b4a740a356ac79c8a6a054603fb7ffef",
+  "maskSha256": "d2e806d41ffc949130a73d1c373eca2385fdcbc1131f8edb47b9aee868c06fbc",
+  "source": {
+    "path": "Tools/artworks/pure_run/villager/death_v03_annotations.json",
+    "sha256": "d3c123a0fa88c4ce8e77b55879b5d5e06025336f1cd3aa26a06d0887e654f6b4"
+  },
+  "regions": {
+    "eyeRegion": [
+      135,
+      101,
+      165,
+      122
+    ],
+    "weaponExit": null,
+    "weaponTip": null,
+    "gemRegion": null,
+    "scabbard": null,
+    "staticEffect": null
+  }
+}

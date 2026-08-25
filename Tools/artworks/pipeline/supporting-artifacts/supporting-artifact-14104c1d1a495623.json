@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 2,
+  "supportingArtifactId": "supporting-artifact-14104c1d1a495623",
+  "artifact": {
+    "path": "Tools/artworks/pure_run/equipment/reviews/leather_boots_v04_review.png",
+    "sha256": "d68acfe148e03982241c80a7602c430ba3f4e0f82db51dfabd45a6e4688dea3c"
+  },
+  "role": "equipment-style-review-sheet",
+  "note": "Leather boots V4 beside approved armor and helmet anchors."
+}

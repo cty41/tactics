@@ -1,0 +1,32 @@
+{
+  "schemaVersion": 2,
+  "attemptId": "job-a1738729f4985f5a-a001",
+  "jobId": "job-a1738729f4985f5a",
+  "ordinal": 1,
+  "parentAttemptId": null,
+  "retryFeedbackId": null,
+  "promptDelta": null,
+  "technicalRemediation": false,
+  "state": "prepared",
+  "artifacts": {
+    "source": {
+      "path": "Tools/artworks/pure_run/equipment/concepts/pure_run_equipment_wizard_hat_v03_chroma_source.png",
+      "sha256": "410537ae0c91a747b1616d2becda7053b3476c2fb700536008447e91c78c55a1"
+    },
+    "raw": {
+      "path": "Tools/artworks/pipeline/artifacts/job-a1738729f4985f5a/job-a1738729f4985f5a-a001/raw.png",
+      "sha256": "410537ae0c91a747b1616d2becda7053b3476c2fb700536008447e91c78c55a1"
+    },
+    "prepared": {
+      "path": "Tools/artworks/pipeline/artifacts/job-a1738729f4985f5a/job-a1738729f4985f5a-a001/prepared.png",
+      "sha256": "66abcccb2e8b32d02a1166f22ea0ed39da3d970f9abb616bd3f373e4978002f4"
+    }
+  },
+  "report": null,
+  "approvalId": null,
+  "feedbackId": null,
+  "preparation": {
+    "chroma": "00ff00",
+    "chromaTolerance": 48
+  }
+}

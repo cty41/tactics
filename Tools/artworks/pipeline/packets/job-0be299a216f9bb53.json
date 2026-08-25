@@ -1,0 +1,21 @@
+{
+  "schemaVersion": 2,
+  "jobId": "job-0be299a216f9bb53",
+  "state": "ready",
+  "contractId": "contract-da7829058daef503",
+  "contractSha256": "0fecd8a59a6476251fe2f2738e971b853e09ae9f81be2b00b5a9afb97b8a3920",
+  "prompt": {
+    "path": "Tools/artworks/pure_run/equipment/prompt_leather_boots.md",
+    "sha256": "4aa15f372d74656e29a1dc0c498355cf67656896416bf662e9488e4c5e2d53c6"
+  },
+  "inputs": [],
+  "target": {
+    "direction": "down-right",
+    "pose": "display"
+  },
+  "series": null,
+  "conceptOnly": false,
+  "contractRequirements": null,
+  "requiresInvocation": false,
+  "poseGuide": null
+}

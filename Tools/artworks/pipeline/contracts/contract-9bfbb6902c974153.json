@@ -1,0 +1,33 @@
+{
+  "schemaVersion": 2,
+  "contractId": "contract-9bfbb6902c974153",
+  "assetId": "prop-chest_closed",
+  "approvedAssetId": "prop-chest_closed",
+  "kind": "projectile",
+  "direction": "down-right",
+  "pose": "display",
+  "anchor": null,
+  "maskRequired": false,
+  "noArms": false,
+  "handSides": {
+    "near_hand": null,
+    "far_hand": null
+  },
+  "occlusion": null,
+  "compositionSpec": null,
+  "identitySpec": null,
+  "requiresInvocation": false,
+  "tolerances": {
+    "sizePx": 3,
+    "centerPx": 2
+  },
+  "outputs": {
+    "master": "Tools/artworks/pure_run/props/approved/pure_run_prop_chest_closed_v01.png",
+    "preview": "Tools/artworks/pure_run/props/approved/pure_run_prop_chest_closed_v01_128.png"
+  },
+  "rights": {
+    "rightsHolder": "cty41",
+    "license": "CC-BY-4.0",
+    "provenance": "project-owned-gpt-generated"
+  }
+}

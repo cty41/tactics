@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 2,
+  "supportingArtifactId": "supporting-artifact-e39a202414cef021",
+  "artifact": {
+    "path": "Tools/artworks/pure_run/equipment/candidates/pure_run_equipment_iron_helmet_v03b_128.png",
+    "sha256": "649f13b338008664c3c14f35a9a967f36f60900860302cd1e53f30dcadbf50b6"
+  },
+  "role": "equipment-review-candidate",
+  "note": "Flat style profile V1 passing equipment candidate."
+}

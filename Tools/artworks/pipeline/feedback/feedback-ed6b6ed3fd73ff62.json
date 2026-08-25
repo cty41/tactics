@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 2,
+  "feedbackId": "feedback-ed6b6ed3fd73ff62",
+  "attemptId": "job-897833991fd2f552-a003",
+  "candidateSha256": "2b7e5cc6e3e166370f52e43f9043980c9bb826bdd170001d97793a389c19b4d7",
+  "reviewer": "codex",
+  "verdict": "technical_failed",
+  "strengths": [],
+  "defects": [
+    "Checkerboard matte remained opaque after the first extraction."
+  ],
+  "nextPromptDelta": "Keep generated pose; replace extraction with edge-connected flood-fill and renormalize.",
+  "recordedAt": "2026-08-24T01:14:32.2720457Z",
+  "authorType": "agent",
+  "categories": [
+    "processing"
+  ],
+  "disposition": "technical_failed",
+  "frozenInvariants": [],
+  "pendingFixes": [
+    "Checkerboard matte remained opaque after the first extraction."
+  ]
+}

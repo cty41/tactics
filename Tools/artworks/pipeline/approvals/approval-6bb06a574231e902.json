@@ -1,0 +1,18 @@
+{
+  "schemaVersion": 2,
+  "approvalId": "approval-6bb06a574231e902",
+  "attemptId": "job-a6c9881963ca3bdb-a002",
+  "candidateSha256": "0b41b5c3bd025cd7e03f80db599bfb491a61de78d0336e6a46cb006842ef64dd",
+  "maskSha256": null,
+  "reviewer": "cty41",
+  "reviewSha256": {
+    "overlay": "e610f1539681635de8beec8a3b32ea8d15448f8dc3d552206ea675d1f38bc0f7",
+    "preview128": "63c708d51a336157e60aeb245c56629b7e7f44f20943d5f7db64333c6ed310a3",
+    "tile64x32": "0ec2acdabf9fcc58aa486ca70af1f8a490f862504f114b2ae466906fcb896c16"
+  },
+  "decision": "approved",
+  "reason": "用户明确确认 Boss 节点图并要求 promote",
+  "decidedAt": "2026-08-23T03:36:51Z",
+  "annotation": null,
+  "reportSha256": "a2fe91bc5f96fa6d5f3297615687dbd55a8dc993fe59b43ef532585929468834"
+}

@@ -1,0 +1,56 @@
+{
+  "schemaVersion": 1,
+  "attemptId": "job-65c53a1e145fc2d5-a001",
+  "masterSize": [
+    384,
+    384
+  ],
+  "displayScale": 0.5,
+  "displaySize": [
+    192,
+    192
+  ],
+  "footprintTiles": [
+    2,
+    2
+  ],
+  "tileCenters": [
+    [
+      128,
+      192
+    ],
+    [
+      160,
+      208
+    ],
+    [
+      96,
+      208
+    ],
+    [
+      128,
+      224
+    ]
+  ],
+  "logicalTileCenter": [
+    128,
+    224
+  ],
+  "groundAnchorPx": [
+    192.0,
+    342.0
+  ],
+  "scaledGroundAnchorPx": [
+    96,
+    171
+  ],
+  "spriteOrigin": [
+    32,
+    53
+  ],
+  "anchorScreenPoint": [
+    128,
+    224
+  ],
+  "anchorMode": "contact_shape_center"
+}

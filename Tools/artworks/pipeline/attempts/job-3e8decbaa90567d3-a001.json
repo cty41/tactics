@@ -1,0 +1,63 @@
+{
+  "schemaVersion": 2,
+  "attemptId": "job-3e8decbaa90567d3-a001",
+  "jobId": "job-3e8decbaa90567d3",
+  "ordinal": 1,
+  "parentAttemptId": null,
+  "retryFeedbackId": null,
+  "promptDelta": null,
+  "technicalRemediation": false,
+  "state": "promoted",
+  "artifacts": {
+    "source": {
+      "path": "Tools/artworks/pure_run/props/concepts/pure_run_prop_merchant_idle_v02_left_down_source.png",
+      "sha256": "9c03adcc788625c14c52a42dc3f6235d1283047a1b4e3d5bc4266030536bbb9a"
+    },
+    "raw": {
+      "path": "Tools/artworks/pipeline/artifacts/job-3e8decbaa90567d3/job-3e8decbaa90567d3-a001/raw.png",
+      "sha256": "9c03adcc788625c14c52a42dc3f6235d1283047a1b4e3d5bc4266030536bbb9a"
+    },
+    "prepared": {
+      "path": "Tools/artworks/pipeline/artifacts/job-3e8decbaa90567d3/job-3e8decbaa90567d3-a001/prepared.png",
+      "sha256": "bf822a491d704b1b222df2f401648f6c7d9afa1ea735372aee912d6d0a66b462"
+    },
+    "tilePlacementMetrics": {
+      "path": "Tools/artworks/pipeline/reviews/job-3e8decbaa90567d3-a001/tilePlacementMetrics.json",
+      "sha256": "4a7cb89227927413029eac3be347abae9ea6a1d458beeda555f9b5af56717876"
+    },
+    "review": {
+      "overlay": {
+        "path": "Tools/artworks/pipeline/reviews/job-3e8decbaa90567d3-a001/overlay.png",
+        "sha256": "beccd4231551e38be8dbcb3f9f525d95d8ea3572ef9d4a3017e68c7bd4a5ffa8"
+      },
+      "preview128": {
+        "path": "Tools/artworks/pipeline/reviews/job-3e8decbaa90567d3-a001/preview128.png",
+        "sha256": "5d8e383c1c80ce0958ee3cfd5c785bd519afe004b851797dcca6d80bdea9899b"
+      },
+      "tile64x32": {
+        "path": "Tools/artworks/pipeline/reviews/job-3e8decbaa90567d3-a001/tile64x32.png",
+        "sha256": "6e539d2d07aa074dd52ce377bc86e38ea3208c2a34aedebbb9942ef68a591175"
+      }
+    },
+    "promoted": {
+      "master": {
+        "path": "Tools/artworks/pure_run/props/approved/pure_run_prop_merchant_idle_v02.png",
+        "sha256": "bf822a491d704b1b222df2f401648f6c7d9afa1ea735372aee912d6d0a66b462"
+      },
+      "preview": {
+        "path": "Tools/artworks/pure_run/props/approved/pure_run_prop_merchant_idle_v02_128.png",
+        "sha256": "5d8e383c1c80ce0958ee3cfd5c785bd519afe004b851797dcca6d80bdea9899b"
+      }
+    }
+  },
+  "report": {
+    "path": "Tools/artworks/pipeline/reports/report-24f5e494e940a16f.json",
+    "sha256": "bb903388276ef95e3778886828fd6660f4580a5a53f3d143457272f8f9c98368"
+  },
+  "approvalId": "approval-064f7151d446340b",
+  "feedbackId": null,
+  "preparation": {
+    "chroma": null,
+    "chromaTolerance": 0
+  }
+}

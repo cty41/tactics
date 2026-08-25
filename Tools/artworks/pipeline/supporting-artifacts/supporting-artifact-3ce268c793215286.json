@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 2,
+  "supportingArtifactId": "supporting-artifact-3ce268c793215286",
+  "artifact": {
+    "path": "Tools/artworks/pure_run/equipment/reviews/equipment_armor_batch_v01.png",
+    "sha256": "040051304db9a9f38d3d56e3235ad03c0efe1789ce4c2615cd647db4155b3a9b"
+  },
+  "role": "equipment-review-sheet",
+  "note": "Armor batch V1 numbered review sheet."
+}

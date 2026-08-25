@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 2,
+  "supportingArtifactId": "supporting-artifact-d4ab7bf71eaa9aa3",
+  "artifact": {
+    "path": "Tools/artworks/pure_run/equipment/candidates/pure_run_equipment_shadow_cloak_v02.png",
+    "sha256": "c42d841e63e9234a4332c9da8aeb158e4d9055fac14db9a0f3dd9d49ee88e4ce"
+  },
+  "role": "equipment-review-candidate",
+  "note": "Armor V2 flatter Pure Run style review candidate."
+}

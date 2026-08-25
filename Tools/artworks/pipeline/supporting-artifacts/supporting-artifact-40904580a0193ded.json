@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 2,
+  "supportingArtifactId": "supporting-artifact-40904580a0193ded",
+  "artifact": {
+    "path": "Tools/artworks/pure_run/villager/reviews/villager_idle_dr_clockwise40_comparison.png",
+    "sha256": "1352d0ce454e240dac73e78f685c0d501641e03af66206902365fcd27034cc8d"
+  },
+  "role": "direction-comparison",
+  "note": "Four-way direction comparison: red-shiba DR reference, villager V03, cumulative clockwise +20 and cumulative clockwise +40 candidates; all share y=236 baseline."
+}

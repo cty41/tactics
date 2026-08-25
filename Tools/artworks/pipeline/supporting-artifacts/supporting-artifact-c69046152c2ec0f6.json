@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 2,
+  "supportingArtifactId": "supporting-artifact-c69046152c2ec0f6",
+  "artifact": {
+    "path": "Tools/artworks/pure_run/villager/reviews/villager_hit_dr_v02_comparison.png",
+    "sha256": "94370e24ebd8ca7b3dab2c85c08c32831c53865f4627e6811dc53fee862d31b0"
+  },
+  "role": "pose-comparison",
+  "note": "Next villager pose review: grounded hit DR V02 compared with the approved idle DR identity and red-shiba hit DR pose reference; all use y=236 baseline."
+}

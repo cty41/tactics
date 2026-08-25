@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 2,
+  "feedbackId": "feedback-d77575e1d95ea30d",
+  "attemptId": "job-897833991fd2f552-a011",
+  "candidateSha256": "9cbed15b75152d998dfa257bbc3bf391ae4a21fc7d3cdfc915ec0e2f3d562d0a",
+  "reviewer": "codex",
+  "verdict": "technical_failed",
+  "strengths": [],
+  "defects": [
+    "The semantic mask had antialiased label colors, subject overflow, and insufficient paw-to-core contact."
+  ],
+  "nextPromptDelta": "Keep candidate unchanged; use hard label edges, alpha intersection, and direct paw-to-core contact.",
+  "recordedAt": "2026-08-24T01:52:42.9623656Z",
+  "authorType": "agent",
+  "categories": [
+    "processing"
+  ],
+  "disposition": "technical_failed",
+  "frozenInvariants": [],
+  "pendingFixes": [
+    "The semantic mask had antialiased label colors, subject overflow, and insufficient paw-to-core contact."
+  ]
+}

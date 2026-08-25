@@ -1,0 +1,27 @@
+{
+  "schemaVersion": 2,
+  "feedbackId": "feedback-e10aed2c4c2c6c0c",
+  "attemptId": "job-ed5f76ac4fb68184-a003",
+  "candidateSha256": "a9de5b0c2fa3657aa08044d54d1cadd35b21af6f2cc256fd090db074bfddfae7",
+  "reviewer": "cty41",
+  "verdict": "retry",
+  "strengths": [
+    "伯恩山犬身份、裸胶囊体、四爪贴体、毛色和尺寸成立"
+  ],
+  "defects": [
+    "双眼当前偏向画面左侧，没有沿角色右下朝向看向正前方"
+  ],
+  "nextPromptDelta": "仅调整双眼瞳孔与视线，使其沿角色面部朝向看向右下正前方；保持头部、口鼻、表情、毛色、身体与四爪不变",
+  "recordedAt": "2026-08-23T11:48:41Z",
+  "authorType": "human",
+  "categories": [
+    "gaze"
+  ],
+  "disposition": "retry",
+  "frozenInvariants": [
+    "伯恩山犬黑白暖棕身份、短垂耳、闭嘴轻微笑意、裸刚性胶囊体、无服饰无道具、四爪贴体、右下45度、122px体量、y=236"
+  ],
+  "pendingFixes": [
+    "双眼看向角色右下正前方，不再偏画面左侧"
+  ]
+}

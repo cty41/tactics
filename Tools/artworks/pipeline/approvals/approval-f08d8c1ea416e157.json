@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 2,
+  "approvalId": "approval-f08d8c1ea416e157",
+  "attemptId": "job-c683c6ddf14b8146-a001",
+  "candidateSha256": "cdff834d777578766e5b85297aee2060f4a682c0140eb3ef5e260f3a3bd6ec52",
+  "maskSha256": null,
+  "reviewer": "cty41",
+  "reviewSha256": {
+    "sizeComparison": "9f3d2b1ffab85c3cba16a2465420bece6e551af409dac1a8d51377921b8d8b04"
+  },
+  "decision": "approved",
+  "reason": "User said promote next for leather boots V05 after reviewing the style-aligned comparison.",
+  "decidedAt": "2026-08-24T15:48:01Z",
+  "annotation": null,
+  "reportSha256": "4d601771892d9833a42733afdef88cbee10ba69189fe2445a6ccebe424e3a787"
+}

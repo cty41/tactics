@@ -1,0 +1,21 @@
+{
+  "schemaVersion": 2,
+  "jobId": "job-14f14757b75a7df7",
+  "state": "ready",
+  "contractId": "contract-f95fb7a5dda7d076",
+  "contractSha256": "68e9153ce9c2bb384aff88b64de203fab5879157f9790d5a1a38d8e671f6e65e",
+  "prompt": {
+    "path": "Tools/artworks/pure_run/items/prompt_mana_potion.md",
+    "sha256": "97b006979a2333a1217a9ec723ae7eda7e3f1fe5979803b84c51dddb7f361b7b"
+  },
+  "inputs": [],
+  "target": {
+    "direction": "down-right",
+    "pose": "display"
+  },
+  "series": null,
+  "conceptOnly": false,
+  "contractRequirements": null,
+  "requiresInvocation": false,
+  "poseGuide": null
+}

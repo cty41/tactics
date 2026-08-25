@@ -1,0 +1,40 @@
+{
+  "schemaVersion": 2,
+  "attemptId": "job-897833991fd2f552-a003",
+  "jobId": "job-897833991fd2f552",
+  "ordinal": 3,
+  "parentAttemptId": "job-897833991fd2f552-a002",
+  "retryFeedbackId": "feedback-5901559152d5f018",
+  "promptDelta": null,
+  "technicalRemediation": false,
+  "state": "annotated",
+  "artifacts": {
+    "source": {
+      "path": "Tools/artworks/pure_run/villager/concepts/pure_run_villager_idle_dr_v02_normalized_source_v01.png",
+      "sha256": "1b21477830438e126653b2cc004d096eb43e51f67f573ccd5609be210f475911"
+    },
+    "raw": {
+      "path": "Tools/artworks/pipeline/artifacts/job-897833991fd2f552/job-897833991fd2f552-a003/raw.png",
+      "sha256": "1b21477830438e126653b2cc004d096eb43e51f67f573ccd5609be210f475911"
+    },
+    "prepared": {
+      "path": "Tools/artworks/pipeline/artifacts/job-897833991fd2f552/job-897833991fd2f552-a003/prepared.png",
+      "sha256": "2b7e5cc6e3e166370f52e43f9043980c9bb826bdd170001d97793a389c19b4d7"
+    },
+    "maskSource": {
+      "path": "Tools/artworks/pure_run/villager/masks/pure_run_villager_idle_dr_v02_core_mask.png",
+      "sha256": "560b245ad02b9a2fb5246e815f4af8cdda65a7bef9e34aa45b157f0fa4674125"
+    },
+    "mask": {
+      "path": "Tools/artworks/pipeline/artifacts/job-897833991fd2f552/job-897833991fd2f552-a003/mask.png",
+      "sha256": "560b245ad02b9a2fb5246e815f4af8cdda65a7bef9e34aa45b157f0fa4674125"
+    }
+  },
+  "report": null,
+  "approvalId": null,
+  "feedbackId": "feedback-ed6b6ed3fd73ff62",
+  "preparation": {
+    "chroma": null,
+    "chromaTolerance": 0
+  }
+}

@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 2,
+  "feedbackId": "feedback-ae59c279bbb9e960",
+  "attemptId": "job-7a32a988b5b56657-a001",
+  "candidateSha256": "b21b7b4c5e5a094ae296e3ef87b398d1e2b5324471579ab579408acc9d06470b",
+  "reviewer": "codex",
+  "verdict": "retry",
+  "strengths": [],
+  "defects": [
+    "The overnight death draft predates the promoted villager identity and finalized death orientation/centering rules."
+  ],
+  "nextPromptDelta": "Regenerate from the promoted villager identity: compact supine capsule, head upper-right, four attached paws, no equipment, centered full AABB.",
+  "recordedAt": "2026-08-24T02:19:23.9046187Z",
+  "authorType": "agent",
+  "categories": [
+    "identity",
+    "pose_axis"
+  ],
+  "disposition": "retry",
+  "frozenInvariants": [],
+  "pendingFixes": [
+    "The overnight death draft predates the promoted villager identity and finalized death orientation/centering rules."
+  ]
+}

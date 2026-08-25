@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 2,
+  "supportingArtifactId": "supporting-artifact-6e6b4d60f18f1803",
+  "artifact": {
+    "path": "Tools/artworks/pure_run/villager/reviews/villager_hit_dr_tears_comparison.png",
+    "sha256": "f1e2372bae1b28f5daa9e62cb8a6dd12eb8e94d6c43def0cbd1c81e95a0e59c2"
+  },
+  "role": "pose-comparison",
+  "note": "Hit DR correction comparison: V03 adds the user-requested bilateral streaming tears while preserving grounded recoil and y=236 baseline."
+}

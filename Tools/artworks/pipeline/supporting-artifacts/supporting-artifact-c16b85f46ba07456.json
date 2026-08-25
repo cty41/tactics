@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 2,
+  "supportingArtifactId": "supporting-artifact-c16b85f46ba07456",
+  "artifact": {
+    "path": "Tools/artworks/pure_run/equipment/candidates/pure_run_equipment_wizard_hat_v03b.png",
+    "sha256": "2da1f2141d7576edca201561e709b7b272a220db4d764755ffa807e8068a1699"
+  },
+  "role": "equipment-review-candidate",
+  "note": "Flat style profile V1 passing equipment candidate."
+}

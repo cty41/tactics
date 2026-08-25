@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 2,
+  "supportingArtifactId": "supporting-artifact-3474632e34bc8406",
+  "artifact": {
+    "path": "Tools/artworks/pure_run/equipment/candidates/pure_run_equipment_wizard_hat_v03.png",
+    "sha256": "76a685a121b9d75cf4c2e6538313371e161f0dc4bd09cac9beebbc60aa98e4d1"
+  },
+  "role": "equipment-rejected-processing-evidence",
+  "note": "Pre-fix candidate retained as green-background crop regression evidence."
+}

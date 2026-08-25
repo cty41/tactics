@@ -1,0 +1,21 @@
+{
+  "schemaVersion": 2,
+  "jobId": "job-b82a70ea2f262416",
+  "state": "ready",
+  "contractId": "contract-0fb59cbbff488bd6",
+  "contractSha256": "97f6ceabe47eef48b2eca9a858579b24634aee85d65e217d67551cb2c6161677",
+  "prompt": {
+    "path": "Tools/artworks/pure_run/props/prompt_exit_portal_placement.md",
+    "sha256": "3550daaa55b98266b13d04e41d7b159f66558a712ecc56cc1948233dca0895e8"
+  },
+  "inputs": [],
+  "target": {
+    "direction": "down-right",
+    "pose": "display"
+  },
+  "series": null,
+  "conceptOnly": false,
+  "contractRequirements": null,
+  "requiresInvocation": false,
+  "poseGuide": null
+}

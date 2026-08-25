@@ -1,0 +1,18 @@
+{
+  "schemaVersion": 2,
+  "approvalId": "approval-87a9db7d7b5dcf2b",
+  "attemptId": "job-24e3deddf28b48bd-a002",
+  "candidateSha256": "f98a918b0e97411ff57152e9c296e9d7b15c189797b0e5ad03a99a4ccd0c6b4d",
+  "maskSha256": null,
+  "reviewer": "cty41",
+  "reviewSha256": {
+    "overlay": "664dfd734ebfc4f6429be988ff01c7396b35539751564d796674aeeae7493b41",
+    "preview128": "5e97b76aefce4ee22465251cf65130cbb590285110750cfbec6996ddda9f8adb",
+    "tile64x32": "98e9b9deffb2521ff18139bb6c0c3d935bb3a594b8a92160519e317490edf613"
+  },
+  "decision": "approved",
+  "reason": "用户确认带美元符号的 Store 节点图并要求 promote",
+  "decidedAt": "2026-08-23T03:48:23Z",
+  "annotation": null,
+  "reportSha256": "7a64fce585268acc6bf8b44403eaa9b31246aaad9b73d0cf85b2ab5d84f6dc2a"
+}

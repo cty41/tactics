@@ -1,0 +1,3 @@
+# Pure Run Leather Armor V1
+
+Create one standalone simple leather torso armor equipment sprite for a compact isometric dog-capsule roguelike. Three-quarter isometric view, short rounded barrel/capsule-shaped cuirass with an open neck and simple side seams, warm brown worn leather, a few broad straps only. It must look able to wrap a compact capsule body, not a human chest. No mannequin, limbs, head, sleeves, metal breastplate, symbols, text, UI frame, shadow, or rarity glow. Soft painterly cartoon rendering, thick clean dark outline, restrained highlights. Center the single object on pure `#00ff00` with generous clearance.

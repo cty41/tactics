@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 2,
+  "supportingArtifactId": "supporting-artifact-df4bd279b7a388c6",
+  "artifact": {
+    "path": "Tools/artworks/pure_run/equipment/candidates/pure_run_equipment_demonbound_bound_sword_v01_keyed_exact.png",
+    "sha256": "34f5066d34c2939c892992f51c167d60bf41adf0c4658349808c56c8622fe581"
+  },
+  "role": "reviewed-chroma-clean-intermediate",
+  "note": "Exact chroma RGB pixels forced fully transparent after user visual approval."
+}

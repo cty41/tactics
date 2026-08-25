@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 2,
+  "feedbackId": "feedback-9f3a8705954fafca",
+  "attemptId": "job-897833991fd2f552-a008",
+  "candidateSha256": "4db5c6c08b58aca9d3382600c818d4cc6e7bef24719701a507a52a090b6a3ea7",
+  "reviewer": "cty41",
+  "verdict": "retry",
+  "strengths": [],
+  "defects": [
+    "The strong-yaw candidate turned in the opposite direction, toward a right-side profile."
+  ],
+  "nextPromptDelta": "Turn from V03 toward the viewer/screen-bottom: show both eyes, move nose inward, and expose more front chest while retaining DR three-quarter facing.",
+  "recordedAt": "2026-08-24T01:48:28.2963236Z",
+  "authorType": "human",
+  "categories": [
+    "pose_axis"
+  ],
+  "disposition": "retry",
+  "frozenInvariants": [],
+  "pendingFixes": [
+    "The strong-yaw candidate turned in the opposite direction, toward a right-side profile."
+  ]
+}

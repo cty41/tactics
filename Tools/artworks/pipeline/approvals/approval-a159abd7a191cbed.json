@@ -1,0 +1,18 @@
+{
+  "schemaVersion": 2,
+  "approvalId": "approval-a159abd7a191cbed",
+  "attemptId": "job-1e0bf5abe7490414-a001",
+  "candidateSha256": "e6e41a8218e9cf5c3ad5f14c931147114fe4db3fa04c57d04daf5e14b75848d8",
+  "maskSha256": null,
+  "reviewer": "cty41",
+  "reviewSha256": {
+    "overlay": "2386ac75778e666eeb03621de3d1f26c5aa5b760b644ab265cb8f9d6bc9cd877",
+    "preview128": "e4a6c535c4d63d4b3d2815d874294f89635947fad5af5b51fc92a53ea19ace8b",
+    "tile64x32": "9b93406148818c1e207089335cbde137a8809928f6a1e2c93f014496f86a0f3d"
+  },
+  "decision": "approved",
+  "reason": "用户确认新版地图上下文、目标位于右上并朝左下面向我方，明确要求除出口外全部 promote",
+  "decidedAt": "2026-08-23T16:12:00Z",
+  "annotation": null,
+  "reportSha256": "c12e61dc4b215b76d6a0dc0d8de58efa8b110da343b96f8d205c7d20aedc7aef"
+}

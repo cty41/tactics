@@ -1,0 +1,32 @@
+{
+  "schemaVersion": 2,
+  "attemptId": "job-a4763d62bd4b6787-a001",
+  "jobId": "job-a4763d62bd4b6787",
+  "ordinal": 1,
+  "parentAttemptId": null,
+  "retryFeedbackId": null,
+  "promptDelta": null,
+  "technicalRemediation": false,
+  "state": "prepared",
+  "artifacts": {
+    "source": {
+      "path": "Tools/artworks/pure_run/equipment/concepts/pure_run_equipment_amazon_round_shield_v01_chroma_source.png",
+      "sha256": "5659dbaf8eb28de1a40ee4fb7e9fd22f7282a0d0cda6b579c91308640aff2161"
+    },
+    "raw": {
+      "path": "Tools/artworks/pipeline/artifacts/job-a4763d62bd4b6787/job-a4763d62bd4b6787-a001/raw.png",
+      "sha256": "5659dbaf8eb28de1a40ee4fb7e9fd22f7282a0d0cda6b579c91308640aff2161"
+    },
+    "prepared": {
+      "path": "Tools/artworks/pipeline/artifacts/job-a4763d62bd4b6787/job-a4763d62bd4b6787-a001/prepared.png",
+      "sha256": "42707cd9e9210b7b34576d8b3bb35b53522e73e82075c4fdefc2fc13851c8f54"
+    }
+  },
+  "report": null,
+  "approvalId": null,
+  "feedbackId": null,
+  "preparation": {
+    "chroma": "00ff00",
+    "chromaTolerance": 40
+  }
+}

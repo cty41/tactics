@@ -1,0 +1,18 @@
+{
+  "schemaVersion": 2,
+  "approvalId": "approval-6190d83cb3712a8d",
+  "attemptId": "job-bcbd77a57ecbea0b-a002",
+  "candidateSha256": "8be43b9437886fd3f98bdedc80089cfc41162d8e252e270bcfecd2d7c1c15e20",
+  "maskSha256": null,
+  "reviewer": "cty41",
+  "reviewSha256": {
+    "overlay": "463c8f0706b331bd36f78a3d83d63c0216370d1fd9825d5bad26cd301edc4ef3",
+    "preview128": "9e853117a5818e037a8cabc85a5158b7a9703d89ecfb1955c8c9b48004906219",
+    "tile64x32": "5ff889c9e89b2f09c128af096b36af8efa533f973aa909385cee1fc5f0bd5a89"
+  },
+  "decision": "approved",
+  "reason": "用户确认由场景篝火派生的 Start 节点 mask 并要求 promote",
+  "decidedAt": "2026-08-23T08:11:20Z",
+  "annotation": null,
+  "reportSha256": "a3d4c0210839e6ff0ada7332bc2c4e9a4c3f5be7e6247c486b02548885b56124"
+}

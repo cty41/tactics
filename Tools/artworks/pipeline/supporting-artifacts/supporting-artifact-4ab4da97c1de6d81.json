@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 2,
+  "supportingArtifactId": "supporting-artifact-4ab4da97c1de6d81",
+  "artifact": {
+    "path": "Tools/artworks/pure_run/equipment/reviews/equipment_flat_v1_panel_wizard_hat.png",
+    "sha256": "9cc2b6971a2832be93add430edf69d92094978812e054e664018e72e84823407"
+  },
+  "role": "equipment-review-panel",
+  "note": "Flat style profile V1 full-scale panel."
+}

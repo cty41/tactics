@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 2,
+  "supportingArtifactId": "supporting-artifact-69127a81e2422ad0",
+  "artifact": {
+    "path": "Tools/artworks/pure_run/equipment/candidates/pure_run_equipment_plain_iron_sword_v01_reviewed.png",
+    "sha256": "4ca459c8a4ba3e40344707af10648218e9e34feeb022c7d453352fdbe4ded942"
+  },
+  "role": "promotion-workflow-intermediate",
+  "note": "Intermediate created during reviewed sprite normalization or size comparison."
+}

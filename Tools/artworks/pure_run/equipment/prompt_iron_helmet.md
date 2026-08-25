@@ -1,0 +1,3 @@
+# Pure Run Iron Helmet V1
+
+Create one standalone plain iron helmet equipment sprite for a compact isometric dog-capsule roguelike. Three-quarter isometric view, readable from front-left/down-left, simple rounded forged-iron dome with a short brow rim and open face. No horns, plume, gems, insignia, mannequin, head, text, UI frame, shadow, or rarity glow. Soft painterly cartoon rendering, thick clean dark outline, restrained gray steel highlights, proportions compatible with the project's compact capsule characters. Center the single object on a pure `#00ff00` background with generous clearance.

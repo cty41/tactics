@@ -1,0 +1,18 @@
+{
+  "schemaVersion": 2,
+  "approvalId": "approval-c8336ac2f2611df6",
+  "attemptId": "job-14f14757b75a7df7-a002",
+  "candidateSha256": "9adf1d45daeb3871630da01f824743f3319a5b646ba64bc3f19248b595f5589e",
+  "maskSha256": null,
+  "reviewer": "cty41",
+  "reviewSha256": {
+    "overlay": "14174a27bf1d1da5237d211d1b6d0816c912834a780f7e6e4a095bb9100bd0bc",
+    "preview128": "4580786db84349bc54c2ae5b0bfaa70f1966b096dc35b02165b7f30004f371d8",
+    "tile64x32": "9137eee9807d830fad4e082f6354201a96a20774ded30519791e5663a57acf7d"
+  },
+  "decision": "approved",
+  "reason": "User explicitly confirmed the mana potion after its deterministic one-pixel baseline correction and requested promote.",
+  "decidedAt": "2026-08-23T11:16:50.5379986+08:00",
+  "annotation": null,
+  "reportSha256": "4a6b508049ae3a7346a80dc25cdcd2743de56b88840cdd8073beb7a8913726dd"
+}

@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 2,
+  "supportingArtifactId": "supporting-artifact-581c802489ad7b35",
+  "artifact": {
+    "path": "Tools/artworks/pure_run/equipment/candidates/pure_run_equipment_necromancer_dagger_v01_reviewed_128.png",
+    "sha256": "7c5793e0a855ac9e0cd609371daa5a09cbe4755b26ce63757a8038d022dd1834"
+  },
+  "role": "promotion-workflow-intermediate",
+  "note": "Intermediate created during reviewed sprite normalization or size comparison."
+}

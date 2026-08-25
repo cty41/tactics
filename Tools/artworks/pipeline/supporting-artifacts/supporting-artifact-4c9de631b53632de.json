@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 2,
+  "supportingArtifactId": "supporting-artifact-4c9de631b53632de",
+  "artifact": {
+    "path": "Tools/artworks/pure_run/equipment/reviews/pure_run_equipment_leather_boots_v05_size_comparison.png",
+    "sha256": "4aaf6ef0f5e83ff2a65755b9a6980d3d8592800ac9dbd8d38cf19de39fbb5945"
+  },
+  "role": "equipment-production-evidence",
+  "note": "Retained equipment generation reference, rejected/intermediate candidate, or technical remediation evidence; not a promotable runtime sprite."
+}

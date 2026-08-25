@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 2,
+  "supportingArtifactId": "supporting-artifact-758610ac2a695f11",
+  "artifact": {
+    "path": "Tools/artworks/pipeline/reviews/job-a95411a55ccd0bbe-a001/tilemap_altar_2x2_red_shiba_amazon_compare_v04.png",
+    "sha256": "293cf1d94930ae2b146445f41847685fbcfd6f52ad196501c56bdd3389c9a385"
+  },
+  "role": "tilemap-red-shiba-amazon-comparison",
+  "note": "User-approved V04 scale and grounding comparison: one-tile Amazon and 2x2 altar use 50 percent preview scale; contact-shape centers align to Tile centers."
+}

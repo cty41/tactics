@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 2,
+  "feedbackId": "feedback-5248f4bba161515b",
+  "attemptId": "job-7a32a988b5b56657-a003",
+  "candidateSha256": "e87562a8f3184d0f6a9ead468abf9d35b4a740a356ac79c8a6a054603fb7ffef",
+  "reviewer": "codex",
+  "verdict": "technical_failed",
+  "strengths": [],
+  "defects": [
+    "The first death semantic core was split by an overlapping paw label; the legacy standing-baseline check also conflicts with centered death AABB placement."
+  ],
+  "nextPromptDelta": "Keep candidate unchanged; move paw labels to core edges and preserve centered death placement for audited baseline handling.",
+  "recordedAt": "2026-08-24T02:30:58.9934023Z",
+  "authorType": "agent",
+  "categories": [
+    "processing"
+  ],
+  "disposition": "technical_failed",
+  "frozenInvariants": [],
+  "pendingFixes": [
+    "The first death semantic core was split by an overlapping paw label; the legacy standing-baseline check also conflicts with centered death AABB placement."
+  ]
+}

@@ -1,0 +1,35 @@
+{
+  "schemaVersion": 2,
+  "attemptId": "job-8c0260edd8abdb68-a001",
+  "jobId": "job-8c0260edd8abdb68",
+  "ordinal": 1,
+  "parentAttemptId": null,
+  "retryFeedbackId": null,
+  "promptDelta": null,
+  "technicalRemediation": false,
+  "state": "technical_failed",
+  "artifacts": {
+    "source": {
+      "path": "Tools/artworks/pure_run/items/concepts/pure_run_item_lucky_ring_v01_chroma_source_v01.png",
+      "sha256": "842b32686a0b102afbee5013cc13de11b8f0df99dae6b9fd43de7d3ff89ed9a5"
+    },
+    "raw": {
+      "path": "Tools/artworks/pipeline/artifacts/job-8c0260edd8abdb68/job-8c0260edd8abdb68-a001/raw.png",
+      "sha256": "842b32686a0b102afbee5013cc13de11b8f0df99dae6b9fd43de7d3ff89ed9a5"
+    },
+    "prepared": {
+      "path": "Tools/artworks/pipeline/artifacts/job-8c0260edd8abdb68/job-8c0260edd8abdb68-a001/prepared.png",
+      "sha256": "e472a6372bc462d35a36efa9377df83b4c5c32d8f2442124f3aace918d71d528"
+    }
+  },
+  "report": {
+    "path": "Tools/artworks/pipeline/reports/report-66aea24d65acd1c1.json",
+    "sha256": "91a3ede8529785a7fa69370b0c4eb2b7f9932fe7d6e12715e1f79e77e4a60738"
+  },
+  "approvalId": null,
+  "feedbackId": null,
+  "preparation": {
+    "chroma": "00ff00",
+    "chromaTolerance": 0
+  }
+}

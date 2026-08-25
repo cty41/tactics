@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 2,
+  "feedbackId": "feedback-db51c4009875360d",
+  "attemptId": "job-b82a70ea2f262416-a001",
+  "candidateSha256": "31eca2140a991ab4e9c3c2b2007920ebda9eeee7e9a7694c327903f477e765c3",
+  "reviewer": "cty41",
+  "verdict": "retry",
+  "strengths": [
+    "造型、比例、1x1 footprint与接地点通过"
+  ],
+  "defects": [
+    "透视朝向错误，应与祭坛一致朝屏幕左下"
+  ],
+  "nextPromptDelta": "保持全部造型与placement，仅水平翻转为左下朝向",
+  "recordedAt": "2026-08-23T16:04:23Z",
+  "authorType": "human",
+  "categories": [],
+  "disposition": "retry",
+  "frozenInvariants": [],
+  "pendingFixes": [
+    "透视朝向错误，应与祭坛一致朝屏幕左下"
+  ]
+}

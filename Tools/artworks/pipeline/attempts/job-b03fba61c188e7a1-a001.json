@@ -1,0 +1,32 @@
+{
+  "schemaVersion": 2,
+  "attemptId": "job-b03fba61c188e7a1-a001",
+  "jobId": "job-b03fba61c188e7a1",
+  "ordinal": 1,
+  "parentAttemptId": null,
+  "retryFeedbackId": null,
+  "promptDelta": null,
+  "technicalRemediation": false,
+  "state": "prepared",
+  "artifacts": {
+    "source": {
+      "path": "Tools/artworks/pure_run/equipment/concepts/pure_run_equipment_amazon_javelin_v01_chroma_source.png",
+      "sha256": "81715ef5064c46049f74f88a9446e325ae258084dd9d0c1fa393f7bb03f030fe"
+    },
+    "raw": {
+      "path": "Tools/artworks/pipeline/artifacts/job-b03fba61c188e7a1/job-b03fba61c188e7a1-a001/raw.png",
+      "sha256": "81715ef5064c46049f74f88a9446e325ae258084dd9d0c1fa393f7bb03f030fe"
+    },
+    "prepared": {
+      "path": "Tools/artworks/pipeline/artifacts/job-b03fba61c188e7a1/job-b03fba61c188e7a1-a001/prepared.png",
+      "sha256": "557dfd05e57ad542a8c15731491bb9dc3c3f35c14552c87cea88648f86226b95"
+    }
+  },
+  "report": null,
+  "approvalId": null,
+  "feedbackId": null,
+  "preparation": {
+    "chroma": "00ff00",
+    "chromaTolerance": 40
+  }
+}

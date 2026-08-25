@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 2,
+  "feedbackId": "feedback-baf505cabf7743c0",
+  "attemptId": "job-a95411a55ccd0bbe-a001",
+  "candidateSha256": "faa620130d8dee5339b705f39b26beedf959713884d9d1d64bc93b23fbe3c7cd",
+  "reviewer": "cty41",
+  "verdict": "retry",
+  "strengths": [
+    "神像、底座、空祭品台与2x2构图方向通过"
+  ],
+  "defects": [
+    "前爪曾偏长且缺失爪表现错误；最终需要贴身圆爪、三条爪线、单侧整肢缺失，并按Tile接地形体圆心对齐"
+  ],
+  "nextPromptDelta": "保留最终V04视觉与比例：右侧贴身圆爪内三条短爪线，左侧整肢缺失；预览接地中心对齐Tile中心",
+  "recordedAt": "2026-08-23T15:24:52Z",
+  "authorType": "human",
+  "categories": [],
+  "disposition": "retry",
+  "frozenInvariants": [],
+  "pendingFixes": [
+    "前爪曾偏长且缺失爪表现错误；最终需要贴身圆爪、三条爪线、单侧整肢缺失，并按Tile接地形体圆心对齐"
+  ]
+}

@@ -1,0 +1,15 @@
+{
+  "schemaVersion": 1,
+  "approvalId": "approval-ac300f796d0bfe21",
+  "attemptId": "bootstrap:Tools/artworks/pure_run/villager/approved/pure_run_villager_idle_dr_v01.png",
+  "candidateSha256": "9cbed15b75152d998dfa257bbc3bf391ae4a21fc7d3cdfc915ec0e2f3d562d0a",
+  "maskSha256": "27b2b746058c8760f994d65d0104b3c1ab53d3622a96957cc52d0d69198ca058",
+  "reviewSha256": "2bc7ac37890889c58291f2402bbc278d6edbc93a397403cb02e4f70e7b1cc552",
+  "candidatePath": "Tools/artworks/pure_run/villager/approved/pure_run_villager_idle_dr_v01.png",
+  "maskPath": "Tools/artworks/pure_run/villager/masks/pure_run_villager_idle_dr_v07_semantic_mask_v06.png",
+  "reviewPath": "Tools/artworks/pure_run/villager/reviews/villager_idle_dr_direction_correction_comparison_v02.png",
+  "reviewer": "cty41",
+  "decision": "approved",
+  "reason": "Bootstrap the first user-approved villager identity as the formal anchor for the remaining villager pose family.",
+  "decidedAt": "2026-08-24T01:55:11.2514961Z"
+}

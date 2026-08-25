@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 2,
+  "supportingArtifactId": "supporting-artifact-c9ca5bdd80f925a3",
+  "artifact": {
+    "path": "Tools/artworks/pure_run/equipment/candidates/pure_run_equipment_iron_helmet_v01.png",
+    "sha256": "c47894db5a029d3b0b6727173dfa85e9b58d3f5f475c026f69a8fda91a681d84"
+  },
+  "role": "equipment-review-candidate",
+  "note": "Armor batch V1 controlled 256px review candidate; baseline y=236."
+}

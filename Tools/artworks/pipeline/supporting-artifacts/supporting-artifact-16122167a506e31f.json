@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 2,
+  "supportingArtifactId": "supporting-artifact-16122167a506e31f",
+  "artifact": {
+    "path": "Tools/artworks/pure_run/equipment/reviews/equipment_flat_v1_panel_leather_armor.png",
+    "sha256": "07d775f375a7895b4cdbc50f920754450d48f21c304898f7632fe3e8787c451a"
+  },
+  "role": "equipment-review-panel",
+  "note": "Flat style profile V1 full-scale panel."
+}

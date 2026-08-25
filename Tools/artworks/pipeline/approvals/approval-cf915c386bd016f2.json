@@ -1,0 +1,18 @@
+{
+  "schemaVersion": 2,
+  "approvalId": "approval-cf915c386bd016f2",
+  "attemptId": "job-79e7d50a9481d774-a001",
+  "candidateSha256": "a025263e26595b84abd97ccdf16ed22c9e0baf5322ab3eb723aeba12e8516a50",
+  "maskSha256": null,
+  "reviewer": "cty41",
+  "reviewSha256": {
+    "overlay": "a2330c95d831ab0ce421438a9499a8560b3798614a7f86107ebc776ccdabdf29",
+    "preview128": "b199babfd351c292c987164636889308db30c4b8e794acf4a7b8b0b2364d1bce",
+    "tile64x32": "8c79ee28d62604d4025d7395ac10b09bac4677c6e6a376d99a517ac5a67e0897"
+  },
+  "decision": "approved",
+  "reason": "User explicitly confirmed the cleansing potion and requested promote, completing the first item batch.",
+  "decidedAt": "2026-08-23T11:18:05.7449983+08:00",
+  "annotation": null,
+  "reportSha256": "b6c8b24b073838d2f1d204db37bd190347d239938ea46659997e06c63abb1823"
+}

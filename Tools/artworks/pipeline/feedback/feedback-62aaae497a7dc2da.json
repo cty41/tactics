@@ -1,0 +1,27 @@
+{
+  "schemaVersion": 2,
+  "feedbackId": "feedback-62aaae497a7dc2da",
+  "attemptId": "job-24e3deddf28b48bd-a001",
+  "candidateSha256": "33efd00b582dfda3e139d3672f820e0acb3e5a47bda6f88fe7f3c330aeb719df",
+  "reviewer": "cty41",
+  "verdict": "retry",
+  "strengths": [
+    "钱袋外轮廓与单色 mask 风格正确"
+  ],
+  "defects": [
+    "中央圆形负空间无法明确表达商店或金钱含义"
+  ],
+  "nextPromptDelta": "保留钱袋轮廓，将中央圆孔替换为清晰的美元符号 $ 负形镂空",
+  "recordedAt": "2026-08-23T03:46:45Z",
+  "authorType": "human",
+  "categories": [
+    "identity"
+  ],
+  "disposition": "retry",
+  "frozenInvariants": [
+    "钱袋外轮廓、扎口与系绳、#6B4657 单色、透明背景、现有尺寸"
+  ],
+  "pendingFixes": [
+    "中央使用清晰可读的 $ 负形符号"
+  ]
+}

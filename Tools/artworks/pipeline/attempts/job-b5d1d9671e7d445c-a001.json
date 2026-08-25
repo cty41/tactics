@@ -1,0 +1,49 @@
+{
+  "schemaVersion": 2,
+  "attemptId": "job-b5d1d9671e7d445c-a001",
+  "jobId": "job-b5d1d9671e7d445c",
+  "ordinal": 1,
+  "parentAttemptId": null,
+  "retryFeedbackId": null,
+  "promptDelta": null,
+  "technicalRemediation": false,
+  "state": "promoted",
+  "sourceMode": "reviewed_import",
+  "reviewedImportId": "reviewed-import-65fbaf394779f9e8",
+  "artifacts": {
+    "source": {
+      "path": "Tools/artworks/pure_run/equipment/concepts/pure_run_equipment_leather_armor_v03_chroma_source.png",
+      "sha256": "1d9d8c15d761b80e6bc6b8c2647e19474de9118661c4b9b92d3f2f47d37a5710"
+    },
+    "prepared": {
+      "path": "Tools/artworks/pure_run/equipment/candidates/pure_run_equipment_leather_armor_v04.png",
+      "sha256": "bfa2dd69f85136690106ebb1998845ff20fdc589417012167e4988861c722b3b"
+    },
+    "importedPreview": {
+      "path": "Tools/artworks/pure_run/equipment/candidates/pure_run_equipment_leather_armor_v04_128.png",
+      "sha256": "6aa74e4e7c6497418843502eadfd19fc3b022763afe5e992511dcaf8f5433dad"
+    },
+    "review": {
+      "sizeComparison": {
+        "path": "Tools/artworks/pure_run/equipment/reviews/pure_run_equipment_leather_armor_v04_size_comparison.png",
+        "sha256": "da0271b17cd0d0c733622a9024b50f626576aab269d214ce04dc6b1f11e37ad3"
+      }
+    },
+    "promoted": {
+      "master": {
+        "path": "Tools/artworks/pure_run/equipment/approved/pure_run_equipment_leather_armor_v04.png",
+        "sha256": "bfa2dd69f85136690106ebb1998845ff20fdc589417012167e4988861c722b3b"
+      },
+      "preview": {
+        "path": "Tools/artworks/pure_run/equipment/approved/pure_run_equipment_leather_armor_v04_128.png",
+        "sha256": "6aa74e4e7c6497418843502eadfd19fc3b022763afe5e992511dcaf8f5433dad"
+      }
+    }
+  },
+  "report": {
+    "path": "Tools/artworks/pipeline/reports/report-6c4e4b95f6f52f1c.json",
+    "sha256": "713b8b0ed69230341be6659bf64550687c7d56a79650925bfd022bd644209bc0"
+  },
+  "approvalId": "approval-ca4265f0bfc8448d",
+  "feedbackId": null
+}

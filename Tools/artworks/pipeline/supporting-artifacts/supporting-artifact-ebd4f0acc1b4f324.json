@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 2,
+  "supportingArtifactId": "supporting-artifact-ebd4f0acc1b4f324",
+  "artifact": {
+    "path": "Tools/artworks/pure_run/equipment/tmp/pure_run_equipment_wizard_hat_v04_alpha_fixed_128.png",
+    "sha256": "51cd2cb5aac10ae18380ef95b91554b162f2ab76d111594ca18f76844e8cc6d7"
+  },
+  "role": "equipment-production-evidence",
+  "note": "Retained equipment generation reference, rejected/intermediate candidate, or technical remediation evidence; not a promotable runtime sprite."
+}

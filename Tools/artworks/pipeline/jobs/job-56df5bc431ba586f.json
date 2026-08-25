@@ -1,0 +1,36 @@
+{
+  "schemaVersion": 2,
+  "jobId": "job-56df5bc431ba586f",
+  "state": "ready",
+  "contractId": "contract-59b37b935d43f071",
+  "contractSha256": "e838328c0cb6b1acb6a5c6c7bda12e8e52908e2884812044c2b813acf56a91c1",
+  "prompt": null,
+  "inputs": [
+    {
+      "path": "Tools/artworks/pure_run/equipment/concepts/pure_run_equipment_amazon_round_shield_v01_chroma_source.png",
+      "sha256": "5659dbaf8eb28de1a40ee4fb7e9fd22f7282a0d0cda6b579c91308640aff2161"
+    },
+    {
+      "path": "Tools/artworks/pure_run/equipment/candidates/pure_run_equipment_amazon_round_shield_v01_promote_exact.png",
+      "sha256": "d5e14d2259d2af05a5fe5c00c275ed245ae5b543d0507ab031a23919363a2b24"
+    },
+    {
+      "path": "Tools/artworks/pure_run/equipment/candidates/pure_run_equipment_amazon_round_shield_v01_promote_exact_128.png",
+      "sha256": "804c3c427a1ebc06bb5dcd5db9cf812f949232825fc5e377c2b295cf9d3e2445"
+    },
+    {
+      "path": "Tools/artworks/pure_run/equipment/reviews/pure_run_equipment_amazon_round_shield_v01_promote_exact_size_comparison.png",
+      "sha256": "7af3f3193fef839869e9964e991b496b95bfe984380a151c404cdd36d47ff225"
+    }
+  ],
+  "target": {
+    "direction": "down-right",
+    "pose": "display"
+  },
+  "series": null,
+  "conceptOnly": false,
+  "contractRequirements": null,
+  "requiresInvocation": false,
+  "sourceMode": "reviewed_import",
+  "reviewedImportId": "reviewed-import-df93228d2e45fb80"
+}

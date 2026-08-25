@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 2,
+  "supportingArtifactId": "supporting-artifact-c47edd8b5d76aa78",
+  "artifact": {
+    "path": "Tools/artworks/pure_run/equipment/reviews/equipment_weapons_batch_v01.png",
+    "sha256": "b45e5216c759b8d4ed092db88aa8a98e3ea811fc730232dda7d9b35c185b928e"
+  },
+  "role": "contact-sheet",
+  "note": "Numbered UI-scale review sheet for weapon batch V01; no item is approved by this sheet alone"
+}

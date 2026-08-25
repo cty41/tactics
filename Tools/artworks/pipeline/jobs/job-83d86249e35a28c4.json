@@ -1,0 +1,36 @@
+{
+  "schemaVersion": 2,
+  "jobId": "job-83d86249e35a28c4",
+  "state": "ready",
+  "contractId": "contract-570a3ff55c67e5a5",
+  "contractSha256": "8511350124e165d81a8291981aa5821abbd6cd1a335dd41677381b6c15adf924",
+  "prompt": null,
+  "inputs": [
+    {
+      "path": "Tools/artworks/pure_run/equipment/concepts/pure_run_equipment_mage_oak_staff_v01_chroma_source.png",
+      "sha256": "de27f1e032a56e114d8da819bc24e637a4492eceda95fc3d6df2d5c6443c0fae"
+    },
+    {
+      "path": "Tools/artworks/pure_run/equipment/candidates/pure_run_equipment_mage_oak_staff_v01_promote_exact.png",
+      "sha256": "3d0c3eb8fc37979f6a9f97483df54de1186e3b349bbc89e75f1ade896e003ea8"
+    },
+    {
+      "path": "Tools/artworks/pure_run/equipment/candidates/pure_run_equipment_mage_oak_staff_v01_promote_exact_128.png",
+      "sha256": "b28756d35f2e0bb2e22430037c2aa6893028a0a8bbc69120e2d386a0a4a994f8"
+    },
+    {
+      "path": "Tools/artworks/pure_run/equipment/reviews/pure_run_equipment_mage_oak_staff_v01_promote_exact_size_comparison.png",
+      "sha256": "9cac470edadf4b3f6596ee1fa0bd1986e0eba7c7fb0221acd2d2370a4f85fc85"
+    }
+  ],
+  "target": {
+    "direction": "down-right",
+    "pose": "display"
+  },
+  "series": null,
+  "conceptOnly": false,
+  "contractRequirements": null,
+  "requiresInvocation": false,
+  "sourceMode": "reviewed_import",
+  "reviewedImportId": "reviewed-import-4bf2566b00d080a5"
+}

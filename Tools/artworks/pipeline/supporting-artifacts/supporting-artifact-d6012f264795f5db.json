@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 2,
+  "supportingArtifactId": "supporting-artifact-d6012f264795f5db",
+  "artifact": {
+    "path": "Tools/artworks/pure_run/equipment/reviews/equipment_flat_v1_panel_shadow_cloak.png",
+    "sha256": "a01e29599c00ec8fd74efdd3f5b9f2f8a11f61a46a02455dfe56eb9fae50768e"
+  },
+  "role": "equipment-review-panel",
+  "note": "Flat style profile V1 full-scale panel."
+}

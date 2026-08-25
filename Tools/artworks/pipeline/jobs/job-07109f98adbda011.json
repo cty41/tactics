@@ -1,0 +1,36 @@
+{
+  "schemaVersion": 2,
+  "jobId": "job-07109f98adbda011",
+  "state": "ready",
+  "contractId": "contract-f5c6d1c1f77f72ab",
+  "contractSha256": "c105e79e9c1517a52d565e2d5ea6e1d8445fc925196758c186e20ec3d89f35be",
+  "prompt": null,
+  "inputs": [
+    {
+      "path": "Tools/artworks/pure_run/equipment/concepts/pure_run_equipment_plain_iron_sword_v01_chroma_source.png",
+      "sha256": "9e0e8391a9689ec02965eee8cc8f77763c818620ed56ad90aed948f457678ddc"
+    },
+    {
+      "path": "Tools/artworks/pure_run/equipment/candidates/pure_run_equipment_plain_iron_sword_v01_promote_exact.png",
+      "sha256": "4ca459c8a4ba3e40344707af10648218e9e34feeb022c7d453352fdbe4ded942"
+    },
+    {
+      "path": "Tools/artworks/pure_run/equipment/candidates/pure_run_equipment_plain_iron_sword_v01_promote_exact_128.png",
+      "sha256": "0489d52554c6de949e9ba35344f8f051e4e4bbc76c8e5694c7b62b23d103741f"
+    },
+    {
+      "path": "Tools/artworks/pure_run/equipment/reviews/pure_run_equipment_plain_iron_sword_v01_promote_exact_size_comparison.png",
+      "sha256": "9d2d8d79fa3d8d253aeb58a08b528fb2db899dd8f3232bac19a627efcb602638"
+    }
+  ],
+  "target": {
+    "direction": "down-right",
+    "pose": "display"
+  },
+  "series": null,
+  "conceptOnly": false,
+  "contractRequirements": null,
+  "requiresInvocation": false,
+  "sourceMode": "reviewed_import",
+  "reviewedImportId": "reviewed-import-f838f82417076888"
+}

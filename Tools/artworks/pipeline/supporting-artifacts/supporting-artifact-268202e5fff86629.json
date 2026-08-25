@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 2,
+  "supportingArtifactId": "supporting-artifact-268202e5fff86629",
+  "artifact": {
+    "path": "Tools/artworks/pure_run/equipment/candidates/pure_run_equipment_necromancer_dagger_v01_128.png",
+    "sha256": "5123aead95ac473ba744aa4d90166735ab37ed02529ef449728fdc930be129e5"
+  },
+  "role": "equipment-review-candidate",
+  "note": "Unapproved equipment batch V01 transformed candidate for numbered human review"
+}

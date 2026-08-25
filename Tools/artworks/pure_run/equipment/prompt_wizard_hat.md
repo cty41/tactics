@@ -1,0 +1,3 @@
+# Pure Run Wizard Hat V1
+
+Create one standalone classic wizard hat equipment sprite for a compact dog-capsule roguelike. Three-quarter isometric view, broad soft brim and one gently bent conical crown, deep muted blue-purple cloth with a simple dark band. Keep it plain and practical, sized for a compact dog head. No stars, moons, gems, face, ears, mannequin, text, UI frame, cast shadow, magical particles, or rarity glow. Soft painterly cartoon rendering, thick clean dark outline, restrained highlights, clean readable silhouette. Center the single object on pure `#00ff00` with generous clearance.

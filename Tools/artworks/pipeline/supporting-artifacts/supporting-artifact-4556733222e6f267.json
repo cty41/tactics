@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 2,
+  "supportingArtifactId": "supporting-artifact-4556733222e6f267",
+  "artifact": {
+    "path": "Tools/artworks/pure_run/villager/reviews/villager_idle_dr_direction_correction_comparison.png",
+    "sha256": "94ea2496998477e7ae90a3ee6e4aecc2efef2986198d5c6ac249a01cb2d2d033"
+  },
+  "role": "direction-comparison",
+  "note": "Direction correction comparison: V06 documented as wrong-way profile turn; V07 turns from V03 toward viewer/screen-bottom, closer to red-shiba DR three-quarter geometry."
+}

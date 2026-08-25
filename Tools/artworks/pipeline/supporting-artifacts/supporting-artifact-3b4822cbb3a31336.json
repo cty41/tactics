@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 2,
+  "supportingArtifactId": "supporting-artifact-3b4822cbb3a31336",
+  "artifact": {
+    "path": "Tools/artworks/pure_run/equipment/reviews/armor_tile_panel_iron_helmet_v01.png",
+    "sha256": "3922dd40e864ce9080b89292ab8a630fefaed44825df7c8d958b7c31d8ea4a8d"
+  },
+  "role": "equipment-tile-review-panel",
+  "note": "Armor batch V1 tile-scale review panel."
+}

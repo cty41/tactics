@@ -1,0 +1,15 @@
+{
+  "schemaVersion": 2,
+  "attemptId": "job-ed5f76ac4fb68184-a004",
+  "jobId": "job-ed5f76ac4fb68184",
+  "ordinal": 4,
+  "parentAttemptId": "job-ed5f76ac4fb68184-a003",
+  "retryFeedbackId": "feedback-17ec2819444713c6",
+  "promptDelta": null,
+  "technicalRemediation": false,
+  "state": "ready",
+  "artifacts": {},
+  "report": null,
+  "approvalId": null,
+  "feedbackId": null
+}

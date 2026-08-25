@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 2,
+  "supportingArtifactId": "supporting-artifact-469e24bfb0683dea",
+  "artifact": {
+    "path": "Tools/artworks/pure_run/equipment/reviews/leather_armor_style_test_v03.png",
+    "sha256": "e277f8c90713afc76332cf817b295d79008edb899db5e1fe08f1b5e1bb5893a2"
+  },
+  "role": "equipment-style-calibration-sheet",
+  "note": "Approved character and weapon anchors beside leather armor V3."
+}

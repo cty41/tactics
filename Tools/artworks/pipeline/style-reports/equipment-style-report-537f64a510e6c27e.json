@@ -1,0 +1,40 @@
+{
+  "schemaVersion": 1,
+  "styleReportId": "equipment-style-report-537f64a510e6c27e",
+  "contractId": "contract-6a86410da3e7cfc8",
+  "contractSha256": "4a656222bcb46a2840200039cb4faed44cc228182dc694ea0061a8f49f09db52",
+  "profile": {
+    "path": "Tools/artworks/pure_run/equipment/style_profile_flat_v1.json",
+    "sha256": "c7b9d3754163a302fc19bab6e645c6a7f635d7d9dad3d5a80f954132c34f04c2"
+  },
+  "source": {
+    "path": "Tools/artworks/pure_run/equipment/concepts/pure_run_equipment_iron_helmet_v03_chroma_source.png",
+    "sha256": "7e56cc617713e38bebf200b812a86ee3e6323af0e31d93343e232a6581001347"
+  },
+  "candidate": {
+    "path": "Tools/artworks/pure_run/equipment/candidates/pure_run_equipment_iron_helmet_v03.png",
+    "sha256": "74d4ac18a3ef320230b7f5d12f6f459438d363386dcc64a73041264715a8d576"
+  },
+  "preview": {
+    "path": "Tools/artworks/pure_run/equipment/candidates/pure_run_equipment_iron_helmet_v03_128.png",
+    "sha256": "64aef068e6ebb7a8edc96e3127acfea2566bab26b9f09181f1f33830a87f13b9"
+  },
+  "metrics": {
+    "interiorPixels": 9537,
+    "interiorColorBins": 31,
+    "smoothGradientRatio": 0.0,
+    "visibleBbox": [
+      76,
+      133,
+      180,
+      237
+    ],
+    "visibleSize": [
+      104,
+      104
+    ],
+    "baseline": 236
+  },
+  "issues": [],
+  "passed": true
+}
